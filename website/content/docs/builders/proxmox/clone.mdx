@@ -191,7 +191,7 @@ in the image's Cloud-Init settings for provisioning.
 - `full_clone` (bool) - Whether to run a full or shallow clone from the base clone_vm. Defaults to `true`.
 
 - `boot` - (string) - Override default boot order. Format example `order=virtio0;ide2;net0`.
- Prior to Proxmox 6.2-15 the format was `cdn` (c:CDROM -> d:Disk -> n:Network)
+  Prior to Proxmox 6.2-15 the format was `cdn` (c:CDROM -> d:Disk -> n:Network)
 
 ## Example: Cloud-Init enabled Debian
 
@@ -233,5 +233,4 @@ that there exists a Cloud-Init enabled image on the Proxmox server named
   ],
   "description": "A template for building a base"
 }
-
 ```

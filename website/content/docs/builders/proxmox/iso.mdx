@@ -230,22 +230,23 @@ builder.
     }
   ]
   ```
+
   - `device` (string) - Bus type and bus index that the ISO will be mounted on. Can be `ideX`,
     `sataX` or `scsiX`.
     For `ide` the bus index ranges from 0 to 3, for `sata` form 0 to 5 and for
     `scsi` from 0 to 30.
-    Defaults to `ide3` since `ide2` is generelly the  boot drive.
+    Defaults to `ide3` since `ide2` is generelly the boot drive.
 
   - `iso_file` (string) - Path to the ISO file to boot from, expressed as a
-      proxmox datastore path, for example
-      `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
-      Either `iso_file` OR `iso_url` must be specifed.
+    proxmox datastore path, for example
+    `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
+    Either `iso_file` OR `iso_url` must be specifed.
 
   - `iso_url` (string) - URL to an ISO file to upload to Proxmox, and then
-      boot from. Either `iso_file` OR `iso_url` must be specifed.
+    boot from. Either `iso_file` OR `iso_url` must be specifed.
 
   - `iso_storage_pool` (string) - Proxmox storage pool onto which to upload
-      the ISO file.
+    the ISO file.
 
   - `iso_checksum` (string) - Checksum of the ISO file.
   - `unmount` (bool) - If true, remove the mounted ISO from the template after finishing. Defaults to `false`.
@@ -257,7 +258,7 @@ builder.
   the VMs IP from. Defaults to the first non loopback interface.
 
 - `boot` - (string) - Override default boot order. Format example `order=virtio0;ide2;net0`.
- Prior to Proxmox 6.2-15 the format was `cdn` (c:CDROM -> d:Disk -> n:Network)
+  Prior to Proxmox 6.2-15 the format was `cdn` (c:CDROM -> d:Disk -> n:Network)
 
 ## Boot Command
 
