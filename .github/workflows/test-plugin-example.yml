@@ -1,0 +1,47 @@
+# This is a manually triggered action workflow.
+# It uses Packer at latest version to init, validate and build
+# an example configuration in a folder.
+# This action is compatible with Packer v1.7.0 or later.
+name: test plugin example
+
+on:
+  workflow_dispatch:
+    inputs:
+      logs:
+        description: 'Set 1 to activate full logs'
+        required: false
+        default: '0'
+      folder:
+        description: 'Example folder'
+        required: false
+        default: './example'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: init and build example
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Init
+        uses: hashicorp/packer-github-actions@master
+        with:
+          working_directory: ${{ github.event.inputs.folder }}
+          command: init
+
+      - name: Validate
+        uses: hashicorp/packer-github-actions@master
+        with:
+          working_directory: ${{ github.event.inputs.folder }}
+          command: validate
+        env:
+          PACKER_LOG: ${{ github.event.inputs.logs }}
+
+      - name: Build
+        uses: hashicorp/packer-github-actions@master
+        with:
+          working_directory: ${{ github.event.inputs.folder }}
+          command: build
+        env:
+          PACKER_LOG: ${{ github.event.inputs.logs }}
