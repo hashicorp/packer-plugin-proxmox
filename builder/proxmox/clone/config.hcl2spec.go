@@ -4,7 +4,7 @@ package proxmoxclone
 
 import (
 	"github.com/hashicorp/hcl/v2/hcldec"
-	proxmox "github.com/hashicorp/packer/builder/proxmox/common"
+	proxmox "github.com/hashicorp/packer-plugin-proxmox/builder/proxmox/common"
 	"github.com/zclconf/go-cty/cty"
 )
 

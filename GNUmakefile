@@ -17,8 +17,6 @@ run-example: dev
 	@packer build ./example
 
 install-gen-deps: ## Install dependencies for code generation
-	# packer-sdc allows to code generate everything needed to generate docs and
-	# HCL2 specific code.
 	@go install github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@latest
 
 ci-release-docs: install-gen-deps
@@ -27,6 +25,9 @@ ci-release-docs: install-gen-deps
 
 test:
 	@go test -count $(COUNT) $(TEST) -timeout=3m
+
+generate: install-gen-deps
+	go generate ./...
 
 testacc: dev
 	@PACKER_ACC=1 go test -count $(COUNT) -v $(TEST) -timeout=120m
