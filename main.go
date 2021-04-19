@@ -27,6 +27,7 @@ var (
 
 func main() {
 	pps := plugin.NewSet()
+	pps.RegisterBuilder(plugin.DEFAULT_NAME, new(proxmoxiso.Builder))
 	pps.RegisterBuilder("proxmox-iso", new(proxmoxiso.Builder))
 	pps.RegisterBuilder("proxmox-clone", new(proxmoxclone.Builder))
 	pps.SetVersion(PluginVersion)
