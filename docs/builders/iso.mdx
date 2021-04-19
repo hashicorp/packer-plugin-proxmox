@@ -285,7 +285,137 @@ the template.
 The boot command is "typed" character for character over the virtual keyboard
 to the machine, simulating a human actually typing the keyboard.
 
-@include 'packer-plugin-sdk/bootcommand/BootConfig.mdx'
+<!-- Code generated from the comments of the BootConfig struct in bootcommand/config.go; DO NOT EDIT MANUALLY -->
+
+The boot configuration is very important: `boot_command` specifies the keys
+to type when the virtual machine is first booted in order to start the OS
+installer. This command is typed after boot_wait, which gives the virtual
+machine some time to actually load.
+
+The boot_command is an array of strings. The strings are all typed in
+sequence. It is an array only to improve readability within the template.
+
+There are a set of special keys available. If these are in your boot
+command, they will be replaced by the proper key:
+
+-   `<bs>` - Backspace
+
+-   `<del>` - Delete
+
+-   `<enter> <return>` - Simulates an actual "enter" or "return" keypress.
+
+-   `<esc>` - Simulates pressing the escape key.
+
+-   `<tab>` - Simulates pressing the tab key.
+
+-   `<f1> - <f12>` - Simulates pressing a function key.
+
+-   `<up> <down> <left> <right>` - Simulates pressing an arrow key.
+
+-   `<spacebar>` - Simulates pressing the spacebar.
+
+-   `<insert>` - Simulates pressing the insert key.
+
+-   `<home> <end>` - Simulates pressing the home and end keys.
+
+-   `<pageUp> <pageDown>` - Simulates pressing the page up and page down
+    keys.
+
+-   `<menu>` - Simulates pressing the Menu key.
+
+-   `<leftAlt> <rightAlt>` - Simulates pressing the alt key.
+
+-   `<leftCtrl> <rightCtrl>` - Simulates pressing the ctrl key.
+
+-   `<leftShift> <rightShift>` - Simulates pressing the shift key.
+
+-   `<leftSuper> <rightSuper>` - Simulates pressing the ⌘ or Windows key.
+
+-   `<wait> <wait5> <wait10>` - Adds a 1, 5 or 10 second pause before
+    sending any additional keys. This is useful if you have to generally
+    wait for the UI to update before typing more.
+
+-   `<waitXX>` - Add an arbitrary pause before sending any additional keys.
+    The format of `XX` is a sequence of positive decimal numbers, each with
+    optional fraction and a unit suffix, such as `300ms`, `1.5h` or `2h45m`.
+    Valid time units are `ns`, `us` (or `µs`), `ms`, `s`, `m`, `h`. For
+    example `<wait10m>` or `<wait1m20s>`.
+
+-   `<XXXOn> <XXXOff>` - Any printable keyboard character, and of these
+     "special" expressions, with the exception of the `<wait>` types, can
+     also be toggled on or off. For example, to simulate ctrl+c, use
+     `<leftCtrlOn>c<leftCtrlOff>`. Be sure to release them, otherwise they
+     will be held down until the machine reboots. To hold the `c` key down,
+     you would use `<cOn>`. Likewise, `<cOff>` to release.
+
+-   `{{ .HTTPIP }} {{ .HTTPPort }}` - The IP and port, respectively of an
+    HTTP server that is started serving the directory specified by the
+    `http_directory` configuration parameter. If `http_directory` isn't
+    specified, these will be blank!
+
+-   `{{ .Name }}` - The name of the VM.
+
+Example boot command. This is actually a working boot command used to start an
+CentOS 6.4 installer:
+
+In JSON:
+
+```json
+"boot_command": [
+    "<tab><wait>",
+    " ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/centos6-ks.cfg<enter>"
+ ]
+```
+
+In HCL2:
+
+```hcl
+boot_command = [
+    "<tab><wait>",
+    " ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/centos6-ks.cfg<enter>"
+ ]
+```
+
+The example shown below is a working boot command used to start an Ubuntu
+12.04 installer:
+
+In JSON:
+
+```json
+"boot_command": [
+  "<esc><esc><enter><wait>",
+  "/install/vmlinuz noapic ",
+  "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
+  "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
+  "hostname={{ .Name }} ",
+  "fb=false debconf/frontend=noninteractive ",
+  "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
+  "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
+  "initrd=/install/initrd.gz -- <enter>"
+]
+```
+
+In HCL2:
+
+```hcl
+boot_command = [
+  "<esc><esc><enter><wait>",
+  "/install/vmlinuz noapic ",
+  "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
+  "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
+  "hostname={{ .Name }} ",
+  "fb=false debconf/frontend=noninteractive ",
+  "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
+  "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
+  "initrd=/install/initrd.gz -- <enter>"
+]
+```
+
+For more examples of various boot commands, see the sample projects from our
+[community templates page](/community-tools#templates).
+
+<!-- End of code generated from the comments of the BootConfig struct in bootcommand/config.go; -->
+
 
 The example shown below is a working boot command used to start an Ubuntu
 12.04 installer:
@@ -309,11 +439,53 @@ For more examples of various boot commands, see the sample projects from our
 
 ## Http directory configuration
 
-@include 'packer-plugin-sdk/multistep/commonsteps/HTTPConfig.mdx'
+<!-- Code generated from the comments of the HTTPConfig struct in multistep/commonsteps/http_config.go; DO NOT EDIT MANUALLY -->
+
+Packer will create an http server serving `http_directory` when it is set, a
+random free port will be selected and the architecture of the directory
+referenced will be available in your builder.
+
+Example usage from a builder:
+
+  `wget http://{{ .HTTPIP }}:{{ .HTTPPort }}/foo/bar/preseed.cfg`
+
+<!-- End of code generated from the comments of the HTTPConfig struct in multistep/commonsteps/http_config.go; -->
+
 
 ### Optional:
 
-@include 'packer-plugin-sdk/multistep/commonsteps/HTTPConfig-not-required.mdx'
+<!-- Code generated from the comments of the HTTPConfig struct in multistep/commonsteps/http_config.go; DO NOT EDIT MANUALLY -->
+
+- `http_directory` (string) - Path to a directory to serve using an HTTP server. The files in this
+  directory will be available over HTTP that will be requestable from the
+  virtual machine. This is useful for hosting kickstart files and so on.
+  By default this is an empty string, which means no HTTP server will be
+  started. The address and port of the HTTP server will be available as
+  variables in `boot_command`. This is covered in more detail below.
+
+- `http_content` (map[string]string) - Key/Values to serve using an HTTP server. http_content works like and
+  conflicts with http_directory The keys represent the paths and the values
+  contents. This is useful for hosting kickstart files and so on. By
+  default this is empty, which means no HTTP server will be started. The
+  address and port of the HTTP server will be available as variables in
+  `boot_command`. This is covered in more detail below. Example: Setting
+  `"foo/bar"="baz"`, will allow you to http get on
+  `http://{http_ip}:{http_port}/foo/bar`.
+
+- `http_port_min` (int) - These are the minimum and maximum port to use for the HTTP server
+  started to serve the `http_directory`. Because Packer often runs in
+  parallel, Packer will choose a randomly available port in this range to
+  run the HTTP server. If you want to force the HTTP server to be on one
+  port, make this minimum and maximum port the same. By default the values
+  are `8000` and `9000`, respectively.
+
+- `http_port_max` (int) - HTTP Port Max
+
+- `http_bind_address` (string) - This is the bind address for the HTTP server. Defaults to 0.0.0.0 so that
+  it will work with any network interface.
+
+<!-- End of code generated from the comments of the HTTPConfig struct in multistep/commonsteps/http_config.go; -->
+
 
 ## Example: Fedora with kickstart
 
