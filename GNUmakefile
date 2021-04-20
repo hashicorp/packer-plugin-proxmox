@@ -1,4 +1,4 @@
-NAME=scaffolding
+NAME=proxmox
 BINARY=packer-plugin-${NAME}
 
 COUNT?=1
