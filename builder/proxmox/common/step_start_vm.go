@@ -54,6 +54,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		QemuCores:    c.Cores,
 		QemuSockets:  c.Sockets,
 		QemuOs:       c.OS,
+		Bios:     c.BIOS,
 		QemuVga:      generateProxmoxVga(c.VGA),
 		QemuNetworks: generateProxmoxNetworkAdapters(c.NICs),
 		QemuDisks:    generateProxmoxDisks(c.Disks),

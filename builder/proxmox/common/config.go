@@ -49,6 +49,7 @@ type Config struct {
 	CPUType        string       `mapstructure:"cpu_type"`
 	Sockets        int          `mapstructure:"sockets"`
 	OS             string       `mapstructure:"os"`
+	BIOS           string       `mapstructure:"bios"`
 	VGA            vgaConfig    `mapstructure:"vga"`
 	NICs           []nicConfig  `mapstructure:"network_adapters"`
 	Disks          []diskConfig `mapstructure:"disks"`

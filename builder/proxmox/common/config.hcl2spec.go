@@ -201,6 +201,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"cpu_type":                     &hcldec.AttrSpec{Name: "cpu_type", Type: cty.String, Required: false},
 		"sockets":                      &hcldec.AttrSpec{Name: "sockets", Type: cty.Number, Required: false},
 		"os":                           &hcldec.AttrSpec{Name: "os", Type: cty.String, Required: false},
+		"bios":                         &hcldec.AttrSpec{Name: "bios", Type: cty.String, Required: false},
 		"vga":                          &hcldec.BlockSpec{TypeName: "vga", Nested: hcldec.ObjectSpec((*FlatvgaConfig)(nil).HCL2Spec())},
 		"network_adapters":             &hcldec.BlockListSpec{TypeName: "network_adapters", Nested: hcldec.ObjectSpec((*FlatnicConfig)(nil).HCL2Spec())},
 		"disks":                        &hcldec.BlockListSpec{TypeName: "disks", Nested: hcldec.ObjectSpec((*FlatdiskConfig)(nil).HCL2Spec())},
