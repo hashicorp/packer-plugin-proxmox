@@ -93,6 +93,9 @@ type FlatConfig struct {
 	CPUType                   *string                            `mapstructure:"cpu_type" cty:"cpu_type" hcl:"cpu_type"`
 	Sockets                   *int                               `mapstructure:"sockets" cty:"sockets" hcl:"sockets"`
 	OS                        *string                            `mapstructure:"os" cty:"os" hcl:"os"`
+	BIOS                      *string                            `mapstructure:"bios" cty:"bios" hcl:"bios"`
+	EFIDisk                   *string                            `mapstructure:"efidisk" cty:"efidisk" hcl:"efidisk"`
+	Machine                   *string                            `mapstructure:"machine" cty:"machine" hcl:"machine"`
 	VGA                       *proxmox.FlatvgaConfig             `mapstructure:"vga" cty:"vga" hcl:"vga"`
 	NICs                      []proxmox.FlatnicConfig            `mapstructure:"network_adapters" cty:"network_adapters" hcl:"network_adapters"`
 	Disks                     []proxmox.FlatdiskConfig           `mapstructure:"disks" cty:"disks" hcl:"disks"`
@@ -204,6 +207,9 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"cpu_type":                     &hcldec.AttrSpec{Name: "cpu_type", Type: cty.String, Required: false},
 		"sockets":                      &hcldec.AttrSpec{Name: "sockets", Type: cty.Number, Required: false},
 		"os":                           &hcldec.AttrSpec{Name: "os", Type: cty.String, Required: false},
+		"bios":                         &hcldec.AttrSpec{Name: "bios", Type: cty.String, Required: false},
+		"efidisk":                      &hcldec.AttrSpec{Name: "efidisk", Type: cty.String, Required: false},
+		"machine":                      &hcldec.AttrSpec{Name: "machine", Type: cty.String, Required: false},
 		"vga":                          &hcldec.BlockSpec{TypeName: "vga", Nested: hcldec.ObjectSpec((*proxmox.FlatvgaConfig)(nil).HCL2Spec())},
 		"network_adapters":             &hcldec.BlockListSpec{TypeName: "network_adapters", Nested: hcldec.ObjectSpec((*proxmox.FlatnicConfig)(nil).HCL2Spec())},
 		"disks":                        &hcldec.BlockListSpec{TypeName: "disks", Nested: hcldec.ObjectSpec((*proxmox.FlatdiskConfig)(nil).HCL2Spec())},
