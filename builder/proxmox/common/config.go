@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -237,8 +238,14 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 	if c.Node == "" {
 		errs = packersdk.MultiErrorAppend(errs, errors.New("node must be specified"))
 	}
-	if strings.ContainsAny(c.TemplateName, " ") {
-		errs = packersdk.MultiErrorAppend(errs, errors.New("template_name must not contain spaces"))
+	
+	// Verify VM Name and Template Name are a valid DNS Names
+	re := regexp.MustCompile(`^(?:(?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]*[a-zA-Z0-9])?)\.)*(?:[A-Za-z0-9](?:[A-Za-z0-9\-]*[A-Za-z0-9])?))$`)
+	if !re.MatchString(c.VMName) {
+			errs = packersdk.MultiErrorAppend(errs, errors.New("vm_name must be a valid DNS name"))
+	}
+	if c.TemplateName != "" && !re.MatchString(c.TemplateName) {
+			errs = packersdk.MultiErrorAppend(errs, errors.New("template_name must be a valid DNS name"))
 	}
 	for idx := range c.NICs {
 		if c.NICs[idx].Bridge == "" {
