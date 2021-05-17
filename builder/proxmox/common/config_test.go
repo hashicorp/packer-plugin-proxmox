@@ -53,8 +53,8 @@ func TestAgentSetToFalse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if c.Agent != false {
-		t.Errorf("Expected Agent to be false, got %t", c.Agent)
+	if c.Agent.False() != true {
+		t.Errorf("Expected Agent to be false, got %t", c.Agent.True())
 	}
 }
 
@@ -106,7 +106,7 @@ func TestPacketQueueSupportForNetworkAdapters(t *testing.T) {
 func TestVMandTemplateName(t *testing.T) {
 	dnsnametests := []struct {
 		expectedToFail bool
-		name          string
+		name           string
 	}{
 		{expectedToFail: false, name: "packer"},
 		{expectedToFail: false, name: "pac.ker"},

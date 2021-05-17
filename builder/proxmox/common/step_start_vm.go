@@ -33,7 +33,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 	c := state.Get("config").(*Config)
 
 	agent := 1
-	if c.Agent == false {
+	if c.Agent.False() {
 		agent = 0
 	}
 
