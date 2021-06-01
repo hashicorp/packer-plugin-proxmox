@@ -1,0 +1,196 @@
+orbs:
+  win: circleci/windows@1.0.0
+
+version: 2.1
+
+executors:
+  golang:
+    docker:
+      - image: docker.mirror.hashicorp.services/circleci/golang:1.16
+    resource_class: medium+
+  darwin:
+    macos:
+      xcode: "12.0.0"
+
+commands:
+  install-go-run-tests-unix:
+    parameters:
+      GOOS:
+        type: string
+      GOVERSION:
+        type: string
+      HOME:
+        type: string
+        default: "~"
+    steps:
+      - checkout
+      - run: curl https://dl.google.com/go/go<< parameters.GOVERSION >>.<< parameters.GOOS >>-amd64.tar.gz | tar -C << parameters.HOME >>/ -xz
+      - run: << parameters.HOME >>/go/bin/go test ./... -coverprofile=coverage.txt  -covermode=atomic
+  install-go-run-tests-windows:
+    parameters:
+      GOVERSION:
+        type: string
+    steps:
+      - checkout
+      - run: curl https://dl.google.com/go/go<< parameters.GOVERSION >>.windows-amd64.zip --output ~/go<< parameters.GOVERSION >>.windows-amd64.zip
+      - run: unzip ~/go<< parameters.GOVERSION >>.windows-amd64.zip -d ~/
+      - run: ~/go/bin/go test ./... -coverprofile=coverage.txt  -covermode=atomic
+  build-and-persist-plugin-binary:
+    parameters:
+      GOOS:
+        type: string
+      GOARCH:
+        default: "amd64"
+        type: string
+    steps:
+      - checkout
+      - run: GOOS=<< parameters.GOOS >> GOARCH=<<parameters.GOARCH>> go build -o ./pkg/packer_plugin_proxmox_<< parameters.GOOS >>_<< parameters.GOARCH >> .
+      - run: zip ./pkg/packer_plugin_proxmox_<< parameters.GOOS >>_<< parameters.GOARCH >>.zip ./pkg/packer_plugin_proxmox_<< parameters.GOOS >>_<< parameters.GOARCH >>
+      - run: rm ./pkg/packer_plugin_proxmox_<< parameters.GOOS >>_<< parameters.GOARCH >>
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./pkg/
+
+# Golang CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-go/ for more details
+jobs:
+  test-linux:
+    executor: golang
+    working_directory: /go/src/github.com/hashicorp/packer-plugin-proxmox
+    steps:
+      - checkout
+      - run: go test -count 1 ./... -coverprofile=coverage.txt -covermode=atomic -timeout=3m
+  test-darwin:
+    executor: darwin
+    working_directory: ~/go/github.com/hashicorp/packer-plugin-proxmox
+    steps:
+      - install-go-run-tests-unix:
+          GOOS: darwin
+          GOVERSION: "1.16"
+  test-windows:
+    executor:
+      name: win/vs2019
+      shell: bash.exe
+    steps:
+      - install-go-run-tests-windows:
+          GOVERSION: "1.16"
+  check-lint:
+    executor: golang
+    steps:
+      - checkout
+      - run: git fetch --all
+      - run:
+          command: |
+            echo "==> Updating linter dependencies..."
+            curl -sSfL -q https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.23.8
+            echo "==> Running linter on newly added Go source files..."
+            GO111MODULE=on golangci-lint run --new-from-rev=$(shell git merge-base origin/main HEAD) ./...
+          no_output_timeout: 30m
+  check-fmt:
+    executor: golang
+    steps:
+      - checkout
+      - run: |
+          go fmt ./...
+          echo "==> Checking that code complies with go fmt requirements..."
+          git diff --exit-code; if [ $$? -eq 1 ]; then \
+          echo "Found files that are not fmt'ed."; \
+          echo "You can use the command: \`go fmt ./...\` to reformat code."; \
+          exit 1; \
+          fi
+  check-generate:
+    executor: golang
+    working_directory: /go/src/github.com/hashicorp/packer-plugin-proxmox
+    steps:
+      - checkout
+      - run: |
+          make generate
+          echo "==> Checking that auto-generated code is not changed..."
+          git diff --exit-code; if [ $$? -eq 1 ]; then \
+              echo "Found diffs in go generated code."; \
+              echo "You can use the command: \`make generate\` to reformat code."; \
+              exit 1; \
+          fi
+  build_linux:
+    executor: golang
+    steps:
+      - build-and-persist-plugin-binary:
+          GOOS: linux
+  build_windows:
+    executor: golang
+    working_directory: /go/src/github.com/hashicorp/packer-plugin-proxmox
+    steps:
+      - build-and-persist-plugin-binary:
+          GOOS: windows
+  build_darwin:
+    executor: golang
+    working_directory: /go/src/github.com/hashicorp/packer-plugin-proxmox
+    steps:
+      - build-and-persist-plugin-binary:
+          GOOS: darwin
+  build_darwin_arm64:
+    executor: golang
+    working_directory: /go/src/github.com/hashicorp/packer-plugin-proxmox
+    steps:
+      - build-and-persist-plugin-binary:
+          GOOS: darwin
+          GOARCH: arm64
+  build_freebsd:
+    executor: golang
+    working_directory: /go/src/github.com/hashicorp/packer-plugin-proxmox
+    steps:
+      - build-and-persist-plugin-binary:
+          GOOS: freebsd
+  build_solaris:
+    executor: golang
+    working_directory: /go/src/github.com/hashicorp/packer-plugin-proxmox
+    steps:
+      - build-and-persist-plugin-binary:
+          GOOS: solaris
+  build_openbsd:
+    executor: golang
+    working_directory: /go/src/github.com/hashicorp/packer-plugin-proxmox
+    steps:
+      - build-and-persist-plugin-binary:
+          GOOS: openbsd
+  store_artifacts:
+    executor: golang
+    steps:
+      - attach_workspace:
+          at: .
+      - store_artifacts:
+          path: ./pkg/
+          destination: /
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test-linux
+      - test-darwin
+      - test-windows
+  check-code:
+    jobs:
+      - check-lint
+      - check-fmt
+      - check-generate
+  build_plugin_binaries:
+    jobs:
+      - build_linux
+      - build_darwin
+      - build_darwin_arm64
+      - build_windows
+      - build_freebsd
+      - build_openbsd
+      - build_solaris
+      - store_artifacts:
+          requires:
+            - build_linux
+            - build_darwin
+            - build_darwin_arm64
+            - build_windows
+            - build_freebsd
+            - build_openbsd
+            - build_solaris
