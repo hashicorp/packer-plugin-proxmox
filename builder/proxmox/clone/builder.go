@@ -58,10 +58,19 @@ func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQ
 	config.FullClone = &fullClone
 	config.CIuser = comm.SSHUsername
 	config.Sshkeys = string(comm.SSHPublicKey)
-	sourceVmr, err := client.GetVmRefByName(c.CloneVM)
+	sourceVmrs, err := client.GetVmRefsByName(c.CloneVM)
 	if err != nil {
 		return err
 	}
+
+	// prefer source Vm located on same node
+	sourceVmr := sourceVmrs[0]
+	for _, candVmr := range sourceVmrs {
+		if candVmr.Node() == vmRef.Node() {
+			sourceVmr = candVmr
+		}
+	}
+
 	err = config.CloneVm(sourceVmr, vmRef, client)
 	if err != nil {
 		return err
