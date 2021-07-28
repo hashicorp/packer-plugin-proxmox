@@ -11,10 +11,10 @@ contribute to the project, read on. This document will cover what we're looking
 for. By addressing all the points we're looking for, it raises the chances we
 can quickly merge or address your contributions.
 
-When contributing in any way to the Packer project (new issue, PR, etc), please 
-be aware that our team identifies with many gender pronouns. Please remember to 
-use nonbinary pronouns (they/them) and gender neutral language ("Hello folks") 
-when addressing our team. For more reading on our code of conduct, please see the 
+When contributing in any way to the Packer project (new issue, PR, etc), please
+be aware that our team identifies with many gender pronouns. Please remember to
+use nonbinary pronouns (they/them) and gender neutral language ("Hello folks")
+when addressing our team. For more reading on our code of conduct, please see the
 [HashiCorp community guidelines](https://www.hashicorp.com/community-guidelines).
 
 ## Issues
@@ -53,7 +53,7 @@ when addressing our team. For more reading on our code of conduct, please see th
    linked.
 
 5. Sometimes, if you have a specialized environment or use case, the maintainers
-   may ask for your help testing the patch. 
+   may ask for your help testing the patch.
 
 6. The issue is closed.
 
@@ -80,9 +80,9 @@ adjust them for Windows or other shells.
    `$GOPATH/src/github.com/hashicorp/packer-plugin-proxmox`.
 
 2. When working on the Proxmox plugin, first `cd $GOPATH/src/github.com/hashicorp/packer-plugin-proxmox`
-   so you can run `make dev` and easily access other files. `make dev` will build the packer-plugin-proxmox binary and install it under `$HOME/.packer.d/plugins/`.  
+   so you can run `make dev` and easily access other files. `make dev` will build the packer-plugin-proxmox binary and install it under `$HOME/.packer.d/plugins/`.
 
-3. Make your changes to the Proxmox plugin source. You can run `make dev` to build and install locally, and `make test` to run unit tests. 
+3. Make your changes to the Proxmox plugin source. You can run `make dev` to build and install locally, and `make test` to run unit tests.
    Any compilation errors will be shown when the binaries are rebuilding. If you don't have `make` you can simply run `go build -o packer-plugin-proxmox` from the project root, and `mv packer-plugin-proxmox ~/.packer.d/plugins/packer-plugin-proxmox` to install the plugin.
 
 4. After building the Proxmox plugin successfully, use the latest version of Packer to build a machine and verify your changes. In the [example folder](https://github.com/hashicorp/packer-plugin-proxmox/blob/main/example) we provide a basic template. Comment out the `packer {}` block to force Packer use the development binary installed in the previous step.
@@ -225,16 +225,18 @@ does not attempt to track the latest version for each dependency.
 
 #### HCL2 Spec code generation
 
-Packer relies on `go generate` to generate HCL2's bridging code. First you should install the command with `go install github.com/hashicorp/packer/cmd/mapstructure-to-hcl2`, then you generate with 
+Packer relies on `go generate` to generate HCL2's bridging code. First you should install the command with `go install github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@latest`, then you generate with
 `go generate ./...`. This should update/create `*.hcl2spec.go` file(s).
 
 #### Running Unit Tests
 
-You can run tests for individual packages using commands like this:
+To run unit tests, simply call
 
 ```
-make test TEST=./builder/ebs/...
+make test
 ```
+
+from the plugin's project root.
 
 #### Running Builder Acceptance Tests
 
@@ -252,7 +254,7 @@ resources are not accidentally destroyed or overwritten during testing.
 To run the acceptance tests, invoke `make testacc`:
 
 ```
-make testacc TEST=./builder/ebs
+make testacc
 ...
 ```
 

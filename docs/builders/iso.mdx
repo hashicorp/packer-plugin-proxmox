@@ -213,7 +213,7 @@ builder.
 - `onboot` (boolean) - Specifies whether a VM will be started during system
   bootup. Defaults to `false`.
 
-- `qemu_agent` (boolean) - Disables QEMU Agent option for this VM. When enabled,
+- `qemu_agent` (boolean) - Enables QEMU Agent option for this VM. When enabled,
   then `qemu-guest-agent` must be installed on the guest. When disabled, then
   `ssh_host` should be used. Defaults to `true`.
 
@@ -221,7 +221,7 @@ builder.
 
 - `scsi_controller` (string) - The SCSI controller model to emulate. Can be `lsi`,
   `lsi53c810`, `virtio-scsi-pci`, `virtio-scsi-single`, `megasas`, or `pvscsi`.
-  Defaults to `lsi`.
+  Defaults to `lsi`.f
 
 - `cloud_init` (bool) - If true, add a Cloud-Init CDROM drive after the virtual machine has been converted to a template.
   Defaults to `false`.
@@ -247,7 +247,7 @@ builder.
     `sataX` or `scsiX`.
     For `ide` the bus index ranges from 0 to 3, for `sata` form 0 to 5 and for
     `scsi` from 0 to 30.
-    Defaults to `ide3` since `ide2` is generelly the boot drive.
+    Defaults to `ide3` since `ide2` is generally the boot drive.
 
   - `iso_file` (string) - Path to the ISO file to boot from, expressed as a
     proxmox datastore path, for example

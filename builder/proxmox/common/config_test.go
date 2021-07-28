@@ -53,8 +53,8 @@ func TestAgentSetToFalse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if c.Agent != false {
-		t.Errorf("Expected Agent to be false, got %t", c.Agent)
+	if c.Agent.False() != true {
+		t.Errorf("Expected Agent to be false, got %t", c.Agent.True())
 	}
 }
 
@@ -89,6 +89,36 @@ func TestPacketQueueSupportForNetworkAdapters(t *testing.T) {
 
 		cfg := mandatoryConfig(t)
 		cfg["network_adapters"] = devices
+
+		var c Config
+		_, _, err := c.Prepare(&c, cfg)
+
+		if tt.expectedToFail == true && err == nil {
+			t.Error("expected config preparation to fail, but no error occured")
+		}
+
+		if tt.expectedToFail == false && err != nil {
+			t.Errorf("expected config preparation to succeed, but %s", err.Error())
+		}
+	}
+}
+
+func TestVMandTemplateName(t *testing.T) {
+	dnsnametests := []struct {
+		expectedToFail bool
+		name           string
+	}{
+		{expectedToFail: false, name: "packer"},
+		{expectedToFail: false, name: "pac.ker"},
+		{expectedToFail: true, name: "pac_ker"},
+		{expectedToFail: true, name: "pac ker"},
+	}
+
+	for _, tt := range dnsnametests {
+
+		cfg := mandatoryConfig(t)
+		cfg["vm_name"] = tt.name
+		cfg["template_name"] = tt.name
 
 		var c Config
 		_, _, err := c.Prepare(&c, cfg)
