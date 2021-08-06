@@ -85,6 +85,7 @@ type FlatConfig struct {
 	Token                     *string                            `mapstructure:"token" cty:"token" hcl:"token"`
 	Node                      *string                            `mapstructure:"node" cty:"node" hcl:"node"`
 	Pool                      *string                            `mapstructure:"pool" cty:"pool" hcl:"pool"`
+	TaskTimeout               *string                            `mapstructure:"task_timeout" cty:"task_timeout" hcl:"task_timeout"`
 	VMName                    *string                            `mapstructure:"vm_name" cty:"vm_name" hcl:"vm_name"`
 	VMID                      *int                               `mapstructure:"vm_id" cty:"vm_id" hcl:"vm_id"`
 	Boot                      *string                            `mapstructure:"boot" cty:"boot" hcl:"boot"`
@@ -202,6 +203,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"token":                        &hcldec.AttrSpec{Name: "token", Type: cty.String, Required: false},
 		"node":                         &hcldec.AttrSpec{Name: "node", Type: cty.String, Required: false},
 		"pool":                         &hcldec.AttrSpec{Name: "pool", Type: cty.String, Required: false},
+		"task_timeout":                 &hcldec.AttrSpec{Name: "task_timeout", Type: cty.String, Required: false},
 		"vm_name":                      &hcldec.AttrSpec{Name: "vm_name", Type: cty.String, Required: false},
 		"vm_id":                        &hcldec.AttrSpec{Name: "vm_id", Type: cty.Number, Required: false},
 		"boot":                         &hcldec.AttrSpec{Name: "boot", Type: cty.String, Required: false},
