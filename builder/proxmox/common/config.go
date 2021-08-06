@@ -40,6 +40,7 @@ type Config struct {
 	Token              string `mapstructure:"token"`
 	Node               string `mapstructure:"node"`
 	Pool               string `mapstructure:"pool"`
+	TaskTimeout        time.Duration `mapstructure:"task_timeout"`
 
 	VMName string `mapstructure:"vm_name"`
 	VMID   int    `mapstructure:"vm_id"`
@@ -142,6 +143,9 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 	}
 	if c.Token == "" {
 		c.Token = os.Getenv("PROXMOX_TOKEN")
+	}
+	if c.TaskTimeout == 0 {
+		c.TaskTimeout = 60 * time.Second
 	}
 	if c.BootKeyInterval == 0 && os.Getenv(bootcommand.PackerKeyEnv) != "" {
 		var err error
