@@ -68,6 +68,9 @@ in the image's Cloud-Init settings for provisioning.
 
 - `insecure_skip_tls_verify` (bool) - Skip validating the certificate.
 
+- `task_timeout` (duration string | ex: "10m") - The timeout for
+  Promox API operations, e.g. clones. Defaults to 1 minute.
+
 - `pool` (string) - Name of resource pool to create virtual machine in.
 
 - `vm_name` (string) - Name of the virtual machine during creation. If not
