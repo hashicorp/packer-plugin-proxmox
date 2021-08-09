@@ -3,19 +3,16 @@ package proxmox
 import (
 	"crypto/tls"
 	"log"
-	"time"
 
 	"github.com/Telmate/proxmox-api-go/proxmox"
 )
-
-const defaultTaskTimeout = 30 * time.Second
 
 func newProxmoxClient(config Config) (*proxmox.Client, error) {
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: config.SkipCertValidation,
 	}
 
-	client, err := proxmox.NewClient(config.proxmoxURL.String(), nil, tlsConfig, int(defaultTaskTimeout.Seconds()))
+	client, err := proxmox.NewClient(config.proxmoxURL.String(), nil, tlsConfig, int(config.TaskTimeout.Seconds()))
 	if err != nil {
 		return nil, err
 	}
