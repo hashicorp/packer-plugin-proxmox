@@ -1,3 +1,8 @@
+
+## 1.0.1 (June 14, 2021)
+
+* Allow user to specify task_timeout [GH-#2]
+
 ## 1.0.0 (June 14, 2021)
 
 ### Enhancements:
