@@ -34,12 +34,12 @@ type Config struct {
 
 	ProxmoxURLRaw      string `mapstructure:"proxmox_url"`
 	proxmoxURL         *url.URL
-	SkipCertValidation bool   `mapstructure:"insecure_skip_tls_verify"`
-	Username           string `mapstructure:"username"`
-	Password           string `mapstructure:"password"`
-	Token              string `mapstructure:"token"`
-	Node               string `mapstructure:"node"`
-	Pool               string `mapstructure:"pool"`
+	SkipCertValidation bool          `mapstructure:"insecure_skip_tls_verify"`
+	Username           string        `mapstructure:"username"`
+	Password           string        `mapstructure:"password"`
+	Token              string        `mapstructure:"token"`
+	Node               string        `mapstructure:"node"`
+	Pool               string        `mapstructure:"pool"`
 	TaskTimeout        time.Duration `mapstructure:"task_timeout"`
 
 	VMName string `mapstructure:"vm_name"`
