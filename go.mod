@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/packer-plugin-sdk v0.2.2
 	github.com/mitchellh/mapstructure v1.4.0
 	github.com/stretchr/testify v1.7.0
-	github.com/zclconf/go-cty v1.8.3
+	github.com/zclconf/go-cty v1.9.1
 )
 
 require (
