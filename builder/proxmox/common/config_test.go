@@ -132,3 +132,88 @@ func TestVMandTemplateName(t *testing.T) {
 		}
 	}
 }
+
+func TestAdditionalISOs(t *testing.T) {
+	additionalisotests := []struct {
+		name               string
+		expectedToFail     bool
+		additionalISOFiles map[string]interface{}
+	}{
+		{
+			name:           "missing ISO definition should error",
+			expectedToFail: true,
+			additionalISOFiles: map[string]interface{}{
+				"device": "ide1",
+			},
+		},
+		{
+			name:           "missing iso_storage_pool should error",
+			expectedToFail: true,
+			additionalISOFiles: map[string]interface{}{
+				"device": "ide1",
+				"cd_files": []string{
+					"config_test.go",
+				},
+			},
+		},
+		{
+			name:           "cd_files valid should succeed",
+			expectedToFail: false,
+			additionalISOFiles: map[string]interface{}{
+				"device": "ide1",
+				"cd_files": []string{
+					"config_test.go",
+				},
+				"iso_storage_pool": "local",
+			},
+		},
+		{
+			name:           "cd_content valid should succeed",
+			expectedToFail: false,
+			additionalISOFiles: map[string]interface{}{
+				"device": "ide1",
+				"cd_content": map[string]string{
+					"test": "config_test.go",
+				},
+				"iso_storage_pool": "local",
+			},
+		},
+		{
+			name:           "iso_url valid should succeed",
+			expectedToFail: false,
+			additionalISOFiles: map[string]interface{}{
+				"device":           "ide1",
+				"iso_url":          "http://example.com",
+				"iso_checksum":     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+				"iso_storage_pool": "local",
+			},
+		},
+		{
+			name:           "iso_file valid should succeed",
+			expectedToFail: false,
+			additionalISOFiles: map[string]interface{}{
+				"device":   "ide1",
+				"iso_file": "local:iso/test.iso",
+			},
+		},
+	}
+
+	for _, c := range additionalisotests {
+		t.Run(c.name, func(t *testing.T) {
+			cfg := mandatoryConfig(t)
+			cfg["additional_iso_files"] = c.additionalISOFiles
+
+			var config Config
+			_, _, err := config.Prepare(&config, cfg)
+
+			if c.expectedToFail == true && err == nil {
+				t.Error("expected config preparation to fail, but no error occured")
+			}
+
+			if c.expectedToFail == false && err != nil {
+				t.Errorf("expected config preparation to succeed, but %s", err.Error())
+			}
+		})
+	}
+
+}

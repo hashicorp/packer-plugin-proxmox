@@ -253,16 +253,81 @@ builder.
   - `iso_file` (string) - Path to the ISO file to boot from, expressed as a
     proxmox datastore path, for example
     `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
-    Either `iso_file` OR `iso_url` must be specifed.
+    Either `iso_file` OR `iso_url` OR `cd_files` must be specifed.
 
   - `iso_url` (string) - URL to an ISO file to upload to Proxmox, and then
-    boot from. Either `iso_file` OR `iso_url` must be specifed.
+    boot from. Either `iso_file` OR `iso_url` OR `cd_files` must be specifed.
 
   - `iso_storage_pool` (string) - Proxmox storage pool onto which to upload
     the ISO file.
 
   - `iso_checksum` (string) - Checksum of the ISO file.
   - `unmount` (bool) - If true, remove the mounted ISO from the template after finishing. Defaults to `false`.
+
+  ### Optional
+    - `cd_files` ([]string) - A list of files to place onto a CD that is attached when the VM is
+      booted. This can include either files or directories; any directories
+      will be copied onto the CD recursively, preserving directory structure
+      hierarchy. Symlinks will have the link's target copied into the directory
+      tree on the CD where the symlink was. File globbing is allowed. Overrides 
+      any of `iso_file` or `iso_url` set. Requires `iso_storage_pool` to be set
+      
+      Usage example (JSON):
+      
+      ```json
+      "cd_files": ["./somedirectory/meta-data", "./somedirectory/user-data"],
+      "cd_label": "cidata",
+      ```
+      
+      Usage example (HCL):
+      
+      ```hcl
+      cd_files = ["./somedirectory/meta-data", "./somedirectory/user-data"]
+      cd_label = "cidata"
+      ```
+      
+      The above will create a CD with two files, user-data and meta-data in the
+      CD root. This specific example is how you would create a CD that can be
+      used for an Ubuntu 20.04 autoinstall.
+      
+      Since globbing is also supported,
+      
+      ```hcl
+      cd_files = ["./somedirectory/*"]
+      cd_label = "cidata"
+      ```
+      
+      Would also be an acceptable way to define the above cd. The difference
+      between providing the directory with or without the glob is whether the
+      directory itself or its contents will be at the CD root.
+      
+      Use of this option assumes that you have a command line tool installed
+      that can handle the iso creation. Packer will use one of the following
+      tools:
+      
+        * xorriso
+        * mkisofs
+        * hdiutil (normally found in macOS)
+        * oscdimg (normally found in Windows as part of the Windows ADK)
+
+    
+    - `cd_content` (map[string]string) - Key/Values to add to the CD. The keys represent the paths, and the values
+      contents. It can be used alongside `cd_files`, which is useful to add large
+      files without loading them into memory. If any paths are specified by both,
+      the contents in `cd_content` will take precedence.
+      
+      Usage example (HCL):
+      
+      ```hcl
+      cd_files = ["vendor-data"]
+      cd_content = {
+        "meta-data" = jsonencode(local.instance_data)
+        "user-data" = templatefile("user-data", { packages = ["nginx"] })
+      }
+      cd_label = "cidata"
+      ```
+
+    - `cd_label` (string) - CD Label
 
 - `http_interface` - (string) - Name of the network interface that Packer gets
   `HTTPIP` from. Defaults to the first non loopback interface.
