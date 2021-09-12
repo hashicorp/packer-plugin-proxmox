@@ -45,22 +45,22 @@ type Config struct {
 	VMName string `mapstructure:"vm_name"`
 	VMID   int    `mapstructure:"vm_id"`
 
-	Boot           string          `mapstructure:"boot"`
-	Memory         int             `mapstructure:"memory"`
-	Cores          int             `mapstructure:"cores"`
-	CPUType        string          `mapstructure:"cpu_type"`
-	Sockets        int             `mapstructure:"sockets"`
-	OS             string          `mapstructure:"os"`
-	BIOS           string          `mapstructure:"bios"`
-	EFIDisk        string          `mapstructure:"efidisk"`
-	Machine        string          `mapstructure:"machine"`
-	VGA            vgaConfig       `mapstructure:"vga"`
-	NICs           []nicConfig     `mapstructure:"network_adapters"`
-	Disks          []diskConfig    `mapstructure:"disks"`
-	Agent          config.Trilean  `mapstructure:"qemu_agent"`
-	SCSIController string          `mapstructure:"scsi_controller"`
-	Onboot         bool            `mapstructure:"onboot"`
-	DisableKVM     bool            `mapstructure:"disable_kvm"`
+	Boot           string         `mapstructure:"boot"`
+	Memory         int            `mapstructure:"memory"`
+	Cores          int            `mapstructure:"cores"`
+	CPUType        string         `mapstructure:"cpu_type"`
+	Sockets        int            `mapstructure:"sockets"`
+	OS             string         `mapstructure:"os"`
+	BIOS           string         `mapstructure:"bios"`
+	EFIDisk        string         `mapstructure:"efidisk"`
+	Machine        string         `mapstructure:"machine"`
+	VGA            vgaConfig      `mapstructure:"vga"`
+	NICs           []nicConfig    `mapstructure:"network_adapters"`
+	Disks          []diskConfig   `mapstructure:"disks"`
+	Agent          config.Trilean `mapstructure:"qemu_agent"`
+	SCSIController string         `mapstructure:"scsi_controller"`
+	Onboot         bool           `mapstructure:"onboot"`
+	DisableKVM     bool           `mapstructure:"disable_kvm"`
 
 	TemplateName        string `mapstructure:"template_name"`
 	TemplateDescription string `mapstructure:"template_description"`
