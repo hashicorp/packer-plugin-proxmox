@@ -272,6 +272,12 @@ builder.
 - `boot` - (string) - Override default boot order. Format example `order=virtio0;ide2;net0`.
   Prior to Proxmox 6.2-15 the format was `cdn` (c:CDROM -> d:Disk -> n:Network)
 
+- `bios` - (string) - Set the machine bios. This can be set to ovmf or seabios. The default value is seabios.
+
+- `efidisk` - (string) - Set the efidisk storage location. This need to be set if you use ovmf uefi boot
+
+- `machine` - (string) - Set themachine type. i440fx or q35.
+
 ## Boot Command
 
 The `boot_command` configuration is very important: it specifies the keys to

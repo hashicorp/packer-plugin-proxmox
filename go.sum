@@ -42,8 +42,13 @@ github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym
 github.com/ChrisTrenkamp/goxpath v0.0.0-20170922090931-c385f95c6022 h1:y8Gs8CzNfDF5AZvjr+5UyGQvQEBL7pwo+v+wX6q9JI8=
 github.com/ChrisTrenkamp/goxpath v0.0.0-20170922090931-c385f95c6022/go.mod h1:nuWgzSkT5PnyOd+272uUmV0dnAnAn42Mk7PiQC5VzN4=
 github.com/DataDog/datadog-go v2.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
-github.com/Telmate/proxmox-api-go v0.0.0-20210402150908-b9cc6607c070 h1:Up56ddjq6/wc46Ng+MDQYuDqVDHQMmbV+q8qSUImask=
-github.com/Telmate/proxmox-api-go v0.0.0-20210402150908-b9cc6607c070/go.mod h1:ayPkdmEKnlssqLQ9K1BE1jlsaYhXVwkoduXI30oQF0I=
+github.com/NaverCloudPlatform/ncloud-sdk-go-v2 v1.1.0/go.mod h1:P+3VS0ETiQPyWOx3vB/oeC8J3qd7jnVZLYAFwWgGRt8=
+github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d/go.mod h1:3eOhrUMpNV+6aFIbp5/iudMxNCF27Vw2OZgy4xEx0Fg=
+github.com/Telmate/proxmox-api-go v0.0.0-20200715182505-ec97c70ba887/go.mod h1:OGWyIMJ87/k/GCz8CGiWB2HOXsOVDM6Lpe/nFPkC4IQ=
+github.com/Telmate/proxmox-api-go v0.0.0-20210331182840-ff89a0cebcfa/go.mod h1:ayPkdmEKnlssqLQ9K1BE1jlsaYhXVwkoduXI30oQF0I=
+github.com/Telmate/proxmox-api-go v0.0.0-20210804143723-a6998deceba2 h1:Zp/nKTHow4OawYvMRDSe3EUoxUf206k/1POU4JXtQAY=
+github.com/Telmate/proxmox-api-go v0.0.0-20210804143723-a6998deceba2/go.mod h1:keBhXWLa+UBajvf79xvKcfiqeIc7vZL9wOqxuy1CBGw=
+github.com/abdullin/seq v0.0.0-20160510034733-d5467c17e7af/go.mod h1:5Jv4cbFiHJMsVxt52+i0Ha45fjshj6wxYr1r19tB9bw=
 github.com/agext/levenshtein v1.2.1 h1:QmvMAjj2aEICytGiWzmxoE0x2KZvE0fvmqMOfy2tjT8=
 github.com/agext/levenshtein v1.2.1/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/antchfx/xpath v1.1.11 h1:WOFtK8TVAjLm3lbgqeP0arlHpvCEeTANeWZ/csPpJkQ=
