@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/Telmate/proxmox-api-go/proxmox"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -26,6 +27,10 @@ type vmStarter interface {
 	StartVm(*proxmox.VmRef) (string, error)
 	SetVmConfig(*proxmox.VmRef, map[string]interface{}) (interface{}, error)
 }
+
+var (
+	maxDuplicateIDRetries = 3
+)
 
 func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packersdk.Ui)
@@ -64,26 +69,39 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		Onboot:       c.Onboot,
 	}
 
-	if c.VMID == 0 {
-		ui.Say("No VM ID given, getting next free from Proxmox")
-		id, err := client.GetNextID(0)
-		if err != nil {
-			state.Put("error", err)
-			ui.Error(err.Error())
-			return multistep.ActionHalt
+	var vmRef *proxmox.VmRef
+	for i := 1; ; i++ {
+		id := c.VMID
+		if id == 0 {
+			ui.Say("No VM ID given, getting next free from Proxmox")
+			genID, err := client.GetNextID(0)
+			if err != nil {
+				state.Put("error", err)
+				ui.Error(err.Error())
+				return multistep.ActionHalt
+			}
+			id = genID
+			config.VmID = genID
 		}
-		c.VMID = id
-		config.VmID = id
-	}
-	vmRef := proxmox.NewVmRef(c.VMID)
-	vmRef.SetNode(c.Node)
-	if c.Pool != "" {
-		vmRef.SetPool(c.Pool)
-	}
+		vmRef = proxmox.NewVmRef(id)
+		vmRef.SetNode(c.Node)
+		if c.Pool != "" {
+			vmRef.SetPool(c.Pool)
+		}
 
-	err := s.vmCreator.Create(vmRef, config, state)
-	if err != nil {
-		err := fmt.Errorf("Error creating VM: %s", err)
+		err := s.vmCreator.Create(vmRef, config, state)
+		if err == nil {
+			break
+		}
+
+		// If there's no explicitly configured VMID, and the error is caused
+		// by a race condition in someone else using the ID we just got
+		// generated, we'll retry up to maxDuplicateIDRetries times.
+		if c.VMID == 0 && isDuplicateIDError(err) && i < maxDuplicateIDRetries {
+			ui.Say("Generated VM ID was already allocated, retrying")
+			continue
+		}
+		err = fmt.Errorf("Error creating VM: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
 		return multistep.ActionHalt
@@ -114,7 +132,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 	state.Put("instance_id", vmRef.VmId())
 
 	ui.Say("Starting VM")
-	_, err = client.StartVm(vmRef)
+	_, err := client.StartVm(vmRef)
 	if err != nil {
 		err := fmt.Errorf("Error starting VM: %s", err)
 		state.Put("error", err)
@@ -172,6 +190,10 @@ func setDeviceParamIfDefined(dev proxmox.QemuDevice, key, value string) {
 	if value != "" {
 		dev[key] = value
 	}
+}
+
+func isDuplicateIDError(err error) bool {
+	return strings.Contains(err.Error(), "already exists on node")
 }
 
 type startedVMCleaner interface {
