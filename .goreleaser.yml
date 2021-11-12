@@ -10,18 +10,13 @@ before:
     # As part of the release doc files are included as a separate deliverable for
     # consumption by Packer.io. To include a separate docs.zip uncomment the following command.
     - make ci-release-docs
+    # Check plugin compatibility with required version of the Packer SDK
+    - make plugin-check
 builds:
   # A separated build to run the packer-plugins-check only once for a linux_amd64 binary
   -
     id: plugin-check
     mod_timestamp: '{{ .CommitTimestamp }}'
-    hooks:
-      post:
-        # This will check plugin compatibility against latest version of Packer
-        - cmd: |
-            go install github.com/hashicorp/packer/cmd/packer-plugins-check@latest &&
-            packer-plugins-check -load={{ .Name }}
-          dir: "{{ dir .Path}}"
     flags:
       - -trimpath #removes all file system paths from the compiled executable
     ldflags:
