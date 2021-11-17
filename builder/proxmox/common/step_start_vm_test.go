@@ -112,6 +112,7 @@ type startVMMock struct {
 	create      func(*proxmox.VmRef, proxmox.ConfigQemu, multistep.StateBag) error
 	startVm     func(*proxmox.VmRef) (string, error)
 	setVmConfig func(*proxmox.VmRef, map[string]interface{}) (interface{}, error)
+	getNextID   func(id int) (int, error)
 }
 
 func (m *startVMMock) Create(vmRef *proxmox.VmRef, config proxmox.ConfigQemu, state multistep.StateBag) error {
@@ -123,8 +124,8 @@ func (m *startVMMock) StartVm(vmRef *proxmox.VmRef) (string, error) {
 func (m *startVMMock) SetVmConfig(vmRef *proxmox.VmRef, config map[string]interface{}) (interface{}, error) {
 	return m.setVmConfig(vmRef, config)
 }
-func (m *startVMMock) GetNextID(int) (int, error) {
-	return 1, nil
+func (m *startVMMock) GetNextID(id int) (int, error) {
+	return m.getNextID(id)
 }
 
 func TestStartVM(t *testing.T) {
@@ -170,6 +171,9 @@ func TestStartVM(t *testing.T) {
 				setVmConfig: func(*proxmox.VmRef, map[string]interface{}) (interface{}, error) {
 					return nil, nil
 				},
+				getNextID: func(id int) (int, error) {
+					return 1, nil
+				},
 			}
 			state := new(multistep.BasicStateBag)
 			state.Put("ui", packersdk.TestUi(t))
@@ -180,6 +184,96 @@ func TestStartVM(t *testing.T) {
 			action := s.Run(context.TODO(), state)
 			if action != c.expectedAction {
 				t.Errorf("Expected action %s, got %s", c.expectedAction, action)
+			}
+		})
+	}
+}
+
+func TestStartVMRetryOnDuplicateID(t *testing.T) {
+	newDuplicateError := func(id int) error {
+		return fmt.Errorf("unable to create VM %d - VM %d already exists on node 'test'", id, id)
+	}
+	cs := []struct {
+		name                  string
+		config                *Config
+		createErrorGenerator  func(id int) error
+		expectedCallsToCreate int
+		expectedAction        multistep.StepAction
+	}{
+		{
+			name:                  "Succeed immediately if non-duplicate",
+			config:                &Config{},
+			createErrorGenerator:  func(id int) error { return nil },
+			expectedCallsToCreate: 1,
+			expectedAction:        multistep.ActionContinue,
+		},
+		{
+			name:                  "Fail immediately if duplicate and VMID explicitly configured",
+			config:                &Config{VMID: 1},
+			createErrorGenerator:  func(id int) error { return newDuplicateError(id) },
+			expectedCallsToCreate: 1,
+			expectedAction:        multistep.ActionHalt,
+		},
+		{
+			name:                  "Fail immediately if error not caused by duplicate ID",
+			config:                &Config{},
+			createErrorGenerator:  func(id int) error { return fmt.Errorf("Something else went wrong") },
+			expectedCallsToCreate: 1,
+			expectedAction:        multistep.ActionHalt,
+		},
+		{
+			name:   "Retry if error caused by duplicate ID",
+			config: &Config{},
+			createErrorGenerator: func(id int) error {
+				if id < 2 {
+					return newDuplicateError(id)
+				}
+				return nil
+			},
+			expectedCallsToCreate: 2,
+			expectedAction:        multistep.ActionContinue,
+		},
+		{
+			name:   "Retry only up to maxDuplicateIDRetries times",
+			config: &Config{},
+			createErrorGenerator: func(id int) error {
+				return newDuplicateError(id)
+			},
+			expectedCallsToCreate: maxDuplicateIDRetries,
+			expectedAction:        multistep.ActionHalt,
+		},
+	}
+
+	for _, c := range cs {
+		t.Run(c.name, func(t *testing.T) {
+			createCalls := 0
+			mock := &startVMMock{
+				create: func(vmRef *proxmox.VmRef, config proxmox.ConfigQemu, state multistep.StateBag) error {
+					createCalls++
+					return c.createErrorGenerator(vmRef.VmId())
+				},
+				startVm: func(*proxmox.VmRef) (string, error) {
+					return "", nil
+				},
+				setVmConfig: func(*proxmox.VmRef, map[string]interface{}) (interface{}, error) {
+					return nil, nil
+				},
+				getNextID: func(id int) (int, error) {
+					return createCalls + 1, nil
+				},
+			}
+			state := new(multistep.BasicStateBag)
+			state.Put("ui", packersdk.TestUi(t))
+			state.Put("config", c.config)
+			state.Put("proxmoxClient", mock)
+			s := stepStartVM{vmCreator: mock}
+
+			action := s.Run(context.TODO(), state)
+			if action != c.expectedAction {
+				t.Errorf("Expected action %s, got %s", c.expectedAction, action)
+			}
+			if createCalls != c.expectedCallsToCreate {
+				t.Errorf("Expected %d calls to create, got %d", c.expectedCallsToCreate, createCalls)
 			}
 		})
 	}
