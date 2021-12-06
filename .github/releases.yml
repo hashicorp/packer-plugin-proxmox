@@ -13,10 +13,10 @@ changelog:
         - enhancement
     - title: Bug fixes🧑‍🔧 🐞
       labels:
-        - enhancement
+        - bug 
     - title: Doc improvements 📚
       labels:
-        - doc
+        - docs
         - documentation
     - title: Other Changes
       labels:
