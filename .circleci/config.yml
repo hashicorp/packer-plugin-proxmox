@@ -6,7 +6,7 @@ version: 2.1
 executors:
   golang:
     docker:
-      - image: docker.mirror.hashicorp.services/circleci/golang:1.17
+      - image: docker.mirror.hashicorp.services/cimg/go:1.17
     resource_class: medium+
   darwin:
     macos:
@@ -58,7 +58,7 @@ commands:
 jobs:
   test-linux:
     executor: golang
-    working_directory: /go/src/github.com/hashicorp/packer-plugin-proxmox
+    working_directory: ~/go/src/github.com/hashicorp/packer-plugin-proxmox
     steps:
       - checkout
       - run: go test -count 1 ./... -coverprofile=coverage.txt -covermode=atomic -timeout=3m
@@ -102,7 +102,7 @@ jobs:
           fi
   check-generate:
     executor: golang
-    working_directory: /go/src/github.com/hashicorp/packer-plugin-proxmox
+    working_directory: ~/go/src/github.com/hashicorp/packer-plugin-proxmox
     steps:
       - checkout
       - run: |
@@ -120,38 +120,38 @@ jobs:
           GOOS: linux
   build_windows:
     executor: golang
-    working_directory: /go/src/github.com/hashicorp/packer-plugin-proxmox
+    working_directory: ~/go/src/github.com/hashicorp/packer-plugin-proxmox
     steps:
       - build-and-persist-plugin-binary:
           GOOS: windows
   build_darwin:
     executor: golang
-    working_directory: /go/src/github.com/hashicorp/packer-plugin-proxmox
+    working_directory: ~/go/src/github.com/hashicorp/packer-plugin-proxmox
     steps:
       - build-and-persist-plugin-binary:
           GOOS: darwin
   build_darwin_arm64:
     executor: golang
-    working_directory: /go/src/github.com/hashicorp/packer-plugin-proxmox
+    working_directory: ~/go/src/github.com/hashicorp/packer-plugin-proxmox
     steps:
       - build-and-persist-plugin-binary:
           GOOS: darwin
           GOARCH: arm64
   build_freebsd:
     executor: golang
-    working_directory: /go/src/github.com/hashicorp/packer-plugin-proxmox
+    working_directory: ~/go/src/github.com/hashicorp/packer-plugin-proxmox
     steps:
       - build-and-persist-plugin-binary:
           GOOS: freebsd
   build_solaris:
     executor: golang
-    working_directory: /go/src/github.com/hashicorp/packer-plugin-proxmox
+    working_directory: ~/go/src/github.com/hashicorp/packer-plugin-proxmox
     steps:
       - build-and-persist-plugin-binary:
           GOOS: solaris
   build_openbsd:
     executor: golang
-    working_directory: /go/src/github.com/hashicorp/packer-plugin-proxmox
+    working_directory: ~/go/src/github.com/hashicorp/packer-plugin-proxmox
     steps:
       - build-and-persist-plugin-binary:
           GOOS: openbsd
