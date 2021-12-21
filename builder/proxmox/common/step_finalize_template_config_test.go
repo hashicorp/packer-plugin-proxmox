@@ -85,7 +85,7 @@ func TestTemplateFinalize(t *testing.T) {
 			expectedVMConfig: map[string]interface{}{
 				"name":        "my-template",
 				"description": "some-description",
-				"ide3":        "ceph01:cloudinit",
+				"ide0":        "ceph01:cloudinit",
 			},
 			expectedAction: multistep.ActionContinue,
 		},

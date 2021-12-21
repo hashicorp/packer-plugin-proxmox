@@ -55,7 +55,7 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 			}
 		}
 		if cloudInitStoragePool != "" {
-			ideControllers := []string{"ide3", "ide2", "ide1", "ide0"}
+			ideControllers := []string{"ide0", "ide1", "ide2", "ide3"}
 			cloudInitAttached := false
 			// find a free ide controller
 			for _, controller := range ideControllers {
