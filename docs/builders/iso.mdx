@@ -40,8 +40,9 @@ builder.
   Can also be set via the `PROXMOX_URL` environment variable.
 
 - `username` (string) - Username when authenticating to Proxmox, including
-  the realm. For example `user@pve` to use the local Proxmox realm.
-  When used with `token`, it would look like this: `user@pve!token`
+  the realm. For example `user@pve` to use the local Proxmox realm. When using
+  token authentication, the username must include the token id after an exclamation
+  mark. For example, `user@pve!tokenid`. 
   Can also be set via the `PROXMOX_USERNAME` environment variable.
 
 - `password` (string) - Password for the user.
