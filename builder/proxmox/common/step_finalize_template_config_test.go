@@ -36,7 +36,7 @@ func TestTemplateFinalize(t *testing.T) {
 		expectedAction      multistep.StepAction
 	}{
 		{
-			name:          "empty config changes only description",
+			name:          "empty config changes name and description",
 			builderConfig: &Config{},
 			initialVMConfig: map[string]interface{}{
 				"name":        "dummy",
@@ -45,9 +45,38 @@ func TestTemplateFinalize(t *testing.T) {
 			},
 			expectCallSetConfig: true,
 			expectedVMConfig: map[string]interface{}{
-				"name":        nil,
+				"name":        "",
 				"description": "",
 				"ide2":        nil,
+			},
+			expectedAction: multistep.ActionContinue,
+		},
+		{
+			name: "use VM name when template name not provided",
+			builderConfig: &Config{
+				VMName: "my-vm",
+			},
+			initialVMConfig: map[string]interface{}{
+				"name": "dummy",
+			},
+			expectCallSetConfig: true,
+			expectedVMConfig: map[string]interface{}{
+				"name": "my-vm",
+			},
+			expectedAction: multistep.ActionContinue,
+		},
+		{
+			name: "use template name when both VM name and template name are provided",
+			builderConfig: &Config{
+				VMName:       "my-vm",
+				TemplateName: "my-template",
+			},
+			initialVMConfig: map[string]interface{}{
+				"name": "dummy",
+			},
+			expectCallSetConfig: true,
+			expectedVMConfig: map[string]interface{}{
+				"name": "my-template",
 			},
 			expectedAction: multistep.ActionContinue,
 		},
