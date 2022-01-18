@@ -30,6 +30,7 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 
 	changes := make(map[string]interface{})
 
+	changes["name"] = c.VMName
 	if c.TemplateName != "" {
 		changes["name"] = c.TemplateName
 	}
