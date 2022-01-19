@@ -135,7 +135,8 @@ in the image's Cloud-Init settings for provisioning.
     `e1000-82544gc` or `e1000-82545em`. Defaults to `e1000`.
 
   - `mac_address` (string) - Give the adapter a specific MAC address. If
-    not set, defaults to a random MAC.
+    not set, defaults to a random MAC. If value is "repeatable", value of MAC
+    address is deterministic based on VM ID and NIC ID.
 
   - `vlan_tag` (string) - If the adapter should tag packets. Defaults to
     no tagging.
