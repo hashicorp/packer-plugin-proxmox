@@ -147,6 +147,31 @@ func TestAdditionalISOs(t *testing.T) {
 			},
 		},
 		{
+			name:           "cd_files and iso_file specified should fail",
+			expectedToFail: true,
+			additionalISOFiles: map[string]interface{}{
+				"device": "ide1",
+				"cd_files": []string{
+					"config_test.go",
+				},
+				"iso_file": "local:iso/test.iso",
+			},
+		},
+		{
+			name:           "cd_files, iso_file and iso_url specified should fail",
+			expectedToFail: true,
+			additionalISOFiles: map[string]interface{}{
+				"device": "ide1",
+				"cd_files": []string{
+					"config_test.go",
+				},
+				"iso_file":         "local:iso/test.iso",
+				"iso_url":          "http://example.com",
+				"iso_checksum":     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+				"iso_storage_pool": "local",
+			},
+		},
+		{
 			name:           "missing iso_storage_pool should error",
 			expectedToFail: true,
 			additionalISOFiles: map[string]interface{}{
