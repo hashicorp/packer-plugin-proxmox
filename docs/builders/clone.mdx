@@ -3,7 +3,7 @@ description: |
   The proxmox image Packer builder is able to create new images for use with
   Proxmox VE. The builder takes a cloud-init enabled virtual machine
   template name, runs any provisioning necessary on the image after
-  launching it, then creates a virtual machine template.
+  launching it, and creates a virtual machine or virtual machine template.
 page_title: Proxmox Clone - Builders
 sidebar_title: proxmox-clone
 nav_title: Clone
@@ -17,17 +17,15 @@ Artifact BuilderId: `proxmox.clone`
 The `proxmox-clone` Packer builder is able to create new images for use with
 [Proxmox](https://www.proxmox.com/en/proxmox-ve). The builder takes a virtual
 machine template, runs any provisioning necessary on the image after launching it,
-then creates a virtual machine template. This template can then be used as to
-create new virtual machines within Proxmox.
+and creates a virtual machine or virtual machine template.
 
-The builder does _not_ manage templates. Once it creates a template, it is up
+The builder does _not_ manage templates. It only creates a VM or VM template, it is up
 to you to use it or delete it.
 
 ## Configuration Reference
 
 There are many configuration options available for the builder. They are
-segmented below into two categories: required and optional parameters. Within
-each category, the available configuration keys are alphabetized.
+segmented below into two categories: required and optional parameters.
 
 In addition to the options listed here, a
 [communicator](/docs/templates/legacy_json_templates/communicator) can be configured for this
@@ -193,6 +191,8 @@ in the image's Cloud-Init settings for provisioning.
 
 - `template_description` (string) - Description of the template, visible in
   the Proxmox interface.
+
+- `convert_to_template` (bool) - Convert VM to a template. Defaults to `false`.
 
 - `onboot` (boolean) - Specifies whether a VM will be started during system
   bootup. Defaults to `false`.

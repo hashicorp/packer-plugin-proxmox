@@ -64,6 +64,7 @@ type Config struct {
 
 	TemplateName        string `mapstructure:"template_name"`
 	TemplateDescription string `mapstructure:"template_description"`
+	ConvertToTemplate   bool   `mapstructure:"convert_to_template"`
 
 	CloudInit            bool   `mapstructure:"cloud_init"`
 	CloudInitStoragePool string `mapstructure:"cloud_init_storage_pool"`
@@ -109,6 +110,9 @@ type vgaConfig struct {
 func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []string, error) {
 	// Do not add a cloud-init cdrom by default
 	c.CloudInit = false
+	// Do not covert vm to a template by default
+	c.ConvertToTemplate = false
+
 	var md mapstructure.Metadata
 	err := config.Decode(upper, &config.DecodeOpts{
 		Metadata:           &md,

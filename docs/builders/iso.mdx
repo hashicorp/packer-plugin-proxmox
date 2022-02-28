@@ -2,8 +2,7 @@
 description: |
   The proxmox Packer builder is able to create new images for use with
   Proxmox VE. The builder takes an ISO source, runs any provisioning
-  necessary on the image after launching it, then creates a virtual machine
-  template.
+  necessary on the image after launching it, and creates a virtual machine or virtual machine template.
 page_title: Proxmox ISO - Builders
 sidebar_title: proxmox-iso
 nav_title: ISO
@@ -16,18 +15,16 @@ Artifact BuilderId: `proxmox.iso`
 
 The `proxmox-iso` Packer builder is able to create new images for use with
 [Proxmox](https://www.proxmox.com/en/proxmox-ve). The builder takes an ISO
-image, runs any provisioning necessary on the image after launching it, then
-creates a virtual machine template. This template can then be used as to
-create new virtual machines within Proxmox.
+image, runs any provisioning necessary on the image after launching it, and
+creates a virtual machine or virtual machine template.
 
-The builder does _not_ manage templates. Once it creates a template, it is up
+The builder does _not_ manage templates. It only creates a VM or VM template, it is up
 to you to use it or delete it.
 
 ## Configuration Reference
 
 There are many configuration options available for the builder. They are
-segmented below into two categories: required and optional parameters. Within
-each category, the available configuration keys are alphabetized.
+segmented below into two categories: required and optional parameters.
 
 In addition to the options listed here, a
 [communicator](/docs/templates/legacy_json_templates/communicator) can be configured for this
@@ -207,6 +204,8 @@ builder.
 
 - `template_description` (string) - Description of the template, visible in
   the Proxmox interface.
+
+- `convert_to_template` (bool) - Convert VM to a template. Defaults to `false`.
 
 - `unmount_iso` (bool) - If true, remove the mounted ISO from the template
   after finishing. Defaults to `false`.
