@@ -82,6 +82,7 @@ type additionalISOsConfig struct {
 	Unmount               bool   `mapstructure:"unmount"`
 	ShouldUploadISO       bool   `mapstructure-to-hcl2:",skip"`
 	DownloadPathKey       string `mapstructure-to-hcl2:",skip"`
+	commonsteps.CDConfig  `mapstructure:",squash"`
 }
 
 type nicConfig struct {
@@ -281,9 +282,14 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 			c.AdditionalISOFiles[idx].ShouldUploadISO = false
 		} else {
 			c.AdditionalISOFiles[idx].DownloadPathKey = "downloaded_additional_iso_path_" + strconv.Itoa(idx)
-			isoWarnings, isoErrors := c.AdditionalISOFiles[idx].ISOConfig.Prepare(&c.Ctx)
-			errs = packersdk.MultiErrorAppend(errs, isoErrors...)
-			warnings = append(warnings, isoWarnings...)
+			if len(c.AdditionalISOFiles[idx].CDFiles) > 0 || len(c.AdditionalISOFiles[idx].CDContent) > 0 {
+				cdErrors := c.AdditionalISOFiles[idx].CDConfig.Prepare(&c.Ctx)
+				errs = packersdk.MultiErrorAppend(errs, cdErrors...)
+			} else {
+				isoWarnings, isoErrors := c.AdditionalISOFiles[idx].ISOConfig.Prepare(&c.Ctx)
+				errs = packersdk.MultiErrorAppend(errs, isoErrors...)
+				warnings = append(warnings, isoWarnings...)
+			}
 			c.AdditionalISOFiles[idx].ShouldUploadISO = true
 		}
 		if c.AdditionalISOFiles[idx].Device == "" {
@@ -320,8 +326,24 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("SCSI bus index can't be higher than 30"))
 			}
 		}
-		if (c.AdditionalISOFiles[idx].ISOFile == "" && len(c.AdditionalISOFiles[idx].ISOConfig.ISOUrls) == 0) || (c.AdditionalISOFiles[idx].ISOFile != "" && len(c.AdditionalISOFiles[idx].ISOConfig.ISOUrls) != 0) {
-			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("either iso_file or iso_url, but not both, must be specified for AdditionalISO file %s", c.AdditionalISOFiles[idx].Device))
+		if len(c.AdditionalISOFiles[idx].CDFiles) > 0 || len(c.AdditionalISOFiles[idx].CDContent) > 0 {
+			if c.AdditionalISOFiles[idx].ISOStoragePool == "" {
+				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("iso_storage_pool not set for storage of generated ISO from cd_files or cd_content"))
+			}
+		}
+		// Check only one option is present
+		options := 0
+		if c.AdditionalISOFiles[idx].ISOFile != "" {
+			options++
+		}
+		if len(c.AdditionalISOFiles[idx].ISOConfig.ISOUrls) > 0 || c.AdditionalISOFiles[idx].ISOConfig.RawSingleISOUrl != "" {
+			options++
+		}
+		if len(c.AdditionalISOFiles[idx].CDFiles) > 0 || len(c.AdditionalISOFiles[idx].CDContent) > 0 {
+			options++
+		}
+		if options != 1 {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("one of iso_file, iso_url, or a combination of cd_files and cd_content must be specified for AdditionalISO file %s", c.AdditionalISOFiles[idx].Device))
 		}
 	}
 
