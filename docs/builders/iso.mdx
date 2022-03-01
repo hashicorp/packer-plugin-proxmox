@@ -33,6 +33,9 @@ In addition to the options listed here, a
 [communicator](/docs/templates/legacy_json_templates/communicator) can be configured for this
 builder.
 
+If no communicator is defined, an SSH key is generated for use, and is used
+in the image's Cloud-Init settings for provisioning.
+
 ### Required:
 
 - `proxmox_url` (string) - URL to the Proxmox API, including the full path,
@@ -80,6 +83,9 @@ builder.
 ### Optional:
 
 - `insecure_skip_tls_verify` (bool) - Skip validating the certificate.
+
+- `task_timeout` (duration string | ex: "10m") - The timeout for
+  Promox API operations, e.g. clones. Defaults to 1 minute.
 
 - `pool` (string) - Name of resource pool to create virtual machine in.
 
@@ -145,7 +151,8 @@ builder.
     `e1000-82544gc` or `e1000-82545em`. Defaults to `e1000`.
 
   - `mac_address` (string) - Give the adapter a specific MAC address. If
-    not set, defaults to a random MAC.
+    not set, defaults to a random MAC. If value is "repeatable", value of MAC
+    address is deterministic based on VM ID and NIC ID.
 
   - `vlan_tag` (string) - If the adapter should tag packets. Defaults to
     no tagging.
@@ -222,7 +229,7 @@ builder.
 
 - `scsi_controller` (string) - The SCSI controller model to emulate. Can be `lsi`,
   `lsi53c810`, `virtio-scsi-pci`, `virtio-scsi-single`, `megasas`, or `pvscsi`.
-  Defaults to `lsi`.f
+  Defaults to `lsi`.
 
 - `cloud_init` (bool) - If true, add a Cloud-Init CDROM drive after the virtual machine has been converted to a template.
   Defaults to `false`.
@@ -291,7 +298,9 @@ are all typed in sequence. It is an array only to improve readability within
 the template.
 
 The boot command is "typed" character for character over the virtual keyboard
-to the machine, simulating a human actually typing the keyboard.
+to the machine, simulating a human actually typing the keyboard. The time
+between keystrokes may be configured with `boot_key_interval`, the default
+value is 15ms.
 
 <!-- Code generated from the comments of the BootConfig struct in bootcommand/config.go; DO NOT EDIT MANUALLY -->
 

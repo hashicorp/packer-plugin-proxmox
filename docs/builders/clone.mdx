@@ -43,8 +43,9 @@ in the image's Cloud-Init settings for provisioning.
   Can also be set via the `PROXMOX_URL` environment variable.
 
 - `username` (string) - Username when authenticating to Proxmox, including
-  the realm. For example `user@pve` to use the local Proxmox realm.
-  When used with `token`, it would look like this: `user@pve!token`
+  the realm. For example `user@pve` to use the local Proxmox realm. When using
+  token authentication, the username must include the token id after an exclamation
+  mark. For example, `user@pve!tokenid`. 
   Can also be set via the `PROXMOX_USERNAME` environment variable.
 
 - `password` (string) - Password for the user.
@@ -188,6 +189,11 @@ in the image's Cloud-Init settings for provisioning.
     `raw`, `cow`, `qcow`, `qed`, `qcow2`, `vmdk` or `cloop`. Defaults to
     `raw`.
 
+  - `io_thread` (bool) - Create one I/O thread per storage controller, rather
+    than a single thread for all I/O. This can increase performance when
+    multiple disks are used. Requires `virtio-scsi-single` controller and a
+    `scsi` or `virtio` disk. Defaults to `false`.
+
 - `template_name` (string) - Name of the template. Defaults to the generated
   name used during creation.
 
@@ -197,11 +203,62 @@ in the image's Cloud-Init settings for provisioning.
 - `onboot` (boolean) - Specifies whether a VM will be started during system
   bootup. Defaults to `false`.
 
+- `qemu_agent` (boolean) - Enables QEMU Agent option for this VM. When enabled,
+  then `qemu-guest-agent` must be installed on the guest. When disabled, then
+  `ssh_host` should be used. Defaults to `true`.
+
 - `disable_kvm` (boolean) - Disables KVM hardware virtualization. Defaults to `false`.
 
 - `scsi_controller` (string) - The SCSI controller model to emulate. Can be `lsi`,
   `lsi53c810`, `virtio-scsi-pci`, `virtio-scsi-single`, `megasas`, or `pvscsi`.
   Defaults to `lsi`.
+
+- `cloud_init` (bool) - If true, add a Cloud-Init CDROM drive after the virtual machine has been converted to a template.
+  Defaults to `false`.
+
+- `cloud_init_storage_pool` - (string) - Name of the Proxmox storage pool
+  to store the Cloud-Init CDROM on. If not given, the storage pool of the boot device will be used.
+
+- `additional_iso_files` (array of objects) - Additional ISO files attached to the virtual machine.
+  Example:
+
+  ```json
+  [
+    {
+      "device": "scsi5",
+      "iso_file": "local:iso/virtio-win-0.1.185.iso",
+      "unmount": true,
+      "iso_checksum": "af2b3cc9fa7905dea5e58d31508d75bba717c2b0d5553962658a47aebc9cc386"
+    }
+  ]
+  ```
+
+  - `device` (string) - Bus type and bus index that the ISO will be mounted on. Can be `ideX`,
+    `sataX` or `scsiX`.
+    For `ide` the bus index ranges from 0 to 3, for `sata` form 0 to 5 and for
+    `scsi` from 0 to 30.
+    Defaults to `ide3` since `ide2` is generally the boot drive.
+
+  - `iso_file` (string) - Path to the ISO file to boot from, expressed as a
+    proxmox datastore path, for example
+    `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
+    Either `iso_file` OR `iso_url` must be specifed.
+
+  - `iso_url` (string) - URL to an ISO file to upload to Proxmox, and then
+    boot from. Either `iso_file` OR `iso_url` must be specifed.
+
+  - `iso_storage_pool` (string) - Proxmox storage pool onto which to upload
+    the ISO file.
+
+  - `iso_checksum` (string) - Checksum of the ISO file.
+  - `unmount` (bool) - If true, remove the mounted ISO from the template after finishing. Defaults to `false`.
+
+- `http_interface` - (string) - Name of the network interface that Packer gets
+  `HTTPIP` from. Defaults to the first non loopback interface.
+
+- `vm_interface` - (string) - Name of the network interface that Packer gets
+  the VMs IP from. Defaults to the first non loopback interface.
+
 
 - `full_clone` (bool) - Whether to run a full or shallow clone from the base clone_vm. Defaults to `true`.
 
