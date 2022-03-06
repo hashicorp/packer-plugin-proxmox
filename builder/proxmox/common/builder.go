@@ -47,29 +47,33 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook,
 
 	comm := &b.config.Comm
 
-	// Build the steps
-	coreSteps := []multistep.Step{
-		&stepStartVM{
-			vmCreator: b.vmCreator,
-		},
-		commonsteps.HTTPServerFromHTTPConfig(&b.config.HTTPConfig),
-		&stepTypeBootCommand{
-			BootConfig: b.config.BootConfig,
-			Ctx:        b.config.Ctx,
-		},
-		&communicator.StepConnect{
-			Config:    comm,
-			Host:      commHost((*comm).Host()),
-			SSHConfig: (*comm).SSHConfigFunc(),
-		},
-		&commonsteps.StepProvision{},
-		&commonsteps.StepCleanupTempKeys{
-			Comm: &b.config.Comm,
-		},
-		&stepConvertToTemplate{},
-		&stepFinalizeTemplateConfig{},
-		&stepSuccess{},
+	// Build the steps (Order matters)
+	coreSteps := []multistep.Step{}
+
+	coreSteps = append(coreSteps, &stepStartVM{vmCreator: b.vmCreator})
+	coreSteps = append(coreSteps, commonsteps.HTTPServerFromHTTPConfig(&b.config.HTTPConfig))
+	coreSteps = append(coreSteps, &stepTypeBootCommand{
+		BootConfig: b.config.BootConfig,
+		Ctx:        b.config.Ctx,
+	})
+	coreSteps = append(coreSteps, &communicator.StepConnect{
+		Config:    comm,
+		Host:      commHost((*comm).Host()),
+		SSHConfig: (*comm).SSHConfigFunc(),
+	})
+	coreSteps = append(coreSteps, &commonsteps.StepProvision{})
+	coreSteps = append(coreSteps, &commonsteps.StepCleanupTempKeys{
+		Comm: &b.config.Comm,
+	})
+	coreSteps = append(coreSteps, &stepStopVM{})
+
+	if b.config.ConvertToTemplate {
+		coreSteps = append(coreSteps, &stepConvertToTemplate{})
 	}
+
+	coreSteps = append(coreSteps, &stepFinalizeVMConfig{})
+	coreSteps = append(coreSteps, &stepSuccess{})
+
 	preSteps := b.preSteps
 	for idx := range b.config.AdditionalISOFiles {
 		preSteps = append(preSteps, &commonsteps.StepDownload{
@@ -97,15 +101,16 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook,
 		return nil, errors.New("build was cancelled")
 	}
 
-	// Verify that the template_id was set properly, otherwise we didn't progress through the last step
-	tplID, ok := state.Get("template_id").(int)
+	// Get vmRef for vmid in artifact storage
+	vmRef, ok := state.Get("vmRef").(*proxmox.VmRef)
 	if !ok {
-		return nil, fmt.Errorf("template ID could not be determined")
+		return nil, fmt.Errorf("vmRef could not be determined")
 	}
 
 	artifact := &Artifact{
 		builderID:     b.id,
-		templateID:    tplID,
+		vmID:          vmRef.VmId(),
+		isTemplate:    b.config.ConvertToTemplate,
 		proxmoxClient: b.proxmoxClient,
 		StateData:     map[string]interface{}{"generated_data": state.Get("generated_data")},
 	}

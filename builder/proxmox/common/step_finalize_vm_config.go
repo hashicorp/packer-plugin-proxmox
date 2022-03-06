@@ -10,10 +10,10 @@ import (
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
-// stepFinalizeTemplateConfig does any required modifications to the configuration _after_
+// stepFinalizeVMConfig does any required modifications to the configuration _after_
 // the VM has been converted into a template, such as updating name and description, or
 // unmounting the installation ISO.
-type stepFinalizeTemplateConfig struct{}
+type stepFinalizeVMConfig struct{}
 
 type templateFinalizer interface {
 	GetVmConfig(*proxmox.VmRef) (map[string]interface{}, error)
@@ -22,7 +22,7 @@ type templateFinalizer interface {
 
 var _ templateFinalizer = &proxmox.Client{}
 
-func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
+func (s *stepFinalizeVMConfig) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packersdk.Ui)
 	client := state.Get("proxmoxClient").(templateFinalizer)
 	c := state.Get("config").(*Config)
@@ -118,4 +118,4 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 	return multistep.ActionContinue
 }
 
-func (s *stepFinalizeTemplateConfig) Cleanup(state multistep.StateBag) {}
+func (s *stepFinalizeVMConfig) Cleanup(state multistep.StateBag) {}
