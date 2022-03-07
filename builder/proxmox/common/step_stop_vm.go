@@ -9,7 +9,7 @@ import (
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
-// stepStopVM takes the running VM configured in earlier steps ands stops it.
+// stepStopVM takes the running VM configured in earlier steps and stops it.
 
 type stepStopVM struct{}
 
