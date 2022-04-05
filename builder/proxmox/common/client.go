@@ -17,6 +17,8 @@ func newProxmoxClient(config Config) (*proxmox.Client, error) {
 		return nil, err
 	}
 
+	*proxmox.Debug = config.PackerDebug
+
 	if config.Token != "" {
 		// configure token auth
 		log.Print("using token auth")
