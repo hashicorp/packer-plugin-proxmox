@@ -87,6 +87,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		vmRef.SetNode(c.Node)
 		if c.Pool != "" {
 			vmRef.SetPool(c.Pool)
+			config.Pool = c.Pool
 		}
 
 		err := s.vmCreator.Create(vmRef, config, state)
