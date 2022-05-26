@@ -3,7 +3,7 @@ module github.com/hashicorp/packer-plugin-proxmox
 go 1.17
 
 require (
-	github.com/Telmate/proxmox-api-go v0.0.0-20220107223401-b9c909d83a3b
+	github.com/Telmate/proxmox-api-go v0.0.0-20220524222303-9d9842512e0c
 	github.com/hashicorp/hcl/v2 v2.12.0
 	github.com/hashicorp/packer-plugin-sdk v0.2.13
 	github.com/mitchellh/mapstructure v1.4.1
@@ -89,5 +89,6 @@ require (
 	google.golang.org/grpc v1.40.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
