@@ -3,7 +3,7 @@ module github.com/hashicorp/packer-plugin-proxmox
 go 1.18
 
 require (
-	github.com/Telmate/proxmox-api-go v0.0.0-20220107223401-b9c909d83a3b
+	github.com/Telmate/proxmox-api-go v0.0.0-20220524222303-9d9842512e0c
 	github.com/hashicorp/hcl/v2 v2.14.1
 	github.com/hashicorp/packer-plugin-sdk v0.3.2
 	github.com/mitchellh/mapstructure v1.4.1
