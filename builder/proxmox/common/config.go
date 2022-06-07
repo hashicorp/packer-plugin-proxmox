@@ -73,6 +73,8 @@ type Config struct {
 	AdditionalISOFiles []additionalISOsConfig `mapstructure:"additional_iso_files"`
 	VMInterface        string                 `mapstructure:"vm_interface"`
 
+	ReplaceExisting bool `mapstructure:"replace_existing"`
+
 	Ctx interpolate.Context `mapstructure-to-hcl2:",skip"`
 }
 
