@@ -95,7 +95,7 @@ type FlatConfig struct {
 	Sockets                   *int                               `mapstructure:"sockets" cty:"sockets" hcl:"sockets"`
 	OS                        *string                            `mapstructure:"os" cty:"os" hcl:"os"`
 	BIOS                      *string                            `mapstructure:"bios" cty:"bios" hcl:"bios"`
-	EFIDisk                   *string                            `mapstructure:"efidisk" cty:"efidisk" hcl:"efidisk"`
+	EFI                       *proxmox.FlatefiConfig             `mapstructure:"efi" cty:"efi" hcl:"efi"`
 	Machine                   *string                            `mapstructure:"machine" cty:"machine" hcl:"machine"`
 	VGA                       *proxmox.FlatvgaConfig             `mapstructure:"vga" cty:"vga" hcl:"vga"`
 	NICs                      []proxmox.FlatnicConfig            `mapstructure:"network_adapters" cty:"network_adapters" hcl:"network_adapters"`
@@ -110,6 +110,7 @@ type FlatConfig struct {
 	CloudInitStoragePool      *string                            `mapstructure:"cloud_init_storage_pool" cty:"cloud_init_storage_pool" hcl:"cloud_init_storage_pool"`
 	AdditionalISOFiles        []proxmox.FlatadditionalISOsConfig `mapstructure:"additional_iso_files" cty:"additional_iso_files" hcl:"additional_iso_files"`
 	VMInterface               *string                            `mapstructure:"vm_interface" cty:"vm_interface" hcl:"vm_interface"`
+	ReplaceExisting           *bool                              `mapstructure:"replace_existing" cty:"replace_existing" hcl:"replace_existing"`
 	CloneVM                   *string                            `mapstructure:"clone_vm" cty:"clone_vm" hcl:"clone_vm"`
 	FullClone                 *bool                              `mapstructure:"full_clone" required:"false" cty:"full_clone" hcl:"full_clone"`
 }
@@ -210,7 +211,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"sockets":                      &hcldec.AttrSpec{Name: "sockets", Type: cty.Number, Required: false},
 		"os":                           &hcldec.AttrSpec{Name: "os", Type: cty.String, Required: false},
 		"bios":                         &hcldec.AttrSpec{Name: "bios", Type: cty.String, Required: false},
-		"efidisk":                      &hcldec.AttrSpec{Name: "efidisk", Type: cty.String, Required: false},
+		"efi":                          &hcldec.BlockSpec{TypeName: "efi", Nested: hcldec.ObjectSpec((*proxmox.FlatefiConfig)(nil).HCL2Spec())},
 		"machine":                      &hcldec.AttrSpec{Name: "machine", Type: cty.String, Required: false},
 		"vga":                          &hcldec.BlockSpec{TypeName: "vga", Nested: hcldec.ObjectSpec((*proxmox.FlatvgaConfig)(nil).HCL2Spec())},
 		"network_adapters":             &hcldec.BlockListSpec{TypeName: "network_adapters", Nested: hcldec.ObjectSpec((*proxmox.FlatnicConfig)(nil).HCL2Spec())},
@@ -225,6 +226,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"cloud_init_storage_pool":      &hcldec.AttrSpec{Name: "cloud_init_storage_pool", Type: cty.String, Required: false},
 		"additional_iso_files":         &hcldec.BlockListSpec{TypeName: "additional_iso_files", Nested: hcldec.ObjectSpec((*proxmox.FlatadditionalISOsConfig)(nil).HCL2Spec())},
 		"vm_interface":                 &hcldec.AttrSpec{Name: "vm_interface", Type: cty.String, Required: false},
+		"replace_existing":             &hcldec.AttrSpec{Name: "replace_existing", Type: cty.Bool, Required: false},
 		"clone_vm":                     &hcldec.AttrSpec{Name: "clone_vm", Type: cty.String, Required: false},
 		"full_clone":                   &hcldec.AttrSpec{Name: "full_clone", Type: cty.Bool, Required: false},
 	}

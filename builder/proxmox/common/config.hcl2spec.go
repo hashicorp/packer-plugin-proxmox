@@ -94,7 +94,7 @@ type FlatConfig struct {
 	Sockets                   *int                       `mapstructure:"sockets" cty:"sockets" hcl:"sockets"`
 	OS                        *string                    `mapstructure:"os" cty:"os" hcl:"os"`
 	BIOS                      *string                    `mapstructure:"bios" cty:"bios" hcl:"bios"`
-	EFIDisk                   *string                    `mapstructure:"efidisk" cty:"efidisk" hcl:"efidisk"`
+	EFI                       *FlatefiConfig             `mapstructure:"efi" cty:"efi" hcl:"efi"`
 	Machine                   *string                    `mapstructure:"machine" cty:"machine" hcl:"machine"`
 	VGA                       *FlatvgaConfig             `mapstructure:"vga" cty:"vga" hcl:"vga"`
 	NICs                      []FlatnicConfig            `mapstructure:"network_adapters" cty:"network_adapters" hcl:"network_adapters"`
@@ -109,6 +109,7 @@ type FlatConfig struct {
 	CloudInitStoragePool      *string                    `mapstructure:"cloud_init_storage_pool" cty:"cloud_init_storage_pool" hcl:"cloud_init_storage_pool"`
 	AdditionalISOFiles        []FlatadditionalISOsConfig `mapstructure:"additional_iso_files" cty:"additional_iso_files" hcl:"additional_iso_files"`
 	VMInterface               *string                    `mapstructure:"vm_interface" cty:"vm_interface" hcl:"vm_interface"`
+	ReplaceExisting           *bool                      `mapstructure:"replace_existing" cty:"replace_existing" hcl:"replace_existing"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -207,7 +208,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"sockets":                      &hcldec.AttrSpec{Name: "sockets", Type: cty.Number, Required: false},
 		"os":                           &hcldec.AttrSpec{Name: "os", Type: cty.String, Required: false},
 		"bios":                         &hcldec.AttrSpec{Name: "bios", Type: cty.String, Required: false},
-		"efidisk":                      &hcldec.AttrSpec{Name: "efidisk", Type: cty.String, Required: false},
+		"efi":                          &hcldec.BlockSpec{TypeName: "efi", Nested: hcldec.ObjectSpec((*FlatefiConfig)(nil).HCL2Spec())},
 		"machine":                      &hcldec.AttrSpec{Name: "machine", Type: cty.String, Required: false},
 		"vga":                          &hcldec.BlockSpec{TypeName: "vga", Nested: hcldec.ObjectSpec((*FlatvgaConfig)(nil).HCL2Spec())},
 		"network_adapters":             &hcldec.BlockListSpec{TypeName: "network_adapters", Nested: hcldec.ObjectSpec((*FlatnicConfig)(nil).HCL2Spec())},
@@ -222,6 +223,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"cloud_init_storage_pool":      &hcldec.AttrSpec{Name: "cloud_init_storage_pool", Type: cty.String, Required: false},
 		"additional_iso_files":         &hcldec.BlockListSpec{TypeName: "additional_iso_files", Nested: hcldec.ObjectSpec((*FlatadditionalISOsConfig)(nil).HCL2Spec())},
 		"vm_interface":                 &hcldec.AttrSpec{Name: "vm_interface", Type: cty.String, Required: false},
+		"replace_existing":             &hcldec.AttrSpec{Name: "replace_existing", Type: cty.Bool, Required: false},
 	}
 	return s
 }
@@ -302,6 +304,33 @@ func (*FlatdiskConfig) HCL2Spec() map[string]hcldec.Spec {
 		"cache_mode":        &hcldec.AttrSpec{Name: "cache_mode", Type: cty.String, Required: false},
 		"format":            &hcldec.AttrSpec{Name: "format", Type: cty.String, Required: false},
 		"io_thread":         &hcldec.AttrSpec{Name: "io_thread", Type: cty.Bool, Required: false},
+	}
+	return s
+}
+
+// FlatefiConfig is an auto-generated flat version of efiConfig.
+// Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
+type FlatefiConfig struct {
+	Storage         *string `mapstructure:"storage" cty:"storage" hcl:"storage"`
+	PreEnrolledKeys *bool   `mapstructure:"pre_enrolled_keys" cty:"pre_enrolled_keys" hcl:"pre_enrolled_keys"`
+	Type            *string `mapstructure:"type" cty:"type" hcl:"type"`
+}
+
+// FlatMapstructure returns a new FlatefiConfig.
+// FlatefiConfig is an auto-generated flat version of efiConfig.
+// Where the contents a fields with a `mapstructure:,squash` tag are bubbled up.
+func (*efiConfig) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Spec } {
+	return new(FlatefiConfig)
+}
+
+// HCL2Spec returns the hcl spec of a efiConfig.
+// This spec is used by HCL to read the fields of efiConfig.
+// The decoded values from this spec will then be applied to a FlatefiConfig.
+func (*FlatefiConfig) HCL2Spec() map[string]hcldec.Spec {
+	s := map[string]hcldec.Spec{
+		"storage":           &hcldec.AttrSpec{Name: "storage", Type: cty.String, Required: false},
+		"pre_enrolled_keys": &hcldec.AttrSpec{Name: "pre_enrolled_keys", Type: cty.Bool, Required: false},
+		"type":              &hcldec.AttrSpec{Name: "type", Type: cty.String, Required: false},
 	}
 	return s
 }
