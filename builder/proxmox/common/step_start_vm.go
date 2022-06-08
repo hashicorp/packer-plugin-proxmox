@@ -79,8 +79,8 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		ui.Say("Replace existing set, checking for existing VM or template by name")
 		vmrs, err := client.GetVmRefsByName(c.TemplateName)
 		if err != nil {
-			state.Put("error", err)
-			ui.Error(fmt.Sprintf("Error finding existing VMs, continuing: %s", err.Error()))
+			// This can happen if no VMs found, so don't consider it to be an error
+			ui.Say(fmt.Sprintf("Couldn't find existing VMs, continuing: %s", err.Error()))
 		} else if len(vmrs) > 0 {
 			for _, vmr := range vmrs {
 				ui.Say(fmt.Sprintf("Stopping VM ID: %d", vmr.VmId()))
