@@ -1,5 +1,5 @@
 //go:generate packer-sdc struct-markdown
-//go:generate packer-sdc mapstructure-to-hcl2 -type Config,nicConfig,diskConfig,vgaConfig,additionalISOsConfig
+//go:generate packer-sdc mapstructure-to-hcl2 -type Config,nicConfig,diskConfig,vgaConfig,efiConfig,additionalISOsConfig
 
 package proxmox
 
@@ -52,7 +52,7 @@ type Config struct {
 	Sockets        int            `mapstructure:"sockets"`
 	OS             string         `mapstructure:"os"`
 	BIOS           string         `mapstructure:"bios"`
-	EFIDisk        string         `mapstructure:"efidisk"`
+	EFI            efiConfig      `mapstructure:"efi"`
 	Machine        string         `mapstructure:"machine"`
 	VGA            vgaConfig      `mapstructure:"vga"`
 	NICs           []nicConfig    `mapstructure:"network_adapters"`
@@ -70,6 +70,8 @@ type Config struct {
 
 	AdditionalISOFiles []additionalISOsConfig `mapstructure:"additional_iso_files"`
 	VMInterface        string                 `mapstructure:"vm_interface"`
+
+	ReplaceExisting bool `mapstructure:"replace_existing"`
 
 	Ctx interpolate.Context `mapstructure-to-hcl2:",skip"`
 }
@@ -105,6 +107,12 @@ type diskConfig struct {
 type vgaConfig struct {
 	Type   string `mapstructure:"type"`
 	Memory int    `mapstructure:"memory"`
+}
+
+type efiConfig struct {
+	Storage         string `mapstructure:"storage"`
+	PreEnrolledKeys bool   `mapstructure:"pre_enrolled_keys"`
+	Type            string `mapstructure:"type"`
 }
 
 func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []string, error) {

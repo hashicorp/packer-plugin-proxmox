@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Telmate/proxmox-api-go/proxmox"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -26,6 +27,10 @@ type vmStarter interface {
 	GetNextID(int) (int, error)
 	StartVm(*proxmox.VmRef) (string, error)
 	SetVmConfig(*proxmox.VmRef, map[string]interface{}) (interface{}, error)
+	GetVmRefsByName(vmName string) (vmrs []*proxmox.VmRef, err error)
+	GetVmState(vmr *proxmox.VmRef) (vmState map[string]interface{}, err error)
+	StopVm(vmr *proxmox.VmRef) (exitStatus string, err error)
+	DeleteVm(vmr *proxmox.VmRef) (exitStatus string, err error)
 }
 
 var (
@@ -60,13 +65,56 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		QemuSockets:  c.Sockets,
 		QemuOs:       c.OS,
 		Bios:         c.BIOS,
-		EFIDisk:      c.EFIDisk,
+		EFIDisk:      generateProxmoxEfi(c.EFI),
 		Machine:      c.Machine,
 		QemuVga:      generateProxmoxVga(c.VGA),
 		QemuNetworks: generateProxmoxNetworkAdapters(c.NICs),
 		QemuDisks:    generateProxmoxDisks(c.Disks),
 		Scsihw:       c.SCSIController,
 		Onboot:       c.Onboot,
+	}
+
+	if c.ReplaceExisting {
+		ui.Say("Replace existing set, checking for existing VM or template by name")
+		vmrs, err := client.GetVmRefsByName(c.TemplateName)
+		if err != nil {
+			// This can happen if no VMs found, so don't consider it to be an error
+			ui.Say(fmt.Sprintf("Couldn't find existing VMs, continuing: %s", err.Error()))
+		} else if len(vmrs) > 0 {
+			for _, vmr := range vmrs {
+				ui.Say(fmt.Sprintf("Stopping VM ID: %d", vmr.VmId()))
+				_, err := client.StopVm(vmr)
+				if err != nil {
+					state.Put("error", err)
+					ui.Error(fmt.Sprintf("Error stopping VM ID: %d, continuing: %s", vmr.VmId(), err.Error()))
+					continue
+				}
+				// Wait until vm is stopped. Otherwise, deletion will fail.
+				ui.Say("Waiting for VM to stop for up to 300 seconds")
+				waited := 0
+				for waited < 300 {
+					vmState, err := client.GetVmState(vmr)
+					if err == nil && vmState["status"] == "stopped" {
+						break
+					} else if err != nil {
+						state.Put("error", err)
+						ui.Error(fmt.Sprintf("Error getting VM state for VM ID: %d, continuing: %s", vmr.VmId(), err.Error()))
+						continue
+					}
+					time.Sleep(1 * time.Second)
+				}
+
+				_, err = client.DeleteVm(vmr)
+				if err != nil {
+					state.Put("error", err)
+					ui.Error(fmt.Sprintf("Error deleting VM: %s", err.Error()))
+				} else {
+					ui.Say("Successfully deleted VM")
+				}
+			}
+		} else {
+			ui.Say("No existing VMs found to delete")
+		}
 	}
 
 	var vmRef *proxmox.VmRef
@@ -183,6 +231,20 @@ func generateProxmoxVga(vga vgaConfig) proxmox.QemuDevice {
 
 	if vga.Memory > 0 {
 		dev["memory"] = vga.Memory
+	}
+	return dev
+}
+
+func generateProxmoxEfi(efi efiConfig) proxmox.QemuDevice {
+	dev := make(proxmox.QemuDevice)
+	// Per README: https://github.com/Telmate/proxmox-api-go/commit/1773f83bf4a811e252f21f7df6d39d33ebab08a7#diff-b335630551682c19a781afebcf4d07bf978fb1f8ac04c6bf87428ed5106870f5
+	setDeviceParamIfDefined(dev, "storage", efi.Storage)
+	setDeviceParamIfDefined(dev, "efitype", efi.Type)
+
+	if !efi.PreEnrolledKeys {
+		dev["pre-enrolled-keys"] = "1"
+	} else {
+		dev["pre-enrolled-keys"] = "0"
 	}
 	return dev
 }

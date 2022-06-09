@@ -347,9 +347,22 @@ in the image's Cloud-Init settings for provisioning.
 
 - `bios` - (string) - Set the machine bios. This can be set to ovmf or seabios. The default value is seabios.
 
-- `efidisk` - (string) - Set the efidisk storage location. This need to be set if you use ovmf uefi boot
+- `efi` (object) - Set the EFI storage location. This need to be set if you use ovmf uefi:
+
+  ```json
+  {
+    "storage": "local",
+    "pre-enrolled-keys": "1",
+    "efitype": "4m"
+  },
+  ```
+
+  - See https://pve.proxmox.com/wiki/Qemu/KVM_Virtual_Machines#qm_bios_and_uefi for details
 
 - `machine` - (string) - Set themachine type. i440fx or q35.
+
+- `replace_existing` - (bool) - If existing VM's or templates with the same name as the template name should be removed prior to creation.
+  Defaults to `false`.
 
 ## Boot Command
 
