@@ -1,5 +1,5 @@
 //go:generate packer-sdc struct-markdown
-//go:generate packer-sdc mapstructure-to-hcl2 -type Config,nicConfig,diskConfig,vgaConfig,additionalISOsConfig
+//go:generate packer-sdc mapstructure-to-hcl2 -type Config,nicConfig,diskConfig,vgaConfig,additionalISOsConfig,efiConfig
 
 package proxmox
 
@@ -52,7 +52,7 @@ type Config struct {
 	Sockets        int            `mapstructure:"sockets"`
 	OS             string         `mapstructure:"os"`
 	BIOS           string         `mapstructure:"bios"`
-	EFIDisk        string         `mapstructure:"efidisk"`
+	EFIDisk        efiConfig      `mapstructure:"efidisk"`
 	Machine        string         `mapstructure:"machine"`
 	VGA            vgaConfig      `mapstructure:"vga"`
 	NICs           []nicConfig    `mapstructure:"network_adapters"`
@@ -101,6 +101,11 @@ type diskConfig struct {
 	CacheMode       string `mapstructure:"cache_mode"`
 	DiskFormat      string `mapstructure:"format"`
 	IOThread        bool   `mapstructure:"io_thread"`
+}
+type efiConfig struct {
+	Storage         string `mapstructure:"storage"`
+	PreEnrolledKeys int    `mapstructure:"pre_enrolled_keys"`
+	EfiType         string `mapstructure:"efitype"`
 }
 type vgaConfig struct {
 	Type   string `mapstructure:"type"`

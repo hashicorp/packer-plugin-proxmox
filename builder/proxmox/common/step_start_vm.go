@@ -60,7 +60,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		QemuSockets:  c.Sockets,
 		QemuOs:       c.OS,
 		Bios:         c.BIOS,
-		EFIDisk:      c.EFIDisk,
+		EFIDisk:      generateProxmoxEfi(c.EFIDisk),
 		Machine:      c.Machine,
 		QemuVga:      generateProxmoxVga(c.VGA),
 		QemuNetworks: generateProxmoxNetworkAdapters(c.NICs),
@@ -177,6 +177,7 @@ func generateProxmoxDisks(disks []diskConfig) proxmox.QemuDevices {
 	}
 	return devs
 }
+
 func generateProxmoxVga(vga vgaConfig) proxmox.QemuDevice {
 	dev := make(proxmox.QemuDevice)
 	setDeviceParamIfDefined(dev, "type", vga.Type)
@@ -184,6 +185,14 @@ func generateProxmoxVga(vga vgaConfig) proxmox.QemuDevice {
 	if vga.Memory > 0 {
 		dev["memory"] = vga.Memory
 	}
+	return dev
+}
+
+func generateProxmoxEfi(efi efiConfig) proxmox.QemuDevice {
+	dev := make(proxmox.QemuDevice)
+	setDeviceParamIfDefined(dev, "storage", efi.Storage)
+	dev["pre-enrolled-keys"] = efi.PreEnrolledKeys
+	setDeviceParamIfDefined(dev, "efitype", efi.EfiType)
 	return dev
 }
 
