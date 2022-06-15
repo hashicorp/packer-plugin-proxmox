@@ -33,6 +33,9 @@ builds:
     ldflags:
       - '-s -w -X {{ .ModulePath }}/version.Version={{.Version}} -X {{ .ModulePath }}/version.VersionPrerelease= '
     goos:
+      - netbsd
+      - solaris
+      - openbsd
       - freebsd
       - windows
       - linux
@@ -43,6 +46,8 @@ builds:
       - arm
       - arm64
     ignore:
+      - goos: openbsd
+        goarch: arm64
       - goos: darwin
         goarch: '386'
       - goos: linux
