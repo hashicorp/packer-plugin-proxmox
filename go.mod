@@ -4,8 +4,8 @@ go 1.17
 
 require (
 	github.com/Telmate/proxmox-api-go v0.0.0-20220107223401-b9c909d83a3b
-	github.com/hashicorp/hcl/v2 v2.12.0
-	github.com/hashicorp/packer-plugin-sdk v0.3.0
+	github.com/hashicorp/hcl/v2 v2.13.0
+	github.com/hashicorp/packer-plugin-sdk v0.3.1
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/stretchr/testify v1.7.0
 	github.com/zclconf/go-cty v1.10.0
@@ -75,7 +75,7 @@ require (
 	github.com/ugorji/go/codec v1.2.6 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	golang.org/x/crypto v0.0.0-20220427172511-eb4f295cb31f // indirect
+	golang.org/x/crypto v0.0.0-20220517005047-85d78b3ac167 // indirect
 	golang.org/x/mobile v0.0.0-20210901025245-1fde1d6c3ca1 // indirect
 	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2 // indirect
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f // indirect
