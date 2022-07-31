@@ -67,9 +67,7 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook,
 	})
 	coreSteps = append(coreSteps, &stepStopVM{})
 
-	if b.config.ConvertToTemplate {
-		coreSteps = append(coreSteps, &stepConvertToTemplate{})
-	}
+	coreSteps = append(coreSteps, &stepConvertToTemplate{})
 
 	coreSteps = append(coreSteps, &stepFinalizeVMConfig{})
 	coreSteps = append(coreSteps, &stepSuccess{})
