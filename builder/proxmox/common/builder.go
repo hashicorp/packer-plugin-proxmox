@@ -108,7 +108,7 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook,
 	artifact := &Artifact{
 		builderID:     b.id,
 		vmID:          vmRef.VmId(),
-		isTemplate:    b.config.ConvertToTemplate,
+		isTemplate:    !b.config.SkipConvertToTemplate.True(),
 		proxmoxClient: b.proxmoxClient,
 		StateData:     map[string]interface{}{"generated_data": state.Get("generated_data")},
 	}

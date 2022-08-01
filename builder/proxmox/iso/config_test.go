@@ -46,7 +46,7 @@ func TestBasicExampleFromDocsIsValid(t *testing.T) {
       "unmount_iso": true,
       "template_name": "fedora-29",
       "template_description": "Fedora 29-1.2, generated on {{ isotime \"2006-01-02T15:04:05Z\" }}",
-	  "convert_to_template": true
+	  "skip_convert_to_template": true
 	}
   ]
 }`
@@ -110,8 +110,8 @@ func TestBasicExampleFromDocsIsValid(t *testing.T) {
 	if b.config.CloudInit != false {
 		t.Errorf("Expected CloudInit to be false, got %t", b.config.CloudInit)
 	}
-	if b.config.ConvertToTemplate != true {
-		t.Errorf("Expected ConvertToTemplate to be true, got %t", b.config.CloudInit)
+	if b.config.SkipConvertToTemplate.False() {
+		t.Errorf("Expected ConvertToTemplate to be true, got %t", b.config.SkipConvertToTemplate.True())
 	}
 }
 
