@@ -27,6 +27,7 @@ type vmStarter interface {
 	GetNextID(int) (int, error)
 	StartVm(*proxmox.VmRef) (string, error)
 	SetVmConfig(*proxmox.VmRef, map[string]interface{}) (interface{}, error)
+	CheckVmRef(vmr *proxmox.VmRef) (err error)
 	GetVmRefsByName(vmName string) (vmrs []*proxmox.VmRef, err error)
 	GetVmState(vmr *proxmox.VmRef) (vmState map[string]interface{}, err error)
 	StopVm(vmr *proxmox.VmRef) (exitStatus string, err error)
@@ -36,6 +37,19 @@ type vmStarter interface {
 var (
 	maxDuplicateIDRetries = 3
 )
+
+func getExistingVms(c *Config, client vmStarter) ([]*proxmox.VmRef, error) {
+	if c.VMID > 0 {
+		vmRef := proxmox.NewVmRef(c.VMID)
+		err := client.CheckVmRef(vmRef)
+		if err != nil {
+			return []*proxmox.VmRef{}, err
+		}
+		return []*proxmox.VmRef{vmRef}, nil
+	} else {
+		return client.GetVmRefsByName(c.TemplateName)
+	}
+}
 
 func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packersdk.Ui)
@@ -75,9 +89,9 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		Onboot:       &c.Onboot,
 	}
 
-	if c.ReplaceExisting {
-		ui.Say("Replace existing set, checking for existing VM or template by name")
-		vmrs, err := client.GetVmRefsByName(c.TemplateName)
+	if c.PackerForce {
+		ui.Say("Force set, checking for existing VM or template")
+		vmrs, err := getExistingVms(c, client)
 		if err != nil {
 			// This can happen if no VMs found, so don't consider it to be an error
 			ui.Say(fmt.Sprintf("Couldn't find existing VMs, continuing: %s", err.Error()))
