@@ -27,6 +27,38 @@ builds:
       - amd64
     binary: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
   -
+    id: linux-builds
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath #removes all file system paths from the compiled executable
+    ldflags:
+      - '-s -w -X {{ .ModulePath }}/version.Version={{.Version}} -X {{ .ModulePath }}/version.VersionPrerelease= '
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - '386'
+      - arm
+      - arm64
+    ignore:
+      - goos: linux
+        goarch: amd64
+    binary: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
+  -
+    id: darwin-builds
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath #removes all file system paths from the compiled executable
+    ldflags:
+      - '-s -w -X {{ .ModulePath }}/version.Version={{.Version}} -X {{ .ModulePath }}/version.VersionPrerelease= '
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    binary: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
+  -
+    id: other-builds
     mod_timestamp: '{{ .CommitTimestamp }}'
     flags:
       - -trimpath #removes all file system paths from the compiled executable
@@ -34,24 +66,21 @@ builds:
       - '-s -w -X {{ .ModulePath }}/version.Version={{.Version}} -X {{ .ModulePath }}/version.VersionPrerelease= '
     goos:
       - netbsd
-      - solaris
       - openbsd
       - freebsd
       - windows
-      - linux
-      - darwin
+      - solaris
     goarch:
       - amd64
       - '386'
       - arm
-      - arm64
     ignore:
-      - goos: openbsd
-        goarch: arm64
-      - goos: darwin
+      - goos: windows
+        goarch: arm
+      - goos: solaris
+        goarch: arm
+      - goos: solaris
         goarch: '386'
-      - goos: linux
-        goarch: amd64
     binary: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
 archives:
 - format: zip
