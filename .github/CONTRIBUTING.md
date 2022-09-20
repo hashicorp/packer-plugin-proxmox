@@ -66,7 +66,7 @@ runtime in order to build packer with the Proxmox plugin.
 
 1. This project always releases from the latest version of golang.
 [Install go](https://golang.org/doc/install#install) To properly build from
-source, you need to have golang >= 1.17
+source, you need to have golang >= 1.18
 
 ## Setting up Proxmox plugin for dev
 
