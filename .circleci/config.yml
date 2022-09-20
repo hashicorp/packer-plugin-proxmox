@@ -3,7 +3,7 @@ version: 2.1
 executors:
   golang:
     docker:
-      - image: docker.mirror.hashicorp.services/cimg/go:1.17.13
+      - image: docker.mirror.hashicorp.services/cimg/go:1.18.5
     resource_class: medium+
 
 commands:
@@ -45,10 +45,6 @@ jobs:
     steps:
       - build-and-persist-plugin-binary:
           GOOS: darwin
-  build_darwin_arm64:
-    executor: golang
-    working_directory: ~/go/src/github.com/hashicorp/packer-plugin-proxmox
-    steps:
       - build-and-persist-plugin-binary:
           GOOS: darwin
           GOARCH: arm64
@@ -83,19 +79,18 @@ workflows:
   version: 2
   build_plugin_binaries:
     jobs:
-      - build_linux
       - build_darwin
-      - build_darwin_arm64
-      - build_windows
       - build_freebsd
+      - build_linux
       - build_openbsd
       - build_solaris
+      - build_windows
       - store_artifacts:
           requires:
-            - build_linux
             - build_darwin
-            - build_darwin_arm64
-            - build_windows
             - build_freebsd
+            - build_linux
             - build_openbsd
             - build_solaris
+            - build_windows
+  
