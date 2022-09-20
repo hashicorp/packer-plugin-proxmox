@@ -1,0 +1,33 @@
+#
+# This GitHub action runs Packer go tests across
+# MacOS runners.
+#
+
+name: "Go Test MacOS"
+
+on: [ workflow_dispatch, push ]
+
+permissions:
+  contents: read
+
+jobs:
+  get-go-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: 'Determine Go version'
+        id: get-go-version
+        run: |
+          echo "Building with Go $(cat .go-version)"
+          echo "::set-output name=go-version::$(cat .go-version)"
+  darwin-go-tests:
+    runs-on: macos-latest
+    name: Darwin Go tests
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ needs.get-go-version.outputs.go-version }}
+      - run: go test -race -count 1 ./... -timeout=3m
+
+
