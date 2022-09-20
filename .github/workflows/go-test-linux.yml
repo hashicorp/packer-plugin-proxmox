@@ -1,0 +1,31 @@
+#
+# This GitHub action runs Packer go tests across
+# Linux runners.
+#
+
+name: "Go Test Linux"
+
+on: [ workflow_dispatch, push ]
+
+permissions:
+  contents: read
+
+jobs:
+  get-go-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: 'Determine Go version'
+        id: get-go-version
+        run: |
+          echo "Building with Go $(cat .go-version)"
+          echo "::set-output name=go-version::$(cat .go-version)"
+  Linux-go-tests:
+    runs-on: ubuntu-latest
+    name: Linux Go tests
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ needs.get-go-version.outputs.go-version }}
+      - run: go test -race -count 1 ./... -timeout=3m
