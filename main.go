@@ -13,9 +13,8 @@ import (
 
 func main() {
 	pps := plugin.NewSet()
-	pps.RegisterBuilder(plugin.DEFAULT_NAME, new(proxmoxiso.Builder))
-	pps.RegisterBuilder("proxmox-iso", new(proxmoxiso.Builder))
-	pps.RegisterBuilder("proxmox-clone", new(proxmoxclone.Builder))
+	pps.RegisterBuilder("iso", new(proxmoxiso.Builder))
+	pps.RegisterBuilder("clone", new(proxmoxclone.Builder))
 	pps.SetVersion(version.PluginVersion)
 	err := pps.Run()
 	if err != nil {
