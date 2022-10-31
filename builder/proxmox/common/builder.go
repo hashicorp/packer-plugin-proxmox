@@ -66,6 +66,7 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook,
 		&commonsteps.StepCleanupTempKeys{
 			Comm: &b.config.Comm,
 		},
+		&stepRemoveCloudInitDrive{},
 		&stepConvertToTemplate{},
 		&stepFinalizeTemplateConfig{},
 		&stepSuccess{},
