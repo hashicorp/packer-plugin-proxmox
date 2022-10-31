@@ -243,10 +243,10 @@ or responding to pattern `/dev/.+`. Example:
   `lsi53c810`, `virtio-scsi-pci`, `virtio-scsi-single`, `megasas`, or `pvscsi`.
   Defaults to `lsi`.
 
-- `cloud_init` (bool) - If true, add a Cloud-Init CDROM drive after the virtual machine has been converted to a template.
-  Defaults to `false`.
+- `cloud_init` (bool) - If true, add an empty Cloud-Init CDROM drive after the virtual
+  machine has been converted to a template. Defaults to `false`.
 
-- `cloud_init_storage_pool` - (string) - Name of the Proxmox storage pool
+- `cloud_init_storage_pool` (string) - Name of the Proxmox storage pool
   to store the Cloud-Init CDROM on. If not given, the storage pool of the boot device will be used.
 
 - `additional_iso_files` (array of objects) - Additional ISO files attached to the virtual machine.
