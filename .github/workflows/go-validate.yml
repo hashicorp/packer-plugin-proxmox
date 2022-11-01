@@ -19,8 +19,8 @@ jobs:
       - name: 'Determine Go version'
         id: get-go-version
         run: |
-          echo "Building with Go $(cat .go-version)"
-          echo "::set-output name=go-version::$(cat .go-version)"
+          echo "Found Go $(cat .go-version)"
+          echo "go-version=$(cat .go-version)" >> $GITHUB_OUTPUT
   check-mod-tidy:
     needs:
       - get-go-version
