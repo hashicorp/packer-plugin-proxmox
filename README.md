@@ -2,6 +2,12 @@
 The `Proxmox` multi-component plugin can be used with HashiCorp [Packer](https://www.packer.io)
 to create custom images. For the full list of available features for this plugin see [docs](docs).
 
+> **Note**
+>
+> Releases prior to v1.1.0 were incorrectly registered as `proxmox-promox-iso` and `proxmox-proxmox-clone`.
+> You are encouraged to upgrade any locally installed version of this plugin to v1.1.0. Refer to [Plugin loading issue](https://github.com/hashicorp/packer-plugin-proxmox/issues/119) for more details.
+
+
 ## Installation
 
 ### Using pre-built releases
@@ -19,7 +25,7 @@ Then, run [`packer init`](https://www.packer.io/docs/commands/init).
 packer {
   required_plugins {
     proxmox = {
-      version = ">= 1.0.6"
+      version = ">= 1.1.0"
       source  = "github.com/hashicorp/proxmox"
     }
   }
