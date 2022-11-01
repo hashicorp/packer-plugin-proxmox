@@ -3,7 +3,7 @@ version: 2.1
 executors:
   golang:
     docker:
-      - image: docker.mirror.hashicorp.services/cimg/go:1.18.5
+      - image: docker.mirror.hashicorp.services/cimg/go:1.18
     resource_class: medium+
 
 commands:
