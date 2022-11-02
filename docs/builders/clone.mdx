@@ -122,7 +122,12 @@ in the image's Cloud-Init settings for provisioning.
       "model": "virtio",
       "bridge": "vmbr0",
       "vlan_tag": "10",
-      "firewall": true
+      "firewall": true,
+      "ipconfig": 
+        {
+          "ip": "10.0.10.123/24",
+          "gateway": "10.0.10.1"
+        }
     }
   ]
   ```
@@ -153,6 +158,17 @@ in the image's Cloud-Init settings for provisioning.
     handle a great number of incoming connections, such as when the VM is
     operating as a router, reverse proxy or a busy HTTP server. Requires
     `virtio` network adapter. Defaults to `0`.
+  
+  - `ipconfig` (array of objects) - Set IP address and gateway via Cloud-Init.
+    If no options are given, DHCP will be used.
+
+    - `ip` (string) IPv4 address (CIDR notation).
+
+    - `gateway` (string) IPv4 gateway.
+
+    - `ip6` (string) IPv6 address (CIDR notation).
+
+    - `gateway6` (string) IPv6 gateway.
 
 - `serials` ([]string) - A list (max 4 elements) of serial ports attached to
 the virtual machine. It may pass through a host serial device `/dev/ttyS0`
@@ -230,6 +246,12 @@ or responding to pattern `/dev/.+`. Example:
 
 - `cloud_init_storage_pool` (string) - Name of the Proxmox storage pool
   to store the Cloud-Init CDROM on. If not given, the storage pool of the boot device will be used.
+
+- `nameserver` (string) - Set nameserver IP address(es) via Cloud-Init.
+  If not given, the host setting will be used.
+
+- `searchdomain` (string) - Set the DNS searchdomain via Cloud-Init.
+  If not given, the host setting will be used.
 
 - `additional_iso_files` (array of objects) - Additional ISO files attached to the virtual machine.
   Example:

@@ -7,6 +7,35 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
+// FlatCloudInitIpconfig is an auto-generated flat version of CloudInitIpconfig.
+// Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
+type FlatCloudInitIpconfig struct {
+	Ip       *string `mapstructure:"ip" cty:"ip" hcl:"ip"`
+	Gateway  *string `mapstructure:"gateway" cty:"gateway" hcl:"gateway"`
+	Ip6      *string `mapstructure:"ip6" cty:"ip6" hcl:"ip6"`
+	Gateway6 *string `mapstructure:"gateway6" cty:"gateway6" hcl:"gateway6"`
+}
+
+// FlatMapstructure returns a new FlatCloudInitIpconfig.
+// FlatCloudInitIpconfig is an auto-generated flat version of CloudInitIpconfig.
+// Where the contents a fields with a `mapstructure:,squash` tag are bubbled up.
+func (*CloudInitIpconfig) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Spec } {
+	return new(FlatCloudInitIpconfig)
+}
+
+// HCL2Spec returns the hcl spec of a CloudInitIpconfig.
+// This spec is used by HCL to read the fields of CloudInitIpconfig.
+// The decoded values from this spec will then be applied to a FlatCloudInitIpconfig.
+func (*FlatCloudInitIpconfig) HCL2Spec() map[string]hcldec.Spec {
+	s := map[string]hcldec.Spec{
+		"ip":       &hcldec.AttrSpec{Name: "ip", Type: cty.String, Required: false},
+		"gateway":  &hcldec.AttrSpec{Name: "gateway", Type: cty.String, Required: false},
+		"ip6":      &hcldec.AttrSpec{Name: "ip6", Type: cty.String, Required: false},
+		"gateway6": &hcldec.AttrSpec{Name: "gateway6", Type: cty.String, Required: false},
+	}
+	return s
+}
+
 // FlatConfig is an auto-generated flat version of Config.
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatConfig struct {
@@ -340,12 +369,13 @@ func (*FlatefiConfig) HCL2Spec() map[string]hcldec.Spec {
 // FlatnicConfig is an auto-generated flat version of nicConfig.
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatnicConfig struct {
-	Model        *string `mapstructure:"model" cty:"model" hcl:"model"`
-	PacketQueues *int    `mapstructure:"packet_queues" cty:"packet_queues" hcl:"packet_queues"`
-	MACAddress   *string `mapstructure:"mac_address" cty:"mac_address" hcl:"mac_address"`
-	Bridge       *string `mapstructure:"bridge" cty:"bridge" hcl:"bridge"`
-	VLANTag      *string `mapstructure:"vlan_tag" cty:"vlan_tag" hcl:"vlan_tag"`
-	Firewall     *bool   `mapstructure:"firewall" cty:"firewall" hcl:"firewall"`
+	Model        *string                `mapstructure:"model" cty:"model" hcl:"model"`
+	PacketQueues *int                   `mapstructure:"packet_queues" cty:"packet_queues" hcl:"packet_queues"`
+	MACAddress   *string                `mapstructure:"mac_address" cty:"mac_address" hcl:"mac_address"`
+	Bridge       *string                `mapstructure:"bridge" cty:"bridge" hcl:"bridge"`
+	VLANTag      *string                `mapstructure:"vlan_tag" cty:"vlan_tag" hcl:"vlan_tag"`
+	Firewall     *bool                  `mapstructure:"firewall" cty:"firewall" hcl:"firewall"`
+	Ipconfig     *FlatCloudInitIpconfig `mapstructure:"ipconfig" cty:"ipconfig" hcl:"ipconfig"`
 }
 
 // FlatMapstructure returns a new FlatnicConfig.
@@ -366,6 +396,7 @@ func (*FlatnicConfig) HCL2Spec() map[string]hcldec.Spec {
 		"bridge":        &hcldec.AttrSpec{Name: "bridge", Type: cty.String, Required: false},
 		"vlan_tag":      &hcldec.AttrSpec{Name: "vlan_tag", Type: cty.String, Required: false},
 		"firewall":      &hcldec.AttrSpec{Name: "firewall", Type: cty.Bool, Required: false},
+		"ipconfig":      &hcldec.BlockSpec{TypeName: "ipconfig", Nested: hcldec.ObjectSpec((*FlatCloudInitIpconfig)(nil).HCL2Spec())},
 	}
 	return s
 }

@@ -114,6 +114,8 @@ type FlatConfig struct {
 	VMInterface               *string                            `mapstructure:"vm_interface" cty:"vm_interface" hcl:"vm_interface"`
 	CloneVM                   *string                            `mapstructure:"clone_vm" cty:"clone_vm" hcl:"clone_vm"`
 	FullClone                 *bool                              `mapstructure:"full_clone" required:"false" cty:"full_clone" hcl:"full_clone"`
+	Nameserver                *string                            `mapstructure:"nameserver" cty:"nameserver" hcl:"nameserver"`
+	Searchdomain              *string                            `mapstructure:"searchdomain" cty:"searchdomain" hcl:"searchdomain"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -231,6 +233,8 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"vm_interface":                 &hcldec.AttrSpec{Name: "vm_interface", Type: cty.String, Required: false},
 		"clone_vm":                     &hcldec.AttrSpec{Name: "clone_vm", Type: cty.String, Required: false},
 		"full_clone":                   &hcldec.AttrSpec{Name: "full_clone", Type: cty.Bool, Required: false},
+		"nameserver":                   &hcldec.AttrSpec{Name: "nameserver", Type: cty.String, Required: false},
+		"searchdomain":                 &hcldec.AttrSpec{Name: "searchdomain", Type: cty.String, Required: false},
 	}
 	return s
 }

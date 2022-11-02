@@ -1,5 +1,5 @@
 //go:generate packer-sdc struct-markdown
-//go:generate packer-sdc mapstructure-to-hcl2 -type Config,nicConfig,diskConfig,vgaConfig,additionalISOsConfig,efiConfig
+//go:generate packer-sdc mapstructure-to-hcl2 -type Config,nicConfig,CloudInitIpconfig,diskConfig,vgaConfig,additionalISOsConfig,efiConfig
 
 package proxmox
 
@@ -88,12 +88,20 @@ type additionalISOsConfig struct {
 }
 
 type nicConfig struct {
-	Model        string `mapstructure:"model"`
-	PacketQueues int    `mapstructure:"packet_queues"`
-	MACAddress   string `mapstructure:"mac_address"`
-	Bridge       string `mapstructure:"bridge"`
-	VLANTag      string `mapstructure:"vlan_tag"`
-	Firewall     bool   `mapstructure:"firewall"`
+	Model        string            `mapstructure:"model"`
+	PacketQueues int               `mapstructure:"packet_queues"`
+	MACAddress   string            `mapstructure:"mac_address"`
+	Bridge       string            `mapstructure:"bridge"`
+	VLANTag      string            `mapstructure:"vlan_tag"`
+	Firewall     bool              `mapstructure:"firewall"`
+	Ipconfig     CloudInitIpconfig `mapstructure:"ipconfig"`
+}
+
+type CloudInitIpconfig struct {
+	Ip       string `mapstructure:"ip"`
+	Gateway  string `mapstructure:"gateway"`
+	Ip6      string `mapstructure:"ip6"`
+	Gateway6 string `mapstructure:"gateway6"`
 }
 type diskConfig struct {
 	Type            string `mapstructure:"type"`
@@ -394,4 +402,22 @@ func contains(haystack []string, needle string) bool {
 		}
 	}
 	return false
+}
+
+// Convert Ipconfig attributes into a Proxmox-API compatible string
+func (c CloudInitIpconfig) ToString() string {
+	options := []string{}
+	if c.Ip != "" {
+		options = append(options, "ip="+c.Ip)
+	}
+	if c.Gateway != "" {
+		options = append(options, "gw="+c.Gateway)
+	}
+	if c.Ip6 != "" {
+		options = append(options, "ip6="+c.Ip6)
+	}
+	if c.Gateway6 != "" {
+		options = append(options, "gw6="+c.Gateway6)
+	}
+	return strings.Join(options, ",")
 }

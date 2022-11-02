@@ -13,6 +13,9 @@ type Config struct {
 
 	CloneVM   string         `mapstructure:"clone_vm"`
 	FullClone config.Trilean `mapstructure:"full_clone" required:"false"`
+
+	Nameserver   string `mapstructure:"nameserver"`
+	Searchdomain string `mapstructure:"searchdomain"`
 }
 
 func (c *Config) Prepare(raws ...interface{}) ([]string, []string, error) {

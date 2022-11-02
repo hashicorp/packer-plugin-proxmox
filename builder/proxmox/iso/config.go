@@ -46,6 +46,11 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, []string, error) {
 	if len(c.ISOConfig.ISOUrls) != 0 && c.ISOStoragePool == "" {
 		errs = packersdk.MultiErrorAppend(errs, errors.New("when specifying iso_url, iso_storage_pool must also be specified"))
 	}
+	for idx := range c.NICs {
+		if c.NICs[idx].Ipconfig != (proxmox.CloudInitIpconfig{}) {
+			errs = packersdk.MultiErrorAppend(errs, errors.New("Cloud-Init options are only available when using the proxmox-clone builder"))
+		}
+	}
 
 	if errs != nil && len(errs.Errors) > 0 {
 		return nil, warnings, errs
