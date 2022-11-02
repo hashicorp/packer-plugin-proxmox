@@ -231,6 +231,38 @@ or responding to pattern `/dev/.+`. Example:
 - `cloud_init_storage_pool` (string) - Name of the Proxmox storage pool
   to store the Cloud-Init CDROM on. If not given, the storage pool of the boot device will be used.
 
+- `nameserver` (string) - Set nameserver IP address(es) via Cloud-Init.
+  If not given, the same setting as on the host is used.
+
+- `searchdomain` (string) - Set the DNS searchdomain via Cloud-Init.
+  If not given, the same setting as on the host is used.
+
+- `ipconfig` (array of objects) - Set IP address and gateway via Cloud-Init.
+  If no options are given, DHCP will be used.
+  If you have configured more than one network interface, make sure to match the order of
+  `network_adapters` and `ipconfig`. 
+
+  Usage example (JSON):
+
+  ```json
+  [
+    {
+      "ip": "192.168.1.55/24",
+      "gateway": "192.168.1.1",
+      "ip6": "fda8:a260:6eda:20::4da/128",
+      "gateway6": "fda8:a260:6eda:20::1"
+    }
+  ]
+  ```
+
+  - `ip` (string) IPv4 address (CIDR notation).
+
+  - `gateway` (string) IPv4 gateway.
+
+  - `ip6` (string) IPv6 address (CIDR notation).
+
+  - `gateway6` (string) IPv6 gateway.
+
 - `additional_iso_files` (array of objects) - Additional ISO files attached to the virtual machine.
   Example:
 

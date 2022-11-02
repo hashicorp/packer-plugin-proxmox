@@ -113,7 +113,10 @@ type FlatConfig struct {
 	AdditionalISOFiles        []proxmox.FlatadditionalISOsConfig `mapstructure:"additional_iso_files" cty:"additional_iso_files" hcl:"additional_iso_files"`
 	VMInterface               *string                            `mapstructure:"vm_interface" cty:"vm_interface" hcl:"vm_interface"`
 	CloneVM                   *string                            `mapstructure:"clone_vm" cty:"clone_vm" hcl:"clone_vm"`
-	FullClone                 *bool                              `mapstructure:"full_clone" required:"false" cty:"full_clone" hcl:"full_clone"`
+	FullClone                 *bool                              `mapstructure:"full_clone" cty:"full_clone" hcl:"full_clone"`
+	Nameserver                *string                            `mapstructure:"nameserver" required:"false" cty:"nameserver" hcl:"nameserver"`
+	Searchdomain              *string                            `mapstructure:"searchdomain" required:"false" cty:"searchdomain" hcl:"searchdomain"`
+	Ipconfigs                 []FlatcloudInitIpconfig            `mapstructure:"ipconfig" required:"false" cty:"ipconfig" hcl:"ipconfig"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -231,6 +234,38 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"vm_interface":                 &hcldec.AttrSpec{Name: "vm_interface", Type: cty.String, Required: false},
 		"clone_vm":                     &hcldec.AttrSpec{Name: "clone_vm", Type: cty.String, Required: false},
 		"full_clone":                   &hcldec.AttrSpec{Name: "full_clone", Type: cty.Bool, Required: false},
+		"nameserver":                   &hcldec.AttrSpec{Name: "nameserver", Type: cty.String, Required: false},
+		"searchdomain":                 &hcldec.AttrSpec{Name: "searchdomain", Type: cty.String, Required: false},
+		"ipconfig":                     &hcldec.BlockListSpec{TypeName: "ipconfig", Nested: hcldec.ObjectSpec((*FlatcloudInitIpconfig)(nil).HCL2Spec())},
+	}
+	return s
+}
+
+// FlatcloudInitIpconfig is an auto-generated flat version of cloudInitIpconfig.
+// Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
+type FlatcloudInitIpconfig struct {
+	Ip       *string `mapstructure:"ip" required:"false" cty:"ip" hcl:"ip"`
+	Gateway  *string `mapstructure:"gateway" required:"false" cty:"gateway" hcl:"gateway"`
+	Ip6      *string `mapstructure:"ip6" required:"false" cty:"ip6" hcl:"ip6"`
+	Gateway6 *string `mapstructure:"gateway6" required:"false" cty:"gateway6" hcl:"gateway6"`
+}
+
+// FlatMapstructure returns a new FlatcloudInitIpconfig.
+// FlatcloudInitIpconfig is an auto-generated flat version of cloudInitIpconfig.
+// Where the contents a fields with a `mapstructure:,squash` tag are bubbled up.
+func (*cloudInitIpconfig) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Spec } {
+	return new(FlatcloudInitIpconfig)
+}
+
+// HCL2Spec returns the hcl spec of a cloudInitIpconfig.
+// This spec is used by HCL to read the fields of cloudInitIpconfig.
+// The decoded values from this spec will then be applied to a FlatcloudInitIpconfig.
+func (*FlatcloudInitIpconfig) HCL2Spec() map[string]hcldec.Spec {
+	s := map[string]hcldec.Spec{
+		"ip":       &hcldec.AttrSpec{Name: "ip", Type: cty.String, Required: false},
+		"gateway":  &hcldec.AttrSpec{Name: "gateway", Type: cty.String, Required: false},
+		"ip6":      &hcldec.AttrSpec{Name: "ip6", Type: cty.String, Required: false},
+		"gateway6": &hcldec.AttrSpec{Name: "gateway6", Type: cty.String, Required: false},
 	}
 	return s
 }

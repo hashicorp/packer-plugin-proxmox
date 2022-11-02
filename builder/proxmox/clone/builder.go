@@ -54,10 +54,21 @@ func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQ
 	if c.FullClone.False() {
 		fullClone = 0
 	}
-
 	config.FullClone = &fullClone
+
+	// cloud-init options
 	config.CIuser = comm.SSHUsername
 	config.Sshkeys = string(comm.SSHPublicKey)
+	config.Nameserver = c.Nameserver
+	config.Searchdomain = c.Searchdomain
+	IpconfigMap := make(map[int]interface{})
+	for idx := range c.Ipconfigs {
+		if c.Ipconfigs[idx] != (cloudInitIpconfig{}) {
+			IpconfigMap[idx] = c.Ipconfigs[idx].String()
+		}
+	}
+	config.Ipconfig = IpconfigMap
+
 	sourceVmrs, err := client.GetVmRefsByName(c.CloneVM)
 	if err != nil {
 		return err
