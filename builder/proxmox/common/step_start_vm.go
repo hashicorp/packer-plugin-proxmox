@@ -51,7 +51,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 	config := proxmox.ConfigQemu{
 		Name:         c.VMName,
 		Agent:        agent,
-		QemuKVM:      kvm,
+		QemuKVM:      &kvm,
 		Boot:         c.Boot, // Boot priority, example: "order=virtio0;ide2;net0", virtio0:Disk0 -> ide0:CDROM -> net0:Network
 		QemuCpu:      c.CPUType,
 		Description:  "Packer ephemeral build VM",
@@ -66,7 +66,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		QemuNetworks: generateProxmoxNetworkAdapters(c.NICs),
 		QemuDisks:    generateProxmoxDisks(c.Disks),
 		Scsihw:       c.SCSIController,
-		Onboot:       c.Onboot,
+		Onboot:       &c.Onboot,
 	}
 
 	var vmRef *proxmox.VmRef

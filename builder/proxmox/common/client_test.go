@@ -64,7 +64,7 @@ func TestLogin(t *testing.T) {
 		}
 
 		// validate ticket
-		if val, err := req.Cookie("PVEAuthCookie"); err != nil || val.Value != "dummy-ticket" {
+		if req.Header["Authorization"][0] != "PVEAuthCookie=dummy-ticket" {
 			rw.WriteHeader(http.StatusUnauthorized)
 			return
 		}
