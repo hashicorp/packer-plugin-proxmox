@@ -4,7 +4,11 @@
 
 name: "Go Validate"
 
-on: [ push ]
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
 
 permissions:
   contents: read
