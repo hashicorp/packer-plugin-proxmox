@@ -5,7 +5,11 @@
 
 name: "Go Test Linux"
 
-on: [ push ]
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
 
 permissions:
   contents: read
