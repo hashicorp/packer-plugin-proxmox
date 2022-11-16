@@ -5,7 +5,11 @@
 
 name: "Go Test Windows"
 
-on: [ push ]
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
 
 permissions:
   contents: read
