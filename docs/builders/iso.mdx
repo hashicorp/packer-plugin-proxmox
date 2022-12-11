@@ -169,6 +169,18 @@ in the image's Cloud-Init settings for provisioning.
     operating as a router, reverse proxy or a busy HTTP server. Requires
     `virtio` network adapter. Defaults to `0`.
 
+- `serials` ([]string) - A list (max 4 elements) of serial ports attached to
+the virtual machine. It may pass through a host serial device `/dev/ttyS0`
+or create unix socket on the host `socket`. Each element can be `socket`
+or responding to pattern `/dev/.+`. Example:
+
+  ```json
+  [
+    "socket",
+    "/dev/ttyS1"
+  ]
+  ```
+
 - `disks` (array of objects) - Disks attached to the virtual machine.
   Example:
 
