@@ -58,6 +58,7 @@ type Config struct {
 	VGA            vgaConfig      `mapstructure:"vga"`
 	NICs           []nicConfig    `mapstructure:"network_adapters"`
 	Disks          []diskConfig   `mapstructure:"disks"`
+	Serials        []string       `mapstructure:"serials"`
 	Agent          config.Trilean `mapstructure:"qemu_agent"`
 	SCSIController string         `mapstructure:"scsi_controller"`
 	Onboot         bool           `mapstructure:"onboot"`

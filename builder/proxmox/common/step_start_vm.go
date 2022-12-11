@@ -65,6 +65,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		QemuVga:      generateProxmoxVga(c.VGA),
 		QemuNetworks: generateProxmoxNetworkAdapters(c.NICs),
 		QemuDisks:    generateProxmoxDisks(c.Disks),
+		QemuSerials:  generateProxmoxSerials(c.Serials),
 		Scsihw:       c.SCSIController,
 		Onboot:       &c.Onboot,
 	}
@@ -193,6 +194,15 @@ func generateProxmoxDisks(disks []diskConfig) proxmox.QemuDevices {
 		if devs[idx]["type"] == "scsi" || devs[idx]["type"] == "virtio" {
 			setDeviceParamIfDefined(devs[idx], "iothread", strconv.FormatBool(disks[idx].IOThread))
 		}
+	}
+	return devs
+}
+
+func generateProxmoxSerials(serials []string) proxmox.QemuDevices {
+	devs := make(proxmox.QemuDevices)
+	for idx := range serials {
+		devs[idx] = make(proxmox.QemuDevice)
+		setDeviceParamIfDefined(devs[idx], "type", serials[idx])
 	}
 	return devs
 }
