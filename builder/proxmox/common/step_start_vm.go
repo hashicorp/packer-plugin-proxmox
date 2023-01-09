@@ -60,7 +60,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		QemuSockets:  c.Sockets,
 		QemuOs:       c.OS,
 		Bios:         c.BIOS,
-		EFIDisk:      generateProxmoxEfi(c.EFIDisk),
+		EFIDisk:      generateProxmoxEfi(c.EFIConfig),
 		Machine:      c.Machine,
 		QemuVga:      generateProxmoxVga(c.VGA),
 		QemuNetworks: generateProxmoxNetworkAdapters(c.NICs),
@@ -118,6 +118,25 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		_, err := client.SetVmConfig(vmRef, addISOConfig)
 		if err != nil {
 			err := fmt.Errorf("Error updating template: %s", err)
+			state.Put("error", err)
+			ui.Error(err.Error())
+			return multistep.ActionHalt
+		}
+	}
+
+	// The EFI disk doesn't get created reliably during initial VM creation,
+	// so let's make sure it's there.
+	if c.EFIConfig != (efiConfig{}) {
+		addEFIConfig := make(map[string]interface{})
+		err := config.CreateQemuEfiParams(addEFIConfig)
+		if err != nil {
+			err := fmt.Errorf("error creating EFI parameters: %s", err)
+			state.Put("error", err)
+			ui.Error(err.Error())
+		}
+		_, err = client.SetVmConfig(vmRef, addEFIConfig)
+		if err != nil {
+			err := fmt.Errorf("error updating template: %s", err)
 			state.Put("error", err)
 			ui.Error(err.Error())
 			return multistep.ActionHalt
@@ -190,9 +209,17 @@ func generateProxmoxVga(vga vgaConfig) proxmox.QemuDevice {
 
 func generateProxmoxEfi(efi efiConfig) proxmox.QemuDevice {
 	dev := make(proxmox.QemuDevice)
-	setDeviceParamIfDefined(dev, "storage", efi.Storage)
-	dev["pre-enrolled-keys"] = efi.PreEnrolledKeys
-	setDeviceParamIfDefined(dev, "efitype", efi.EfiType)
+	setDeviceParamIfDefined(dev, "storage", efi.EFIStoragePool)
+	setDeviceParamIfDefined(dev, "efitype", efi.EFIType)
+	// efi.PreEnrolledKeys can be false, but we only want to set pre-enrolled-keys=0
+	// when other EFI options are set.
+	if len(dev) > 0 {
+		if efi.PreEnrolledKeys {
+			dev["pre-enrolled-keys"] = "1"
+		} else {
+			dev["pre-enrolled-keys"] = "0"
+		}
+	}
 	return dev
 }
 

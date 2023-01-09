@@ -52,7 +52,8 @@ type Config struct {
 	Sockets        int            `mapstructure:"sockets"`
 	OS             string         `mapstructure:"os"`
 	BIOS           string         `mapstructure:"bios"`
-	EFIDisk        efiConfig      `mapstructure:"efidisk"`
+	EFIConfig      efiConfig      `mapstructure:"efi_config"`
+	EFIDisk        string         `mapstructure:"efidisk"`
 	Machine        string         `mapstructure:"machine"`
 	VGA            vgaConfig      `mapstructure:"vga"`
 	NICs           []nicConfig    `mapstructure:"network_adapters"`
@@ -103,9 +104,9 @@ type diskConfig struct {
 	IOThread        bool   `mapstructure:"io_thread"`
 }
 type efiConfig struct {
-	Storage         string `mapstructure:"storage"`
-	PreEnrolledKeys int    `mapstructure:"pre_enrolled_keys"`
-	EfiType         string `mapstructure:"efitype"`
+	EFIStoragePool  string `mapstructure:"efi_storage_pool"`
+	PreEnrolledKeys bool   `mapstructure:"pre_enrolled_keys"`
+	EFIType         string `mapstructure:"efi_type"`
 }
 type vgaConfig struct {
 	Type   string `mapstructure:"type"`
@@ -349,6 +350,24 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		}
 		if options != 1 {
 			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("one of iso_file, iso_url, or a combination of cd_files and cd_content must be specified for AdditionalISO file %s", c.AdditionalISOFiles[idx].Device))
+		}
+	}
+	if c.EFIDisk != "" {
+		if c.EFIConfig != (efiConfig{}) {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("both efi_config and efidisk cannot be set at the same time, consider defining only efi_config as efidisk is deprecated"))
+		} else {
+			warnings = append(warnings, "efidisk is deprecated, please use efi_config instead")
+			c.EFIConfig.EFIStoragePool = c.EFIDisk
+		}
+	}
+	if c.EFIConfig.EFIStoragePool != "" {
+		if c.EFIConfig.EFIType == "" {
+			log.Printf("EFI disk defined, but no efi_type given, using 4m")
+			c.EFIConfig.EFIType = "4m"
+		}
+	} else {
+		if c.EFIConfig.EFIType != "" || c.EFIConfig.PreEnrolledKeys {
+			errs = packersdk.MultiErrorAppend(errs, errors.New("efi_storage_pool not set for efi_config"))
 		}
 	}
 

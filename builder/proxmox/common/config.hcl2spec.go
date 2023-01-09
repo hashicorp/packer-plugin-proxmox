@@ -94,7 +94,8 @@ type FlatConfig struct {
 	Sockets                   *int                       `mapstructure:"sockets" cty:"sockets" hcl:"sockets"`
 	OS                        *string                    `mapstructure:"os" cty:"os" hcl:"os"`
 	BIOS                      *string                    `mapstructure:"bios" cty:"bios" hcl:"bios"`
-	EFIDisk                   *FlatefiConfig             `mapstructure:"efidisk" cty:"efidisk" hcl:"efidisk"`
+	EFIConfig                 *FlatefiConfig             `mapstructure:"efi_config" cty:"efi_config" hcl:"efi_config"`
+	EFIDisk                   *string                    `mapstructure:"efidisk" cty:"efidisk" hcl:"efidisk"`
 	Machine                   *string                    `mapstructure:"machine" cty:"machine" hcl:"machine"`
 	VGA                       *FlatvgaConfig             `mapstructure:"vga" cty:"vga" hcl:"vga"`
 	NICs                      []FlatnicConfig            `mapstructure:"network_adapters" cty:"network_adapters" hcl:"network_adapters"`
@@ -207,7 +208,8 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"sockets":                      &hcldec.AttrSpec{Name: "sockets", Type: cty.Number, Required: false},
 		"os":                           &hcldec.AttrSpec{Name: "os", Type: cty.String, Required: false},
 		"bios":                         &hcldec.AttrSpec{Name: "bios", Type: cty.String, Required: false},
-		"efidisk":                      &hcldec.BlockSpec{TypeName: "efidisk", Nested: hcldec.ObjectSpec((*FlatefiConfig)(nil).HCL2Spec())},
+		"efi_config":                   &hcldec.BlockSpec{TypeName: "efi_config", Nested: hcldec.ObjectSpec((*FlatefiConfig)(nil).HCL2Spec())},
+		"efidisk":                      &hcldec.AttrSpec{Name: "efidisk", Type: cty.String, Required: false},
 		"machine":                      &hcldec.AttrSpec{Name: "machine", Type: cty.String, Required: false},
 		"vga":                          &hcldec.BlockSpec{TypeName: "vga", Nested: hcldec.ObjectSpec((*FlatvgaConfig)(nil).HCL2Spec())},
 		"network_adapters":             &hcldec.BlockListSpec{TypeName: "network_adapters", Nested: hcldec.ObjectSpec((*FlatnicConfig)(nil).HCL2Spec())},
@@ -309,9 +311,9 @@ func (*FlatdiskConfig) HCL2Spec() map[string]hcldec.Spec {
 // FlatefiConfig is an auto-generated flat version of efiConfig.
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatefiConfig struct {
-	Storage         *string `mapstructure:"storage" cty:"storage" hcl:"storage"`
-	PreEnrolledKeys *int    `mapstructure:"pre_enrolled_keys" cty:"pre_enrolled_keys" hcl:"pre_enrolled_keys"`
-	EfiType         *string `mapstructure:"efitype" cty:"efitype" hcl:"efitype"`
+	EFIStoragePool  *string `mapstructure:"efi_storage_pool" cty:"efi_storage_pool" hcl:"efi_storage_pool"`
+	PreEnrolledKeys *bool   `mapstructure:"pre_enrolled_keys" cty:"pre_enrolled_keys" hcl:"pre_enrolled_keys"`
+	EFIType         *string `mapstructure:"efi_type" cty:"efi_type" hcl:"efi_type"`
 }
 
 // FlatMapstructure returns a new FlatefiConfig.
@@ -326,9 +328,9 @@ func (*efiConfig) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Spe
 // The decoded values from this spec will then be applied to a FlatefiConfig.
 func (*FlatefiConfig) HCL2Spec() map[string]hcldec.Spec {
 	s := map[string]hcldec.Spec{
-		"storage":           &hcldec.AttrSpec{Name: "storage", Type: cty.String, Required: false},
-		"pre_enrolled_keys": &hcldec.AttrSpec{Name: "pre_enrolled_keys", Type: cty.Number, Required: false},
-		"efitype":           &hcldec.AttrSpec{Name: "efitype", Type: cty.String, Required: false},
+		"efi_storage_pool":  &hcldec.AttrSpec{Name: "efi_storage_pool", Type: cty.String, Required: false},
+		"pre_enrolled_keys": &hcldec.AttrSpec{Name: "pre_enrolled_keys", Type: cty.Bool, Required: false},
+		"efi_type":          &hcldec.AttrSpec{Name: "efi_type", Type: cty.String, Required: false},
 	}
 	return s
 }

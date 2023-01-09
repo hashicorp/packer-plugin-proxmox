@@ -95,7 +95,8 @@ type FlatConfig struct {
 	Sockets                   *int                               `mapstructure:"sockets" cty:"sockets" hcl:"sockets"`
 	OS                        *string                            `mapstructure:"os" cty:"os" hcl:"os"`
 	BIOS                      *string                            `mapstructure:"bios" cty:"bios" hcl:"bios"`
-	EFIDisk                   *proxmox.FlatefiConfig             `mapstructure:"efidisk" cty:"efidisk" hcl:"efidisk"`
+	EFIConfig                 *proxmox.FlatefiConfig             `mapstructure:"efi_config" cty:"efi_config" hcl:"efi_config"`
+	EFIDisk                   *string                            `mapstructure:"efidisk" cty:"efidisk" hcl:"efidisk"`
 	Machine                   *string                            `mapstructure:"machine" cty:"machine" hcl:"machine"`
 	VGA                       *proxmox.FlatvgaConfig             `mapstructure:"vga" cty:"vga" hcl:"vga"`
 	NICs                      []proxmox.FlatnicConfig            `mapstructure:"network_adapters" cty:"network_adapters" hcl:"network_adapters"`
@@ -216,7 +217,8 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"sockets":                      &hcldec.AttrSpec{Name: "sockets", Type: cty.Number, Required: false},
 		"os":                           &hcldec.AttrSpec{Name: "os", Type: cty.String, Required: false},
 		"bios":                         &hcldec.AttrSpec{Name: "bios", Type: cty.String, Required: false},
-		"efidisk":                      &hcldec.BlockSpec{TypeName: "efidisk", Nested: hcldec.ObjectSpec((*proxmox.FlatefiConfig)(nil).HCL2Spec())},
+		"efi_config":                   &hcldec.BlockSpec{TypeName: "efi_config", Nested: hcldec.ObjectSpec((*proxmox.FlatefiConfig)(nil).HCL2Spec())},
+		"efidisk":                      &hcldec.AttrSpec{Name: "efidisk", Type: cty.String, Required: false},
 		"machine":                      &hcldec.AttrSpec{Name: "machine", Type: cty.String, Required: false},
 		"vga":                          &hcldec.BlockSpec{TypeName: "vga", Nested: hcldec.ObjectSpec((*proxmox.FlatvgaConfig)(nil).HCL2Spec())},
 		"network_adapters":             &hcldec.BlockListSpec{TypeName: "network_adapters", Nested: hcldec.ObjectSpec((*proxmox.FlatnicConfig)(nil).HCL2Spec())},
