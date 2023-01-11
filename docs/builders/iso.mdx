@@ -82,6 +82,11 @@ in the image's Cloud-Init settings for provisioning.
 
 ### Optional:
 
+- `iso_download_pve` (bool) - Download the specified `iso_url` directly from
+  the PVE node. Defaults to `false`.
+  By default Packer downloads the ISO and uploads it in a second step, this
+  option lets Proxmox handle downloading the ISO directly from the server.
+
 - `insecure_skip_tls_verify` (bool) - Skip validating the certificate.
 
 - `task_timeout` (duration string | ex: "10m") - The timeout for

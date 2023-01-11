@@ -119,6 +119,7 @@ type FlatConfig struct {
 	TargetExtension           *string                            `mapstructure:"iso_target_extension" cty:"iso_target_extension" hcl:"iso_target_extension"`
 	ISOFile                   *string                            `mapstructure:"iso_file" cty:"iso_file" hcl:"iso_file"`
 	ISOStoragePool            *string                            `mapstructure:"iso_storage_pool" cty:"iso_storage_pool" hcl:"iso_storage_pool"`
+	ISODownloadPVE            *bool                              `mapstructure:"iso_download_pve" cty:"iso_download_pve" hcl:"iso_download_pve"`
 	UnmountISO                *bool                              `mapstructure:"unmount_iso" cty:"unmount_iso" hcl:"unmount_iso"`
 }
 
@@ -242,6 +243,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"iso_target_extension":         &hcldec.AttrSpec{Name: "iso_target_extension", Type: cty.String, Required: false},
 		"iso_file":                     &hcldec.AttrSpec{Name: "iso_file", Type: cty.String, Required: false},
 		"iso_storage_pool":             &hcldec.AttrSpec{Name: "iso_storage_pool", Type: cty.String, Required: false},
+		"iso_download_pve":             &hcldec.AttrSpec{Name: "iso_download_pve", Type: cty.Bool, Required: false},
 		"unmount_iso":                  &hcldec.AttrSpec{Name: "unmount_iso", Type: cty.Bool, Required: false},
 	}
 	return s

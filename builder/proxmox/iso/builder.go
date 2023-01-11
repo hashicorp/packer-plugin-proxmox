@@ -33,19 +33,25 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 	state := new(multistep.BasicStateBag)
 	state.Put("iso-config", &b.config)
 
-	preSteps := []multistep.Step{
-		&commonsteps.StepDownload{
-			Checksum:    b.config.ISOChecksum,
-			Description: "ISO",
-			Extension:   b.config.TargetExtension,
-			ResultKey:   downloadPathKey,
-			TargetPath:  b.config.TargetPath,
-			Url:         b.config.ISOUrls,
-		},
+	preSteps := []multistep.Step{}
+	if b.config.ISODownloadPVE {
+		preSteps = append(preSteps,
+			&stepDownloadISOOnPVE{},
+		)
+	} else {
+		preSteps = append(preSteps,
+			&commonsteps.StepDownload{
+				Checksum:    b.config.ISOChecksum,
+				Description: "ISO",
+				Extension:   b.config.TargetExtension,
+				ResultKey:   downloadPathKey,
+				TargetPath:  b.config.TargetPath,
+				Url:         b.config.ISOUrls,
+			},
+			&stepUploadISO{},
+		)
 	}
-	preSteps = append(preSteps,
-		&stepUploadISO{},
-	)
+
 	postSteps := []multistep.Step{
 		&stepFinalizeISOTemplate{},
 	}
