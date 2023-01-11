@@ -9,13 +9,13 @@ import (
 	"net/netip"
 	"strings"
 
-	proxmox "github.com/hashicorp/packer-plugin-proxmox/builder/proxmox/common"
+	proxmoxcommon "github.com/hashicorp/packer-plugin-proxmox/builder/proxmox/common"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 )
 
 type Config struct {
-	proxmox.Config `mapstructure:",squash"`
+	proxmoxcommon.Config `mapstructure:",squash"`
 
 	CloneVM   string         `mapstructure:"clone_vm" required:"true"`
 	FullClone config.Trilean `mapstructure:"full_clone" required:"false"`
