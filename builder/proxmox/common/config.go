@@ -230,6 +230,9 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("disk format must be specified for pool type %q", c.Disks[idx].StoragePoolType))
 		}
 	}
+	if len(c.Serials) > 4 {
+	    errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("serials admit up to 4 elements"))
+	}
 	if c.SCSIController == "" {
 		log.Printf("SCSI controller not set, using default 'lsi'")
 		c.SCSIController = "lsi"
