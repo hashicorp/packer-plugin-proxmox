@@ -233,6 +233,12 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 	if len(c.Serials) > 4 {
 	    errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("serials admit up to 4 elements"))
 	}
+	res := regexp.MustCompile(`^(/dev/.+|socket)$`)
+	for idx := range c.Serials {
+		if !res.MatchString(c.Serials[idx]) {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("serials must respond to pattern \"/dev/.+\" or be \"socket\". It was \"%s\"", c.Serials[idx]))
+		}
+	}
 	if c.SCSIController == "" {
 		log.Printf("SCSI controller not set, using default 'lsi'")
 		c.SCSIController = "lsi"
