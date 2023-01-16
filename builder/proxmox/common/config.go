@@ -231,12 +231,12 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		}
 	}
 	if len(c.Serials) > 4 {
-	    errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("serials admit up to 4 elements"))
+		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("too many serials: %d serials defined, but proxmox accepts 4 elements maximum", len(c.Serials)))
 	}
 	res := regexp.MustCompile(`^(/dev/.+|socket)$`)
-	for idx := range c.Serials {
-		if !res.MatchString(c.Serials[idx]) {
-			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("serials must respond to pattern \"/dev/.+\" or be \"socket\". It was \"%s\"", c.Serials[idx]))
+	for _, serial := range c.Serials {
+		if !res.MatchString(serial) {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("serials must respond to pattern \"/dev/.+\" or be \"socket\". It was \"%s\"", serial))
 		}
 	}
 	if c.SCSIController == "" {
