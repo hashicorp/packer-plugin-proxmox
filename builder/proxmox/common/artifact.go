@@ -11,7 +11,8 @@ import (
 
 type Artifact struct {
 	builderID     string
-	templateID    int
+	vmID          int
+	isTemplate    bool
 	proxmoxClient *proxmox.Client
 
 	// StateData should store data such as GeneratedData
@@ -31,11 +32,15 @@ func (*Artifact) Files() []string {
 }
 
 func (a *Artifact) Id() string {
-	return strconv.Itoa(a.templateID)
+	return strconv.Itoa(a.vmID)
 }
 
 func (a *Artifact) String() string {
-	return fmt.Sprintf("A template was created: %d", a.templateID)
+
+	if a.isTemplate {
+		return fmt.Sprintf("A Template was created: %d", a.vmID)
+	}
+	return fmt.Sprintf("A VM was created: %d", a.vmID)
 }
 
 func (a *Artifact) State(name string) interface{} {
@@ -43,7 +48,12 @@ func (a *Artifact) State(name string) interface{} {
 }
 
 func (a *Artifact) Destroy() error {
-	log.Printf("Destroying template: %d", a.templateID)
-	_, err := a.proxmoxClient.DeleteVm(proxmox.NewVmRef(a.templateID))
+
+	if a.isTemplate {
+		log.Printf("Destroying Template: %d", a.vmID)
+	} else {
+		log.Printf("Destroying VM: %d", a.vmID)
+	}
+	_, err := a.proxmoxClient.DeleteVm(proxmox.NewVmRef(a.vmID))
 	return err
 }

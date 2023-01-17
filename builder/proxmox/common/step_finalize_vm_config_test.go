@@ -191,7 +191,7 @@ func TestTemplateFinalize(t *testing.T) {
 			state.Put("vmRef", proxmox.NewVmRef(1))
 			state.Put("proxmoxClient", finalizer)
 
-			step := stepFinalizeTemplateConfig{}
+			step := stepFinalizeVMConfig{}
 			action := step.Run(context.TODO(), state)
 			if action != c.expectedAction {
 				t.Errorf("Expected action to be %v, got %v", c.expectedAction, action)
