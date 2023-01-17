@@ -242,3 +242,47 @@ func TestAdditionalISOs(t *testing.T) {
 	}
 
 }
+
+func TestSerials(t *testing.T) {
+	serialsTest := []struct {
+		name          string
+		serials       []string
+		expectFailure bool
+	}{
+		{
+			name:          "empty serials, no error",
+			expectFailure: false,
+			serials:       []string{},
+		},
+		{
+			name:          "too many serials, fail",
+			expectFailure: true,
+			serials:       []string{"socket", "socket", "socket", "socket", "socket"},
+		},
+		{
+			name:          "malformed serial, fail",
+			expectFailure: true,
+			serials:       []string{"socket", "/dev/abcde", "/mnt/device"},
+		},
+	}
+
+	for _, tt := range serialsTest {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := mandatoryConfig(t)
+			cfg["serials"] = tt.serials
+
+			var c Config
+			_, _, err := c.Prepare(&c, cfg)
+			if err != nil {
+				if !tt.expectFailure {
+					t.Fatalf("unexpected failure to prepare config: %s", err)
+				}
+				t.Logf("got expected failure: %s", err)
+			}
+
+			if err == nil && tt.expectFailure {
+				t.Errorf("expected failure, but prepare succeeded")
+			}
+		})
+	}
+}
