@@ -1,3 +1,4 @@
 main
 dist/*
 packer-plugin-proxmox
+.docs
