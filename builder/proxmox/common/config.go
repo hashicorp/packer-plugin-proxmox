@@ -1,5 +1,5 @@
 //go:generate packer-sdc struct-markdown
-//go:generate packer-sdc mapstructure-to-hcl2 -type Config,nicConfig,diskConfig,vgaConfig,additionalISOsConfig,efiConfig
+//go:generate packer-sdc mapstructure-to-hcl2 -type Config,NICConfig,diskConfig,vgaConfig,additionalISOsConfig,efiConfig
 
 package proxmox
 
@@ -56,7 +56,7 @@ type Config struct {
 	EFIDisk        string         `mapstructure:"efidisk"`
 	Machine        string         `mapstructure:"machine"`
 	VGA            vgaConfig      `mapstructure:"vga"`
-	NICs           []nicConfig    `mapstructure:"network_adapters"`
+	NICs           []NICConfig    `mapstructure:"network_adapters"`
 	Disks          []diskConfig   `mapstructure:"disks"`
 	Serials        []string       `mapstructure:"serials"`
 	Agent          config.Trilean `mapstructure:"qemu_agent"`
@@ -87,7 +87,7 @@ type additionalISOsConfig struct {
 	commonsteps.CDConfig  `mapstructure:",squash"`
 }
 
-type nicConfig struct {
+type NICConfig struct {
 	Model        string `mapstructure:"model"`
 	PacketQueues int    `mapstructure:"packet_queues"`
 	MACAddress   string `mapstructure:"mac_address"`

@@ -99,7 +99,7 @@ type FlatConfig struct {
 	EFIDisk                   *string                            `mapstructure:"efidisk" cty:"efidisk" hcl:"efidisk"`
 	Machine                   *string                            `mapstructure:"machine" cty:"machine" hcl:"machine"`
 	VGA                       *proxmox.FlatvgaConfig             `mapstructure:"vga" cty:"vga" hcl:"vga"`
-	NICs                      []proxmox.FlatnicConfig            `mapstructure:"network_adapters" cty:"network_adapters" hcl:"network_adapters"`
+	NICs                      []proxmox.FlatNICConfig            `mapstructure:"network_adapters" cty:"network_adapters" hcl:"network_adapters"`
 	Disks                     []proxmox.FlatdiskConfig           `mapstructure:"disks" cty:"disks" hcl:"disks"`
 	Serials                   []string                           `mapstructure:"serials" cty:"serials" hcl:"serials"`
 	Agent                     *bool                              `mapstructure:"qemu_agent" cty:"qemu_agent" hcl:"qemu_agent"`
@@ -222,7 +222,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"efidisk":                      &hcldec.AttrSpec{Name: "efidisk", Type: cty.String, Required: false},
 		"machine":                      &hcldec.AttrSpec{Name: "machine", Type: cty.String, Required: false},
 		"vga":                          &hcldec.BlockSpec{TypeName: "vga", Nested: hcldec.ObjectSpec((*proxmox.FlatvgaConfig)(nil).HCL2Spec())},
-		"network_adapters":             &hcldec.BlockListSpec{TypeName: "network_adapters", Nested: hcldec.ObjectSpec((*proxmox.FlatnicConfig)(nil).HCL2Spec())},
+		"network_adapters":             &hcldec.BlockListSpec{TypeName: "network_adapters", Nested: hcldec.ObjectSpec((*proxmox.FlatNICConfig)(nil).HCL2Spec())},
 		"disks":                        &hcldec.BlockListSpec{TypeName: "disks", Nested: hcldec.ObjectSpec((*proxmox.FlatdiskConfig)(nil).HCL2Spec())},
 		"serials":                      &hcldec.AttrSpec{Name: "serials", Type: cty.List(cty.String), Required: false},
 		"qemu_agent":                   &hcldec.AttrSpec{Name: "qemu_agent", Type: cty.Bool, Required: false},

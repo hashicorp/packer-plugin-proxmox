@@ -164,7 +164,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 	return multistep.ActionContinue
 }
 
-func generateProxmoxNetworkAdapters(nics []nicConfig) proxmox.QemuDevices {
+func generateProxmoxNetworkAdapters(nics []NICConfig) proxmox.QemuDevices {
 	devs := make(proxmox.QemuDevices)
 	for idx := range nics {
 		devs[idx] = make(proxmox.QemuDevice)

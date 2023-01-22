@@ -99,7 +99,7 @@ type FlatConfig struct {
 	EFIDisk                   *string                            `mapstructure:"efidisk" cty:"efidisk" hcl:"efidisk"`
 	Machine                   *string                            `mapstructure:"machine" cty:"machine" hcl:"machine"`
 	VGA                       *proxmox.FlatvgaConfig             `mapstructure:"vga" cty:"vga" hcl:"vga"`
-	NICs                      []proxmox.FlatnicConfig            `mapstructure:"network_adapters" cty:"network_adapters" hcl:"network_adapters"`
+	NICs                      []proxmox.FlatNICConfig            `mapstructure:"network_adapters" cty:"network_adapters" hcl:"network_adapters"`
 	Disks                     []proxmox.FlatdiskConfig           `mapstructure:"disks" cty:"disks" hcl:"disks"`
 	Serials                   []string                           `mapstructure:"serials" cty:"serials" hcl:"serials"`
 	Agent                     *bool                              `mapstructure:"qemu_agent" cty:"qemu_agent" hcl:"qemu_agent"`
@@ -112,8 +112,8 @@ type FlatConfig struct {
 	CloudInitStoragePool      *string                            `mapstructure:"cloud_init_storage_pool" cty:"cloud_init_storage_pool" hcl:"cloud_init_storage_pool"`
 	AdditionalISOFiles        []proxmox.FlatadditionalISOsConfig `mapstructure:"additional_iso_files" cty:"additional_iso_files" hcl:"additional_iso_files"`
 	VMInterface               *string                            `mapstructure:"vm_interface" cty:"vm_interface" hcl:"vm_interface"`
-	CloneVM                   *string                            `mapstructure:"clone_vm" cty:"clone_vm" hcl:"clone_vm"`
-	FullClone                 *bool                              `mapstructure:"full_clone" cty:"full_clone" hcl:"full_clone"`
+	CloneVM                   *string                            `mapstructure:"clone_vm" required:"true" cty:"clone_vm" hcl:"clone_vm"`
+	FullClone                 *bool                              `mapstructure:"full_clone" required:"false" cty:"full_clone" hcl:"full_clone"`
 	Nameserver                *string                            `mapstructure:"nameserver" required:"false" cty:"nameserver" hcl:"nameserver"`
 	Searchdomain              *string                            `mapstructure:"searchdomain" required:"false" cty:"searchdomain" hcl:"searchdomain"`
 	Ipconfigs                 []FlatcloudInitIpconfig            `mapstructure:"ipconfig" required:"false" cty:"ipconfig" hcl:"ipconfig"`
@@ -219,7 +219,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"efidisk":                      &hcldec.AttrSpec{Name: "efidisk", Type: cty.String, Required: false},
 		"machine":                      &hcldec.AttrSpec{Name: "machine", Type: cty.String, Required: false},
 		"vga":                          &hcldec.BlockSpec{TypeName: "vga", Nested: hcldec.ObjectSpec((*proxmox.FlatvgaConfig)(nil).HCL2Spec())},
-		"network_adapters":             &hcldec.BlockListSpec{TypeName: "network_adapters", Nested: hcldec.ObjectSpec((*proxmox.FlatnicConfig)(nil).HCL2Spec())},
+		"network_adapters":             &hcldec.BlockListSpec{TypeName: "network_adapters", Nested: hcldec.ObjectSpec((*proxmox.FlatNICConfig)(nil).HCL2Spec())},
 		"disks":                        &hcldec.BlockListSpec{TypeName: "disks", Nested: hcldec.ObjectSpec((*proxmox.FlatdiskConfig)(nil).HCL2Spec())},
 		"serials":                      &hcldec.AttrSpec{Name: "serials", Type: cty.List(cty.String), Required: false},
 		"qemu_agent":                   &hcldec.AttrSpec{Name: "qemu_agent", Type: cty.Bool, Required: false},
