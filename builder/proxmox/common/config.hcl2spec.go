@@ -98,7 +98,7 @@ type FlatConfig struct {
 	EFIDisk                   *string                    `mapstructure:"efidisk" cty:"efidisk" hcl:"efidisk"`
 	Machine                   *string                    `mapstructure:"machine" cty:"machine" hcl:"machine"`
 	VGA                       *FlatvgaConfig             `mapstructure:"vga" cty:"vga" hcl:"vga"`
-	NICs                      []FlatnicConfig            `mapstructure:"network_adapters" cty:"network_adapters" hcl:"network_adapters"`
+	NICs                      []FlatNICConfig            `mapstructure:"network_adapters" cty:"network_adapters" hcl:"network_adapters"`
 	Disks                     []FlatdiskConfig           `mapstructure:"disks" cty:"disks" hcl:"disks"`
 	Serials                   []string                   `mapstructure:"serials" cty:"serials" hcl:"serials"`
 	Agent                     *bool                      `mapstructure:"qemu_agent" cty:"qemu_agent" hcl:"qemu_agent"`
@@ -213,7 +213,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"efidisk":                      &hcldec.AttrSpec{Name: "efidisk", Type: cty.String, Required: false},
 		"machine":                      &hcldec.AttrSpec{Name: "machine", Type: cty.String, Required: false},
 		"vga":                          &hcldec.BlockSpec{TypeName: "vga", Nested: hcldec.ObjectSpec((*FlatvgaConfig)(nil).HCL2Spec())},
-		"network_adapters":             &hcldec.BlockListSpec{TypeName: "network_adapters", Nested: hcldec.ObjectSpec((*FlatnicConfig)(nil).HCL2Spec())},
+		"network_adapters":             &hcldec.BlockListSpec{TypeName: "network_adapters", Nested: hcldec.ObjectSpec((*FlatNICConfig)(nil).HCL2Spec())},
 		"disks":                        &hcldec.BlockListSpec{TypeName: "disks", Nested: hcldec.ObjectSpec((*FlatdiskConfig)(nil).HCL2Spec())},
 		"serials":                      &hcldec.AttrSpec{Name: "serials", Type: cty.List(cty.String), Required: false},
 		"qemu_agent":                   &hcldec.AttrSpec{Name: "qemu_agent", Type: cty.Bool, Required: false},
@@ -226,6 +226,39 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"cloud_init_storage_pool":      &hcldec.AttrSpec{Name: "cloud_init_storage_pool", Type: cty.String, Required: false},
 		"additional_iso_files":         &hcldec.BlockListSpec{TypeName: "additional_iso_files", Nested: hcldec.ObjectSpec((*FlatadditionalISOsConfig)(nil).HCL2Spec())},
 		"vm_interface":                 &hcldec.AttrSpec{Name: "vm_interface", Type: cty.String, Required: false},
+	}
+	return s
+}
+
+// FlatNICConfig is an auto-generated flat version of NICConfig.
+// Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
+type FlatNICConfig struct {
+	Model        *string `mapstructure:"model" cty:"model" hcl:"model"`
+	PacketQueues *int    `mapstructure:"packet_queues" cty:"packet_queues" hcl:"packet_queues"`
+	MACAddress   *string `mapstructure:"mac_address" cty:"mac_address" hcl:"mac_address"`
+	Bridge       *string `mapstructure:"bridge" cty:"bridge" hcl:"bridge"`
+	VLANTag      *string `mapstructure:"vlan_tag" cty:"vlan_tag" hcl:"vlan_tag"`
+	Firewall     *bool   `mapstructure:"firewall" cty:"firewall" hcl:"firewall"`
+}
+
+// FlatMapstructure returns a new FlatNICConfig.
+// FlatNICConfig is an auto-generated flat version of NICConfig.
+// Where the contents a fields with a `mapstructure:,squash` tag are bubbled up.
+func (*NICConfig) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Spec } {
+	return new(FlatNICConfig)
+}
+
+// HCL2Spec returns the hcl spec of a NICConfig.
+// This spec is used by HCL to read the fields of NICConfig.
+// The decoded values from this spec will then be applied to a FlatNICConfig.
+func (*FlatNICConfig) HCL2Spec() map[string]hcldec.Spec {
+	s := map[string]hcldec.Spec{
+		"model":         &hcldec.AttrSpec{Name: "model", Type: cty.String, Required: false},
+		"packet_queues": &hcldec.AttrSpec{Name: "packet_queues", Type: cty.Number, Required: false},
+		"mac_address":   &hcldec.AttrSpec{Name: "mac_address", Type: cty.String, Required: false},
+		"bridge":        &hcldec.AttrSpec{Name: "bridge", Type: cty.String, Required: false},
+		"vlan_tag":      &hcldec.AttrSpec{Name: "vlan_tag", Type: cty.String, Required: false},
+		"firewall":      &hcldec.AttrSpec{Name: "firewall", Type: cty.Bool, Required: false},
 	}
 	return s
 }
@@ -333,39 +366,6 @@ func (*FlatefiConfig) HCL2Spec() map[string]hcldec.Spec {
 		"efi_storage_pool":  &hcldec.AttrSpec{Name: "efi_storage_pool", Type: cty.String, Required: false},
 		"pre_enrolled_keys": &hcldec.AttrSpec{Name: "pre_enrolled_keys", Type: cty.Bool, Required: false},
 		"efi_type":          &hcldec.AttrSpec{Name: "efi_type", Type: cty.String, Required: false},
-	}
-	return s
-}
-
-// FlatnicConfig is an auto-generated flat version of nicConfig.
-// Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
-type FlatnicConfig struct {
-	Model        *string `mapstructure:"model" cty:"model" hcl:"model"`
-	PacketQueues *int    `mapstructure:"packet_queues" cty:"packet_queues" hcl:"packet_queues"`
-	MACAddress   *string `mapstructure:"mac_address" cty:"mac_address" hcl:"mac_address"`
-	Bridge       *string `mapstructure:"bridge" cty:"bridge" hcl:"bridge"`
-	VLANTag      *string `mapstructure:"vlan_tag" cty:"vlan_tag" hcl:"vlan_tag"`
-	Firewall     *bool   `mapstructure:"firewall" cty:"firewall" hcl:"firewall"`
-}
-
-// FlatMapstructure returns a new FlatnicConfig.
-// FlatnicConfig is an auto-generated flat version of nicConfig.
-// Where the contents a fields with a `mapstructure:,squash` tag are bubbled up.
-func (*nicConfig) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Spec } {
-	return new(FlatnicConfig)
-}
-
-// HCL2Spec returns the hcl spec of a nicConfig.
-// This spec is used by HCL to read the fields of nicConfig.
-// The decoded values from this spec will then be applied to a FlatnicConfig.
-func (*FlatnicConfig) HCL2Spec() map[string]hcldec.Spec {
-	s := map[string]hcldec.Spec{
-		"model":         &hcldec.AttrSpec{Name: "model", Type: cty.String, Required: false},
-		"packet_queues": &hcldec.AttrSpec{Name: "packet_queues", Type: cty.Number, Required: false},
-		"mac_address":   &hcldec.AttrSpec{Name: "mac_address", Type: cty.String, Required: false},
-		"bridge":        &hcldec.AttrSpec{Name: "bridge", Type: cty.String, Required: false},
-		"vlan_tag":      &hcldec.AttrSpec{Name: "vlan_tag", Type: cty.String, Required: false},
-		"firewall":      &hcldec.AttrSpec{Name: "firewall", Type: cty.Bool, Required: false},
 	}
 	return s
 }

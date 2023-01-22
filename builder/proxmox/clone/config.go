@@ -3,6 +3,7 @@
 package proxmoxclone
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/netip"
@@ -16,8 +17,8 @@ import (
 type Config struct {
 	proxmox.Config `mapstructure:",squash"`
 
-	CloneVM   string         `mapstructure:"clone_vm"`
-	FullClone config.Trilean `mapstructure:"full_clone"`
+	CloneVM   string         `mapstructure:"clone_vm" required:"true"`
+	FullClone config.Trilean `mapstructure:"full_clone" required:"false"`
 
 	Nameserver   string              `mapstructure:"nameserver" required:"false"`
 	Searchdomain string              `mapstructure:"searchdomain" required:"false"`
@@ -36,6 +37,10 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, []string, error) {
 	_, warnings, merrs := c.Config.Prepare(c, raws...)
 	if merrs != nil {
 		errs = packersdk.MultiErrorAppend(errs, merrs)
+	}
+
+	if c.CloneVM == "" {
+		errs = packersdk.MultiErrorAppend(errs, errors.New("clone_vm must be specified"))
 	}
 
 	// Check validity of given IP addresses

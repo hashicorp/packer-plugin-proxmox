@@ -149,7 +149,7 @@ func TestStartVM(t *testing.T) {
 						StoragePoolType: "lvm",
 					},
 				},
-				NICs: []nicConfig{
+				NICs: []NICConfig{
 					{
 						Bridge: "vmbr0",
 					},
