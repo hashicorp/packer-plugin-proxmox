@@ -3,6 +3,7 @@ package proxmox
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/Telmate/proxmox-api-go/proxmox"
@@ -39,15 +40,15 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 	// set, we need to clear it
 	changes["description"] = c.TemplateDescription
 
-	if c.CloudInit {
-		vmParams, err := client.GetVmConfig(vmRef)
-		if err != nil {
-			err := fmt.Errorf("Error fetching template config: %s", err)
-			state.Put("error", err)
-			ui.Error(err.Error())
-			return multistep.ActionHalt
-		}
+	vmParams, err := client.GetVmConfig(vmRef)
+	if err != nil {
+		err := fmt.Errorf("error fetching template config: %s", err)
+		state.Put("error", err)
+		ui.Error(err.Error())
+		return multistep.ActionHalt
+	}
 
+	if c.CloudInit {
 		cloudInitStoragePool := c.CloudInitStoragePool
 		if cloudInitStoragePool == "" {
 			if vmParams["bootdisk"] != nil && vmParams[vmParams["bootdisk"].(string)] != nil {
@@ -82,13 +83,6 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 	}
 
 	if len(c.AdditionalISOFiles) > 0 {
-		vmParams, err := client.GetVmConfig(vmRef)
-		if err != nil {
-			err := fmt.Errorf("Error fetching template config: %s", err)
-			state.Put("error", err)
-			ui.Error(err.Error())
-			return multistep.ActionHalt
-		}
 		for idx := range c.AdditionalISOFiles {
 			cdrom := c.AdditionalISOFiles[idx].Device
 			if c.AdditionalISOFiles[idx].Unmount {
@@ -104,6 +98,17 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 			}
 		}
 	}
+
+	// Disks that get replaced by the builder end up as unused disks -
+	// find and remove them.
+	rxUnused := regexp.MustCompile(`^unused\d+`)
+	unusedDisks := []string{}
+	for key := range vmParams {
+		if unusedDisk := rxUnused.FindString(key); unusedDisk != "" {
+			unusedDisks = append(unusedDisks, unusedDisk)
+		}
+	}
+	changes["delete"] = strings.Join(unusedDisks, ",")
 
 	if len(changes) > 0 {
 		_, err := client.SetVmConfig(vmRef, changes)
