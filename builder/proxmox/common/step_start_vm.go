@@ -125,9 +125,9 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		}
 	}
 
-	// The EFI disk doesn't get created reliably during initial VM creation,
+	// The EFI disk doesn't get created reliably when using the clone builder,
 	// so let's make sure it's there.
-	if c.EFIConfig != (efiConfig{}) {
+	if c.EFIConfig != (efiConfig{}) && c.Ctx.BuildType == "proxmox-clone" {
 		addEFIConfig := make(map[string]interface{})
 		err := config.CreateQemuEfiParams(addEFIConfig)
 		if err != nil {
