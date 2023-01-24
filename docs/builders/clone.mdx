@@ -20,6 +20,10 @@ machine template, runs any provisioning necessary on the image after launching i
 then creates a virtual machine template. This template can then be used as to
 create new virtual machines within Proxmox.
 
+Disks specified in a `proxmox-clone` builder configuration will replace disks
+that are already present on the cloned VM template. If you want to reuse the disks
+of the cloned VM, don't specify disks in your configuration.
+
 The builder does _not_ manage templates. Once it creates a template, it is up
 to you to use it or delete it.
 

@@ -3,6 +3,8 @@ package proxmox
 import (
 	"context"
 	"fmt"
+	"sort"
+	"strings"
 	"testing"
 
 	"github.com/Telmate/proxmox-api-go/proxmox"
@@ -34,6 +36,7 @@ func TestTemplateFinalize(t *testing.T) {
 		expectedVMConfig    map[string]interface{}
 		setConfigErr        error
 		expectedAction      multistep.StepAction
+		expectedDelete      []string
 	}{
 		{
 			name:          "empty config changes name and description",
@@ -163,6 +166,17 @@ func TestTemplateFinalize(t *testing.T) {
 			setConfigErr:        fmt.Errorf("some error"),
 			expectedAction:      multistep.ActionHalt,
 		},
+		{
+			name:          "find and remove unused disks",
+			builderConfig: &Config{},
+			initialVMConfig: map[string]interface{}{
+				"unused0":  "local-zfs:vm-110-disk-1",
+				"unused99": "local-zfs:vm-110-disk-100",
+			},
+			expectCallSetConfig: true,
+			expectedDelete:      []string{"unused0", "unused99"},
+			expectedAction:      multistep.ActionContinue,
+		},
 	}
 
 	for _, c := range cs {
@@ -179,6 +193,13 @@ func TestTemplateFinalize(t *testing.T) {
 						if cfg[key] != val {
 							t.Errorf("Expected %q to be %q, got %q", key, val, cfg[key])
 						}
+					}
+					// We need to sort deletes first, to test them reliably
+					var gotDelete = strings.Split(cfg["delete"].(string), ",")
+					sort.Strings(gotDelete)
+					sort.Strings(c.expectedDelete)
+					if strings.Join(gotDelete, ",") != strings.Join(c.expectedDelete, ",") {
+						t.Errorf("Expected delete to be %s, got %s", c.expectedDelete, cfg["delete"])
 					}
 
 					return "", c.setConfigErr
