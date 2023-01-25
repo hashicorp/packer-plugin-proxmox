@@ -30,7 +30,7 @@ func TestRequiredParameters(t *testing.T) {
 		t.Fatal("Expected errors to be packersdk.MultiError")
 	}
 
-	required := []string{"username", "token", "proxmox_url", "node", "ssh_username", "clone_vm"}
+	required := []string{"username", "token", "proxmox_url", "node", "ssh_username", "clone_vm", "clone_vm_id"}
 	for _, param := range required {
 		found := false
 		for _, err := range errs.Errors {
@@ -42,6 +42,63 @@ func TestRequiredParameters(t *testing.T) {
 		if !found {
 			t.Errorf("Expected error about missing parameters %q", param)
 		}
+	}
+}
+
+func TestVMNameOrID(t *testing.T) {
+	ipconfigTest := []struct {
+		name          string
+		cloneVM       string
+		cloneVMID     int
+		expectFailure bool
+	}{
+		{
+			name:          "clone_vm given, no error",
+			cloneVM:       "myVM",
+			cloneVMID:     0,
+			expectFailure: false,
+		},
+		{
+			name:          "valid clone_vm_id given, no error",
+			cloneVM:       "",
+			cloneVMID:     100,
+			expectFailure: false,
+		},
+		{
+			name:          "clone_vm_id out of range, error",
+			cloneVM:       "",
+			cloneVMID:     50,
+			expectFailure: true,
+		},
+		{
+			name:          "clone_vm and clone_vm_id given, error",
+			cloneVM:       "myVM",
+			cloneVMID:     100,
+			expectFailure: true,
+		},
+		{
+			name:          "neither clone_vm nor clone_vm_id given, error",
+			cloneVM:       "",
+			cloneVMID:     0,
+			expectFailure: true,
+		},
+	}
+
+	for _, tt := range ipconfigTest {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := mandatoryConfig(t)
+			cfg["clone_vm"] = tt.cloneVM
+			cfg["clone_vm_id"] = tt.cloneVMID
+
+			var c Config
+			_, _, err := c.Prepare(&c, cfg)
+			if err != nil && !tt.expectFailure {
+				t.Fatalf("unexpected failure: %s", err)
+			}
+			if err == nil && tt.expectFailure {
+				t.Errorf("expected failure, but prepare succeeded")
+			}
+		})
 	}
 }
 
