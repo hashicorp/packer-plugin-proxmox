@@ -69,20 +69,29 @@ func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQ
 	}
 	config.Ipconfig = IpconfigMap
 
-	sourceVmrs, err := client.GetVmRefsByName(c.CloneVM)
-	if err != nil {
-		return err
-	}
+	var sourceVmr *proxmoxapi.VmRef
+	if c.CloneVM != "" {
+		sourceVmrs, err := client.GetVmRefsByName(c.CloneVM)
+		if err != nil {
+			return err
+		}
 
-	// prefer source Vm located on same node
-	sourceVmr := sourceVmrs[0]
-	for _, candVmr := range sourceVmrs {
-		if candVmr.Node() == vmRef.Node() {
-			sourceVmr = candVmr
+		// prefer source Vm located on same node
+		sourceVmr = sourceVmrs[0]
+		for _, candVmr := range sourceVmrs {
+			if candVmr.Node() == vmRef.Node() {
+				sourceVmr = candVmr
+			}
+		}
+	} else if c.CloneVMID != 0 {
+		sourceVmr = proxmoxapi.NewVmRef(c.CloneVMID)
+		err := client.CheckVmRef(sourceVmr)
+		if err != nil {
+			return err
 		}
 	}
 
-	err = config.CloneVm(sourceVmr, vmRef, client)
+	err := config.CloneVm(sourceVmr, vmRef, client)
 	if err != nil {
 		return err
 	}

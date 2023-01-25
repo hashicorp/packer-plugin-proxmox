@@ -18,6 +18,7 @@ type Config struct {
 	proxmoxcommon.Config `mapstructure:",squash"`
 
 	CloneVM   string         `mapstructure:"clone_vm" required:"true"`
+	CloneVMID int            `mapstructure:"clone_vm_id" required:"true"`
 	FullClone config.Trilean `mapstructure:"full_clone" required:"false"`
 
 	Nameserver   string              `mapstructure:"nameserver" required:"false"`
@@ -39,8 +40,17 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, []string, error) {
 		errs = packersdk.MultiErrorAppend(errs, merrs)
 	}
 
-	if c.CloneVM == "" {
-		errs = packersdk.MultiErrorAppend(errs, errors.New("clone_vm must be specified"))
+	if c.CloneVM == "" && c.CloneVMID == 0 {
+		errs = packersdk.MultiErrorAppend(errs, errors.New("one of clone_vm or clone_vm_id must be specified"))
+	}
+	if c.CloneVM != "" && c.CloneVMID != 0 {
+		errs = packersdk.MultiErrorAppend(errs, errors.New("clone_vm and clone_vm_id cannot both be specified"))
+	}
+	// Technically Proxmox VMIDs are unsigned 32bit integers, but are limited to
+	// the range 100-999999999. Source:
+	// https://pve-devel.pve.proxmox.narkive.com/Pa6mH1OP/avoiding-vmid-reuse#post8
+	if c.CloneVMID != 0 && (c.CloneVMID < 100 || c.CloneVMID > 999999999) {
+		errs = packersdk.MultiErrorAppend(errs, errors.New("clone_vm_id must be in range 100-999999999"))
 	}
 
 	// Check validity of given IP addresses

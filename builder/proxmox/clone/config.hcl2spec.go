@@ -113,6 +113,7 @@ type FlatConfig struct {
 	AdditionalISOFiles        []proxmox.FlatadditionalISOsConfig `mapstructure:"additional_iso_files" cty:"additional_iso_files" hcl:"additional_iso_files"`
 	VMInterface               *string                            `mapstructure:"vm_interface" cty:"vm_interface" hcl:"vm_interface"`
 	CloneVM                   *string                            `mapstructure:"clone_vm" required:"true" cty:"clone_vm" hcl:"clone_vm"`
+	CloneVMID                 *int                               `mapstructure:"clone_vm_id" required:"true" cty:"clone_vm_id" hcl:"clone_vm_id"`
 	FullClone                 *bool                              `mapstructure:"full_clone" required:"false" cty:"full_clone" hcl:"full_clone"`
 	Nameserver                *string                            `mapstructure:"nameserver" required:"false" cty:"nameserver" hcl:"nameserver"`
 	Searchdomain              *string                            `mapstructure:"searchdomain" required:"false" cty:"searchdomain" hcl:"searchdomain"`
@@ -233,6 +234,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"additional_iso_files":         &hcldec.BlockListSpec{TypeName: "additional_iso_files", Nested: hcldec.ObjectSpec((*proxmox.FlatadditionalISOsConfig)(nil).HCL2Spec())},
 		"vm_interface":                 &hcldec.AttrSpec{Name: "vm_interface", Type: cty.String, Required: false},
 		"clone_vm":                     &hcldec.AttrSpec{Name: "clone_vm", Type: cty.String, Required: false},
+		"clone_vm_id":                  &hcldec.AttrSpec{Name: "clone_vm_id", Type: cty.Number, Required: false},
 		"full_clone":                   &hcldec.AttrSpec{Name: "full_clone", Type: cty.Bool, Required: false},
 		"nameserver":                   &hcldec.AttrSpec{Name: "nameserver", Type: cty.String, Required: false},
 		"searchdomain":                 &hcldec.AttrSpec{Name: "searchdomain", Type: cty.String, Required: false},
