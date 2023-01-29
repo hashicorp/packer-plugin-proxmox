@@ -3,9 +3,9 @@ package proxmox
 import (
 	"context"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/Telmate/proxmox-api-go/proxmox"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -24,31 +24,71 @@ type ProxmoxVMCreator interface {
 	Create(*proxmox.VmRef, proxmox.ConfigQemu, multistep.StateBag) error
 }
 type vmStarter interface {
-	GetNextID(int) (int, error)
-	StartVm(*proxmox.VmRef) (string, error)
-	SetVmConfig(*proxmox.VmRef, map[string]interface{}) (interface{}, error)
 	CheckVmRef(vmr *proxmox.VmRef) (err error)
-	GetVmRefsByName(vmName string) (vmrs []*proxmox.VmRef, err error)
-	GetVmState(vmr *proxmox.VmRef) (vmState map[string]interface{}, err error)
-	StopVm(vmr *proxmox.VmRef) (exitStatus string, err error)
 	DeleteVm(vmr *proxmox.VmRef) (exitStatus string, err error)
+	GetNextID(int) (int, error)
+	GetVmConfig(vmr *proxmox.VmRef) (vmConfig map[string]interface{}, err error)
+	GetVmRefsByName(vmName string) (vmrs []*proxmox.VmRef, err error)
+	SetVmConfig(*proxmox.VmRef, map[string]interface{}) (interface{}, error)
+	StartVm(*proxmox.VmRef) (string, error)
 }
 
 var (
 	maxDuplicateIDRetries = 3
 )
 
-func getExistingVms(c *Config, client vmStarter) ([]*proxmox.VmRef, error) {
+// Check if the given builder configuration maps to an existing VM template on the Proxmox cluster.
+// Returns an empty *proxmox.VmRef when no matching ID or name is found.
+func getExistingTemplate(c *Config, client vmStarter) (*proxmox.VmRef, error) {
+	vmRef := &proxmox.VmRef{}
 	if c.VMID > 0 {
-		vmRef := proxmox.NewVmRef(c.VMID)
+		log.Printf("looking up VM with ID %d", c.VMID)
+		vmRef = proxmox.NewVmRef(c.VMID)
 		err := client.CheckVmRef(vmRef)
 		if err != nil {
-			return []*proxmox.VmRef{}, err
+			// expect an error if no VM is found
+			// the error string is defined in GetVmInfo() of proxmox-api-go
+			notFoundError := fmt.Sprintf("vm '%d' not found", c.VMID)
+			if err.Error() == notFoundError {
+				log.Println(err.Error())
+				return &proxmox.VmRef{}, nil
+			}
+			return &proxmox.VmRef{}, err
 		}
-		return []*proxmox.VmRef{vmRef}, nil
+		log.Printf("found VM with ID %d", vmRef.VmId())
 	} else {
-		return client.GetVmRefsByName(c.TemplateName)
+		log.Printf("looking up VMs with name '%s'", c.TemplateName)
+		vmRefs, err := client.GetVmRefsByName(c.TemplateName)
+		if err != nil {
+			// expect an error if no VMs are found
+			// the error string is defined in GetVmRefsByName() of proxmox-api-go
+			notFoundError := fmt.Sprintf("vm '%s' not found", c.TemplateName)
+			if err.Error() == notFoundError {
+				log.Println(err.Error())
+				return &proxmox.VmRef{}, nil
+			}
+			return &proxmox.VmRef{}, err
+		}
+		if len(vmRefs) > 1 {
+			vmIDs := []int{}
+			for _, vmr := range vmRefs {
+				vmIDs = append(vmIDs, vmr.VmId())
+			}
+			return &proxmox.VmRef{}, fmt.Errorf("found multiple VMs with name '%s', IDs: %v", c.TemplateName, vmIDs)
+		}
+		vmRef = vmRefs[0]
+		log.Printf("found VM with name '%s' (ID: %d)", c.TemplateName, vmRef.VmId())
 	}
+	log.Printf("check if VM %d is a template", vmRef.VmId())
+	vmConfig, err := client.GetVmConfig(vmRef)
+	if err != nil {
+		return &proxmox.VmRef{}, err
+	}
+	log.Printf("VM %d template: %d", vmRef.VmId(), vmConfig["template"])
+	if vmConfig["template"] == nil {
+		return &proxmox.VmRef{}, fmt.Errorf("found matching VM (ID: %d, name: %s), but it is not a template", vmRef.VmId(), vmConfig["name"])
+	}
+	return vmRef, nil
 }
 
 func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
@@ -66,7 +106,6 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		kvm = false
 	}
 
-	ui.Say("Creating VM")
 	config := proxmox.ConfigQemu{
 		Name:         c.VMName,
 		Agent:        agent,
@@ -90,48 +129,28 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 	}
 
 	if c.PackerForce {
-		ui.Say("Force set, checking for existing VM or template")
-		vmrs, err := getExistingVms(c, client)
+		ui.Say("Force set, checking for existing artifact on PVE cluster")
+		vmRef, err := getExistingTemplate(c, client)
 		if err != nil {
-			// This can happen if no VMs found, so don't consider it to be an error
-			ui.Say(fmt.Sprintf("Couldn't find existing VMs, continuing: %s", err.Error()))
-		} else if len(vmrs) > 0 {
-			for _, vmr := range vmrs {
-				ui.Say(fmt.Sprintf("Stopping VM ID: %d", vmr.VmId()))
-				_, err := client.StopVm(vmr)
-				if err != nil {
-					state.Put("error", err)
-					ui.Error(fmt.Sprintf("Error stopping VM ID: %d, continuing: %s", vmr.VmId(), err.Error()))
-					continue
-				}
-				// Wait until vm is stopped. Otherwise, deletion will fail.
-				ui.Say("Waiting for VM to stop for up to 300 seconds")
-				waited := 0
-				for waited < 300 {
-					vmState, err := client.GetVmState(vmr)
-					if err == nil && vmState["status"] == "stopped" {
-						break
-					} else if err != nil {
-						state.Put("error", err)
-						ui.Error(fmt.Sprintf("Error getting VM state for VM ID: %d, continuing: %s", vmr.VmId(), err.Error()))
-						continue
-					}
-					time.Sleep(1 * time.Second)
-				}
-
-				_, err = client.DeleteVm(vmr)
-				if err != nil {
-					state.Put("error", err)
-					ui.Error(fmt.Sprintf("Error deleting VM: %s", err.Error()))
-				} else {
-					ui.Say("Successfully deleted VM")
-				}
+			state.Put("error", err)
+			ui.Error(err.Error())
+			return multistep.ActionHalt
+		}
+		if vmRef.VmId() != 0 {
+			ui.Say(fmt.Sprintf("found existing VM template with ID %d on PVE node %s, deleting it", vmRef.VmId(), vmRef.Node()))
+			_, err = client.DeleteVm(vmRef)
+			if err != nil {
+				state.Put("error", err)
+				ui.Error(fmt.Sprintf("error deleting VM template: %s", err.Error()))
+				return multistep.ActionHalt
 			}
+			ui.Say(fmt.Sprintf("Successfully deleted VM template %d", vmRef.VmId()))
 		} else {
-			ui.Say("No existing VMs found to delete")
+			ui.Say("No existing artifact found")
 		}
 	}
 
+	ui.Say("Creating VM")
 	var vmRef *proxmox.VmRef
 	for i := 1; ; i++ {
 		id := c.VMID

@@ -114,10 +114,9 @@ type startVMMock struct {
 	startVm     func(*proxmox.VmRef) (string, error)
 	setVmConfig func(*proxmox.VmRef, map[string]interface{}) (interface{}, error)
 	getNextID   func(id int) (int, error)
+	getVmConfig func(vmr *proxmox.VmRef) (vmConfig map[string]interface{}, err error)
 	checkVmRef  func(vmr *proxmox.VmRef) (err error)
 	getVmByName func(vmName string) (vmrs []*proxmox.VmRef, err error)
-	getVmState  func(vmr *proxmox.VmRef) (vmState map[string]interface{}, err error)
-	stopVm      func(vmr *proxmox.VmRef) (exitStatus string, err error)
 	deleteVm    func(vmr *proxmox.VmRef) (exitStatus string, err error)
 }
 
@@ -133,19 +132,14 @@ func (m *startVMMock) SetVmConfig(vmRef *proxmox.VmRef, config map[string]interf
 func (m *startVMMock) GetNextID(id int) (int, error) {
 	return m.getNextID(id)
 }
-
+func (m *startVMMock) GetVmConfig(vmr *proxmox.VmRef) (map[string]interface{}, error) {
+	return m.getVmConfig(vmr)
+}
 func (m *startVMMock) CheckVmRef(vmr *proxmox.VmRef) (err error) {
 	return m.checkVmRef(vmr)
 }
-
 func (m *startVMMock) GetVmRefsByName(vmName string) (vmrs []*proxmox.VmRef, err error) {
 	return m.getVmByName(vmName)
-}
-func (m *startVMMock) GetVmState(vmr *proxmox.VmRef) (vmState map[string]interface{}, err error) {
-	return m.getVmState(vmr)
-}
-func (m *startVMMock) StopVm(vmr *proxmox.VmRef) (exitStatus string, err error) {
-	return m.stopVm(vmr)
 }
 func (m *startVMMock) DeleteVm(vmr *proxmox.VmRef) (exitStatus string, err error) {
 	return m.deleteVm(vmr)
@@ -221,7 +215,6 @@ func TestStartVMRetryOnDuplicateID(t *testing.T) {
 		config                *Config
 		createErrorGenerator  func(id int) error
 		expectedCallsToCreate int
-		expectedCallsToDelete int
 		expectedAction        multistep.StepAction
 	}{
 		{
@@ -266,38 +259,11 @@ func TestStartVMRetryOnDuplicateID(t *testing.T) {
 			expectedCallsToCreate: maxDuplicateIDRetries,
 			expectedAction:        multistep.ActionHalt,
 		},
-		{
-			name: "Delete existing VM by VMID only when VMID and force are enabled",
-			config: &Config{
-				PackerConfig: common.PackerConfig{
-					PackerForce: true,
-				},
-				VMID: 1,
-			},
-			createErrorGenerator:  func(id int) error { return nil },
-			expectedCallsToCreate: 1,
-			expectedCallsToDelete: 1,
-			expectedAction:        multistep.ActionContinue,
-		},
-		{
-			name: "Delete existing VMs by template name when VMID not specified and force are enabled",
-			config: &Config{
-				PackerConfig: common.PackerConfig{
-					PackerForce: true,
-				},
-				TemplateName: "test_vm",
-			},
-			createErrorGenerator:  func(id int) error { return nil },
-			expectedCallsToCreate: 1,
-			expectedCallsToDelete: 3,
-			expectedAction:        multistep.ActionContinue,
-		},
 	}
 
 	for _, c := range cs {
 		t.Run(c.name, func(t *testing.T) {
 			createCalls := 0
-			deleteCalls := 0
 			mock := &startVMMock{
 				create: func(vmRef *proxmox.VmRef, config proxmox.ConfigQemu, state multistep.StateBag) error {
 					createCalls++
@@ -311,28 +277,6 @@ func TestStartVMRetryOnDuplicateID(t *testing.T) {
 				},
 				getNextID: func(id int) (int, error) {
 					return createCalls + 1, nil
-				},
-				checkVmRef: func(vmr *proxmox.VmRef) (err error) {
-					return nil
-				},
-				getVmByName: func(vmName string) (vmrs []*proxmox.VmRef, err error) {
-					return []*proxmox.VmRef{
-						proxmox.NewVmRef(100),
-						proxmox.NewVmRef(101),
-						proxmox.NewVmRef(102),
-					}, nil
-				},
-				getVmState: func(vmr *proxmox.VmRef) (vmState map[string]interface{}, err error) {
-					return map[string]interface{}{ // only used expecting shutdown
-						"status": "stopped",
-					}, nil
-				},
-				stopVm: func(vmr *proxmox.VmRef) (exitStatus string, err error) {
-					return "", nil
-				},
-				deleteVm: func(vmr *proxmox.VmRef) (exitStatus string, err error) {
-					deleteCalls++
-					return "", nil
 				},
 			}
 			state := new(multistep.BasicStateBag)
@@ -348,8 +292,148 @@ func TestStartVMRetryOnDuplicateID(t *testing.T) {
 			if createCalls != c.expectedCallsToCreate {
 				t.Errorf("Expected %d calls to create, got %d", c.expectedCallsToCreate, createCalls)
 			}
-			if deleteCalls != c.expectedCallsToDelete {
-				t.Errorf("Expected %d calls to delete, got %d", c.expectedCallsToDelete, deleteCalls)
+		})
+	}
+}
+
+func TestStartVMWithForce(t *testing.T) {
+	cs := []struct {
+		name                 string
+		config               *Config
+		expectedCallToDelete bool
+		expectedAction       multistep.StepAction
+		mockGetVmRefsByName  func(vmName string) (vmrs []*proxmox.VmRef, err error)
+		mockGetVmConfig      func(vmr *proxmox.VmRef) (map[string]interface{}, error)
+	}{
+		{
+			name: "Delete existing VM when it's a template and force is enabled",
+			config: &Config{
+				PackerConfig: common.PackerConfig{
+					PackerForce: true,
+				},
+				VMID: 100,
+			},
+			expectedCallToDelete: true,
+			expectedAction:       multistep.ActionContinue,
+			mockGetVmConfig: func(vmr *proxmox.VmRef) (map[string]interface{}, error) {
+				// proxmox-api-go returns a float for "template"
+				return map[string]interface{}{"template": 1.0}, nil
+			},
+		},
+		{
+			name: "Don't delete VM when it's not a template",
+			config: &Config{
+				PackerConfig: common.PackerConfig{
+					PackerForce: true,
+				},
+				VMID: 100,
+			},
+			expectedCallToDelete: false,
+			expectedAction:       multistep.ActionHalt,
+			mockGetVmConfig: func(vmr *proxmox.VmRef) (map[string]interface{}, error) {
+				return map[string]interface{}{}, nil
+			},
+		},
+		{
+			name: "Don't delete VM when force disabled",
+			config: &Config{
+				PackerConfig: common.PackerConfig{
+					PackerForce: false,
+				},
+				VMID: 100,
+			},
+			expectedCallToDelete: false,
+			expectedAction:       multistep.ActionContinue,
+			mockGetVmConfig: func(vmr *proxmox.VmRef) (map[string]interface{}, error) {
+				return map[string]interface{}{"template": 1.0}, nil
+			},
+		},
+		{
+			name: "Don't delete VM when name isn't unique",
+			config: &Config{
+				PackerConfig: common.PackerConfig{
+					PackerForce: true,
+				},
+				VMName: "mockVM",
+			},
+			expectedCallToDelete: false,
+			expectedAction:       multistep.ActionHalt,
+			mockGetVmRefsByName: func(vmName string) (vmrs []*proxmox.VmRef, err error) {
+				return []*proxmox.VmRef{
+					proxmox.NewVmRef(100),
+					proxmox.NewVmRef(101),
+				}, nil
+			},
+			mockGetVmConfig: func(vmr *proxmox.VmRef) (map[string]interface{}, error) {
+				return map[string]interface{}{"template": 1.0}, nil
+			},
+		},
+		{
+			name: "delete VM when name is unique",
+			config: &Config{
+				PackerConfig: common.PackerConfig{
+					PackerForce: true,
+				},
+				VMName: "mockVM",
+			},
+			expectedCallToDelete: true,
+			expectedAction:       multistep.ActionContinue,
+			mockGetVmRefsByName: func(vmName string) (vmrs []*proxmox.VmRef, err error) {
+				return []*proxmox.VmRef{
+					proxmox.NewVmRef(100),
+				}, nil
+			},
+			mockGetVmConfig: func(vmr *proxmox.VmRef) (map[string]interface{}, error) {
+				return map[string]interface{}{"template": 1.0}, nil
+			},
+		},
+	}
+
+	for _, c := range cs {
+		t.Run(c.name, func(t *testing.T) {
+			deleteWasCalled := false
+			mock := &startVMMock{
+				create: func(vmRef *proxmox.VmRef, config proxmox.ConfigQemu, state multistep.StateBag) error {
+					return nil
+				},
+				startVm: func(*proxmox.VmRef) (string, error) {
+					return "", nil
+				},
+				setVmConfig: func(*proxmox.VmRef, map[string]interface{}) (interface{}, error) {
+					return nil, nil
+				},
+				getNextID: func(id int) (int, error) {
+					return 101, nil
+				},
+				checkVmRef: func(vmr *proxmox.VmRef) (err error) {
+					return nil
+				},
+				getVmByName: func(vmName string) (vmrs []*proxmox.VmRef, err error) {
+					return c.mockGetVmRefsByName(vmName)
+				},
+				getVmConfig: func(vmr *proxmox.VmRef) (config map[string]interface{}, err error) {
+					return c.mockGetVmConfig(vmr)
+				},
+				deleteVm: func(vmr *proxmox.VmRef) (exitStatus string, err error) {
+					deleteWasCalled = true
+					return "", nil
+				},
+			}
+			state := new(multistep.BasicStateBag)
+			state.Put("ui", packersdk.TestUi(t))
+			state.Put("config", c.config)
+			state.Put("proxmoxClient", mock)
+			s := stepStartVM{vmCreator: mock}
+
+			action := s.Run(context.TODO(), state)
+			if action != c.expectedAction {
+				t.Errorf("Expected action %s, got %s", c.expectedAction, action)
+			}
+			if deleteWasCalled && !c.expectedCallToDelete {
+				t.Error("didn't expect call of deleteVm")
+			}
+			if !deleteWasCalled && c.expectedCallToDelete {
+				t.Error("Expected call of deleteVm")
 			}
 		})
 	}
