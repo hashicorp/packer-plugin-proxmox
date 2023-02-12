@@ -169,6 +169,12 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		c.BootKeyInterval = 5 * time.Millisecond
 	}
 
+	// Technically Proxmox VMIDs are unsigned 32bit integers, but are limited to
+	// the range 100-999999999. Source:
+	// https://pve-devel.pve.proxmox.narkive.com/Pa6mH1OP/avoiding-vmid-reuse#post8
+	if c.VMID != 0 && (c.VMID < 100 || c.VMID > 999999999) {
+		errs = packersdk.MultiErrorAppend(errs, errors.New("vm_id must be in range 100-999999999"))
+	}
 	if c.VMName == "" {
 		// Default to packer-[time-ordered-uuid]
 		c.VMName = fmt.Sprintf("packer-%s", uuid.TimeOrderedUUID())

@@ -98,8 +98,9 @@ in the image's Cloud-Init settings for provisioning.
   given, a random uuid will be used.
 
 - `vm_id` (int) - The ID used to reference the virtual machine. This will
-  also be the ID of the final template. If not given, the next free ID on
-  the node will be used.
+  also be the ID of the final template. Proxmox VMIDs are unique cluster-wide
+  and are limited to the range 100-999999999.
+  If not given, the next free ID on the cluster will be used.
 
 - `memory` (int) - How much memory, in megabytes, to give the virtual
   machine. Defaults to `512`.
