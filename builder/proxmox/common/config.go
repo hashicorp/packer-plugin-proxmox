@@ -50,6 +50,7 @@ type Config struct {
 
 	Boot           string         `mapstructure:"boot"`
 	Memory         int            `mapstructure:"memory"`
+	BalloonMinimum int            `mapstructure:"ballooning_minimum"`
 	Cores          int            `mapstructure:"cores"`
 	CPUType        string         `mapstructure:"cpu_type"`
 	Sockets        int            `mapstructure:"sockets"`
@@ -186,6 +187,9 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 	if c.Memory < 16 {
 		log.Printf("Memory %d is too small, using default: 512", c.Memory)
 		c.Memory = 512
+	}
+	if c.Memory < c.BalloonMinimum {
+		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("ballooning_minimum (%d) must be lower than memory (%d)", c.BalloonMinimum, c.Memory))
 	}
 	if c.Cores < 1 {
 		log.Printf("Number of cores %d is too small, using default: 1", c.Cores)
