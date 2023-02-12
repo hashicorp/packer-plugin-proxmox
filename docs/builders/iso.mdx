@@ -102,8 +102,14 @@ in the image's Cloud-Init settings for provisioning.
   and are limited to the range 100-999999999.
   If not given, the next free ID on the cluster will be used.
 
-- `memory` (int) - How much memory, in megabytes, to give the virtual
-  machine. Defaults to `512`.
+- `memory` (int) - How much memory (in megabytes) to give the virtual
+  machine. If `ballooning_minimum` is also set, `memory` defines the maximum amount
+  of memory the VM will be able to use.
+  Defaults to `512`.
+
+- `ballooning_minimum` (int) - Setting this option enables KVM memory ballooning and
+  defines the minimum amount of memory (in megabytes) the VM will have.
+  Defaults to `0` (memory ballooning disabled).
 
 - `cores` (int) - How many CPU cores to give the virtual machine. Defaults
   to `1`.

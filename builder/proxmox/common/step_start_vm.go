@@ -131,6 +131,13 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		Onboot:       &c.Onboot,
 	}
 
+	// 0 disables the ballooning device, which is useful for all VMs
+	// and should be kept enabled by default.
+	// See https://github.com/hashicorp/packer-plugin-proxmox/issues/127#issuecomment-1464030102
+	if c.BalloonMinimum > 0 {
+		config.Balloon = c.BalloonMinimum
+	}
+
 	if c.PackerForce {
 		ui.Say("Force set, checking for existing artifact on PVE cluster")
 		vmRef, err := getExistingTemplate(c, client)
