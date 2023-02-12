@@ -286,3 +286,52 @@ func TestSerials(t *testing.T) {
 		})
 	}
 }
+
+func TestVMID(t *testing.T) {
+	serialsTest := []struct {
+		name          string
+		VMID          int
+		expectFailure bool
+	}{
+		{
+			name:          "VMID zero, no error",
+			expectFailure: false,
+			VMID:          0,
+		},
+		{
+			name:          "VMID in range, no error",
+			expectFailure: false,
+			VMID:          1000,
+		},
+		{
+			name:          "VMID above range, fail",
+			expectFailure: true,
+			VMID:          1000000000,
+		},
+		{
+			name:          "VMID below range, fail",
+			expectFailure: true,
+			VMID:          50,
+		},
+	}
+
+	for _, tt := range serialsTest {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := mandatoryConfig(t)
+			cfg["vm_id"] = tt.VMID
+
+			var c Config
+			_, _, err := c.Prepare(&c, cfg)
+			if err != nil {
+				if !tt.expectFailure {
+					t.Fatalf("unexpected failure to prepare config: %s", err)
+				}
+				t.Logf("got expected failure: %s", err)
+			}
+
+			if err == nil && tt.expectFailure {
+				t.Errorf("expected failure, but prepare succeeded")
+			}
+		})
+	}
+}
