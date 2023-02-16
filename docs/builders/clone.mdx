@@ -356,26 +356,67 @@ Here is a basic example creating a Debian 10 server image. This assumes
 that there exists a Cloud-Init enabled image on the Proxmox server named
 `debian-10-4`.
 
+<Tabs>
+<Tab heading="HCL2">
+
+```hcl
+variable "proxmox_password" {
+  type    = string
+  default = "supersecret"
+}
+
+variable "proxmox_username" {
+  type    = string
+  default = "apiuser@pve"
+}
+
+source "proxmox-clone" "debian" {
+  clone_vm                 = "debian-10-4"
+  cores                    = 1
+  insecure_skip_tls_verify = true
+  memory                   = 2048
+  network_adapters {
+    bridge = "vmbr0"
+    model  = "virtio"
+  }
+  node                 = "pve"
+  os                   = "l26"
+  password             = "${var.proxmox_password}"
+  pool                 = "api-users"
+  proxmox_url          = "https://my-proxmox.my-domain:8006/api2/json"
+  sockets              = 1
+  ssh_username         = "root"
+  template_description = "image made from cloud-init image"
+  template_name        = "debian-scaffolding"
+  username             = "${var.proxmox_username}"
+}
+
+build {
+  sources = ["source.proxmox-clone.debian"]
+}
+```
+
+</Tab>
+<Tab heading="JSON">
+
 ```json
 {
   "variables": {
-    "proxmox_url": "{{env `PROXMOX_URL`}}",
-    "proxmox_username": "{{env `PROXMOX_USERNAME`}}",
-    "proxmox_password": "{{env `PROXMOX_PASSWORD`}}"
+    "proxmox_username": "apiuser@pve",
+    "proxmox_password": "supersecret"
   },
-
   "builders": [
     {
       "type": "proxmox-clone",
-      "proxmox_url": "{{user `proxmox_url`}}",
+      "proxmox_url": "https://my-proxmox.my-domain:8006/api2/json",
       "username": "{{user `proxmox_username`}}",
       "password": "{{user `proxmox_password`}}",
+      "ssh_username": "root",
       "node": "pve",
       "insecure_skip_tls_verify": true,
       "clone_vm": "debian-10-4",
       "template_name": "debian-scaffolding",
       "template_description": "image made from cloud-init image",
-
       "pool": "api-users",
       "os": "l26",
       "cores": 1,
@@ -383,11 +424,14 @@ that there exists a Cloud-Init enabled image on the Proxmox server named
       "memory": 2048,
       "network_adapters": [
         {
+          "model": "virtio",
           "bridge": "vmbr0"
         }
       ]
     }
-  ],
-  "description": "A template for building a base"
+  ]
 }
 ```
+
+</Tab>
+</Tabs>
