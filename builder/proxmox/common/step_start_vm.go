@@ -255,6 +255,9 @@ func generateProxmoxNetworkAdapters(nics []NICConfig) proxmox.QemuDevices {
 		setDeviceParamIfDefined(devs[idx], "tag", nics[idx].VLANTag)
 		setDeviceParamIfDefined(devs[idx], "firewall", strconv.FormatBool(nics[idx].Firewall))
 
+		if nics[idx].MTU > 0 {
+			devs[idx]["mtu"] = nics[idx].MTU
+		}
 		if nics[idx].PacketQueues > 0 {
 			devs[idx]["queues"] = nics[idx].PacketQueues
 		}

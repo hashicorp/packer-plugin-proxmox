@@ -236,6 +236,7 @@ type FlatNICConfig struct {
 	Model        *string `mapstructure:"model" cty:"model" hcl:"model"`
 	PacketQueues *int    `mapstructure:"packet_queues" cty:"packet_queues" hcl:"packet_queues"`
 	MACAddress   *string `mapstructure:"mac_address" cty:"mac_address" hcl:"mac_address"`
+	MTU          *int    `mapstructure:"mtu" cty:"mtu" hcl:"mtu"`
 	Bridge       *string `mapstructure:"bridge" cty:"bridge" hcl:"bridge"`
 	VLANTag      *string `mapstructure:"vlan_tag" cty:"vlan_tag" hcl:"vlan_tag"`
 	Firewall     *bool   `mapstructure:"firewall" cty:"firewall" hcl:"firewall"`
@@ -256,6 +257,7 @@ func (*FlatNICConfig) HCL2Spec() map[string]hcldec.Spec {
 		"model":         &hcldec.AttrSpec{Name: "model", Type: cty.String, Required: false},
 		"packet_queues": &hcldec.AttrSpec{Name: "packet_queues", Type: cty.Number, Required: false},
 		"mac_address":   &hcldec.AttrSpec{Name: "mac_address", Type: cty.String, Required: false},
+		"mtu":           &hcldec.AttrSpec{Name: "mtu", Type: cty.Number, Required: false},
 		"bridge":        &hcldec.AttrSpec{Name: "bridge", Type: cty.String, Required: false},
 		"vlan_tag":      &hcldec.AttrSpec{Name: "vlan_tag", Type: cty.String, Required: false},
 		"firewall":      &hcldec.AttrSpec{Name: "firewall", Type: cty.Bool, Required: false},
