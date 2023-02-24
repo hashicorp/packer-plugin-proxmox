@@ -91,6 +91,7 @@ type NICConfig struct {
 	Model        string `mapstructure:"model"`
 	PacketQueues int    `mapstructure:"packet_queues"`
 	MACAddress   string `mapstructure:"mac_address"`
+	MTU          int    `mapstructure:"mtu"`
 	Bridge       string `mapstructure:"bridge"`
 	VLANTag      string `mapstructure:"vlan_tag"`
 	Firewall     bool   `mapstructure:"firewall"`
@@ -279,6 +280,9 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		}
 		if c.NICs[idx].Model != "virtio" && c.NICs[idx].PacketQueues > 0 {
 			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("network_adapters[%d].packet_queues can only be set for 'virtio' driver", idx))
+		}
+		if (c.NICs[idx].MTU < 0) || (c.NICs[idx].MTU > 65520) {
+			errs = packersdk.MultiErrorAppend(errs, errors.New("network_adapters[%d].mtu only positive values up to 65520 are supported"))
 		}
 	}
 	for idx := range c.Disks {

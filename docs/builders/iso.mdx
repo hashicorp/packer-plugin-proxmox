@@ -159,6 +159,10 @@ in the image's Cloud-Init settings for provisioning.
     not set, defaults to a random MAC. If value is "repeatable", value of MAC
     address is deterministic based on VM ID and NIC ID.
 
+  - `mtu` (int) - Set the maximum transmission unit for the adapter. Valid
+    range: 0 - 65520. If set to `1`, the MTU is inherited from the bridge
+    the adapter is attached to. Defaults to `0` (use Proxmox default).
+
   - `vlan_tag` (string) - If the adapter should tag packets. Defaults to
     no tagging.
 
