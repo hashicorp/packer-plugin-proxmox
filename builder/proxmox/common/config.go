@@ -200,35 +200,35 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		log.Printf("OS not set, using default 'other'")
 		c.OS = "other"
 	}
-	for idx := range c.Disks {
-		if c.Disks[idx].Type == "" {
+	for idx, disk := range c.Disks {
+		if disk.Type == "" {
 			log.Printf("Disk %d type not set, using default 'scsi'", idx)
 			c.Disks[idx].Type = "scsi"
 		}
-		if c.Disks[idx].Size == "" {
+		if disk.Size == "" {
 			log.Printf("Disk %d size not set, using default '20G'", idx)
 			c.Disks[idx].Size = "20G"
 		}
-		if c.Disks[idx].CacheMode == "" {
+		if disk.CacheMode == "" {
 			log.Printf("Disk %d cache mode not set, using default 'none'", idx)
 			c.Disks[idx].CacheMode = "none"
 		}
-		if c.Disks[idx].IOThread {
+		if disk.IOThread {
 			// io thread is only supported by virtio-scsi-single controller
 			if c.SCSIController != "virtio-scsi-single" {
 				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("io thread option requires virtio-scsi-single controller"))
 			} else {
 				// ... and only for virtio and scsi disks
-				if !(c.Disks[idx].Type == "scsi" || c.Disks[idx].Type == "virtio") {
+				if !(disk.Type == "scsi" || disk.Type == "virtio") {
 					errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("io thread option requires scsi or a virtio disk"))
 				}
 			}
 		}
-		// For any storage pool types which aren't in rxStorageTypes in proxmox-api/proxmox/config_qemu.go:890
-		// (currently zfspool|lvm|rbd|cephfs), the format parameter is mandatory. Make sure this is still up to date
-		// when updating the vendored code!
-		if !contains([]string{"zfspool", "lvm", "rbd", "cephfs"}, c.Disks[idx].StoragePoolType) && c.Disks[idx].DiskFormat == "" {
-			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("disk format must be specified for pool type %q", c.Disks[idx].StoragePoolType))
+		if disk.StoragePool == "" {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("disks[%d].storage_pool must be specified", idx))
+		}
+		if disk.StoragePoolType != "" {
+			warnings = append(warnings, "storage_pool_type is deprecated and should be omitted, it will be removed in a later version of the proxmox plugin")
 		}
 	}
 	if len(c.Serials) > 4 {
@@ -260,7 +260,7 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		errs = packersdk.MultiErrorAppend(errs, errors.New("proxmox_url must be specified"))
 	}
 	if c.proxmoxURL, err = url.Parse(c.ProxmoxURLRaw); err != nil {
-		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("Could not parse proxmox_url: %s", err))
+		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("could not parse proxmox_url: %s", err))
 	}
 	if c.Node == "" {
 		errs = packersdk.MultiErrorAppend(errs, errors.New("node must be specified"))
@@ -287,14 +287,6 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		}
 		if (nic.MTU < 0) || (nic.MTU > 65520) {
 			errs = packersdk.MultiErrorAppend(errs, errors.New("network_adapters[%d].mtu only positive values up to 65520 are supported"))
-		}
-	}
-	for idx := range c.Disks {
-		if c.Disks[idx].StoragePool == "" {
-			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("disks[%d].storage_pool must be specified", idx))
-		}
-		if c.Disks[idx].StoragePoolType == "" {
-			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("disks[%d].storage_pool_type must be specified", idx))
 		}
 	}
 	for idx := range c.AdditionalISOFiles {
@@ -393,13 +385,4 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		return nil, warnings, errs
 	}
 	return nil, warnings, nil
-}
-
-func contains(haystack []string, needle string) bool {
-	for _, candidate := range haystack {
-		if candidate == needle {
-			return true
-		}
-	}
-	return false
 }

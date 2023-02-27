@@ -271,7 +271,6 @@ func generateProxmoxDisks(disks []diskConfig) proxmox.QemuDevices {
 		setDeviceParamIfDefined(devs[idx], "type", disks[idx].Type)
 		setDeviceParamIfDefined(devs[idx], "size", disks[idx].Size)
 		setDeviceParamIfDefined(devs[idx], "storage", disks[idx].StoragePool)
-		setDeviceParamIfDefined(devs[idx], "storage_type", disks[idx].StoragePoolType)
 		setDeviceParamIfDefined(devs[idx], "cache", disks[idx].CacheMode)
 		setDeviceParamIfDefined(devs[idx], "format", disks[idx].DiskFormat)
 
