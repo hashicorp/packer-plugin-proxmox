@@ -209,8 +209,7 @@ or responding to pattern `/dev/.+`. Example:
     to store the virtual machine disk on. A `local-lvm` pool is allocated
     by the installer, for example.
 
-  - `storage_pool_type` (string) - Required. The type of the pool, can
-    be `lvm`, `lvm-thin`, `zfspool`, `cephfs`, `rbd` or `directory`.
+  - `storage_pool_type` (string) - This option is deprecated.
 
   - `type` (string) - The type of disk. Can be `scsi`, `sata`, `virtio` or
     `ide`. Defaults to `scsi`.
@@ -435,7 +434,6 @@ source "proxmox-iso" "fedora-kickstart" {
   disks {
     disk_size         = "5G"
     storage_pool      = "local-lvm"
-    storage_pool_type = "lvm"
     type              = "scsi"
   }
   efi_config {
@@ -494,8 +492,7 @@ build {
         {
           "type": "scsi",
           "disk_size": "5G",
-          "storage_pool": "local-lvm",
-          "storage_pool_type": "lvm"
+          "storage_pool": "local-lvm"
         }
       ],
       "efi_config": {
