@@ -200,12 +200,6 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		log.Printf("OS not set, using default 'other'")
 		c.OS = "other"
 	}
-	for idx := range c.NICs {
-		if c.NICs[idx].Model == "" {
-			log.Printf("NIC %d model not set, using default 'e1000'", idx)
-			c.NICs[idx].Model = "e1000"
-		}
-	}
 	for idx := range c.Disks {
 		if c.Disks[idx].Type == "" {
 			log.Printf("Disk %d type not set, using default 'scsi'", idx)
@@ -280,14 +274,18 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 	if c.TemplateName != "" && !re.MatchString(c.TemplateName) {
 		errs = packersdk.MultiErrorAppend(errs, errors.New("template_name must be a valid DNS name"))
 	}
-	for idx := range c.NICs {
-		if c.NICs[idx].Bridge == "" {
+	for idx, nic := range c.NICs {
+		if nic.Bridge == "" {
 			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("network_adapters[%d].bridge must be specified", idx))
 		}
-		if c.NICs[idx].Model != "virtio" && c.NICs[idx].PacketQueues > 0 {
+		if nic.Model == "" {
+			log.Printf("NIC %d model not set, using default 'e1000'", idx)
+			c.NICs[idx].Model = "e1000"
+		}
+		if nic.Model != "virtio" && nic.PacketQueues > 0 {
 			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("network_adapters[%d].packet_queues can only be set for 'virtio' driver", idx))
 		}
-		if (c.NICs[idx].MTU < 0) || (c.NICs[idx].MTU > 65520) {
+		if (nic.MTU < 0) || (nic.MTU > 65520) {
 			errs = packersdk.MultiErrorAppend(errs, errors.New("network_adapters[%d].mtu only positive values up to 65520 are supported"))
 		}
 	}
