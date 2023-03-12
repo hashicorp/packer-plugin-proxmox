@@ -110,6 +110,9 @@ in the image's Cloud-Init settings for provisioning.
   documentation for the complete list of accepted values. For best
   performance, set this to `host`. Defaults to `kvm64`.
 
+- `numa` (bool) - If true, support for non-uniform memory access (NUMA)
+  is enabled. Defaults to `false`.
+
 - `os` (string) - The operating system. Can be `wxp`, `w2k`, `w2k3`, `w2k8`,
   `wvista`, `win7`, `win8`, `win10`, `l24` (Linux 2.4), `l26` (Linux 2.6+),
   `solaris` or `other`. Defaults to `other`.
