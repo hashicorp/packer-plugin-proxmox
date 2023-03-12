@@ -54,6 +54,7 @@ type Config struct {
 	Cores          int            `mapstructure:"cores"`
 	CPUType        string         `mapstructure:"cpu_type"`
 	Sockets        int            `mapstructure:"sockets"`
+	Numa           bool           `mapstructure:"numa"`
 	OS             string         `mapstructure:"os"`
 	BIOS           string         `mapstructure:"bios"`
 	EFIConfig      efiConfig      `mapstructure:"efi_config"`

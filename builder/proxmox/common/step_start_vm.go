@@ -119,6 +119,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		Memory:       c.Memory,
 		QemuCores:    c.Cores,
 		QemuSockets:  c.Sockets,
+		QemuNuma:     &c.Numa,
 		QemuOs:       c.OS,
 		Bios:         c.BIOS,
 		EFIDisk:      generateProxmoxEfi(c.EFIConfig),
