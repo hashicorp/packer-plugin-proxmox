@@ -251,7 +251,6 @@ or responding to pattern `/dev/.+`. Example:
   If not given, the same setting as on the host is used.
 
 - `ipconfig` (array of objects) - Set IP address and gateway via Cloud-Init.
-  If no options are given, DHCP will be used.
   If you have configured more than one network interface, make sure to match the order of
   `network_adapters` and `ipconfig`. 
 
@@ -268,13 +267,13 @@ or responding to pattern `/dev/.+`. Example:
   ]
   ```
 
-  - `ip` (string) IPv4 address (CIDR notation).
+  - `ip` (string) - Either an IPv4 address (CIDR notation) or `dhcp`.
 
-  - `gateway` (string) IPv4 gateway.
+  - `gateway` (string) - IPv4 gateway.
 
-  - `ip6` (string) IPv6 address (CIDR notation).
+  - `ip6` (string) - Can be an IPv6 address (CIDR notation), `auto` (enables SLAAC), or `dhcp`.
 
-  - `gateway6` (string) IPv6 gateway.
+  - `gateway6` (string) - IPv6 gateway.
 
 - `additional_iso_files` (array of objects) - Additional ISO files attached to the virtual machine.
   Example:

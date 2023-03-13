@@ -237,6 +237,22 @@ func TestIpconfig(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:          "ipconfig DHCP, no error",
+			expectFailure: false,
+			ipconfigs: []cloudInitIpconfig{
+				{
+					Ip:  "dhcp",
+					Ip6: "dhcp",
+				},
+			},
+			nics: []proxmox.NICConfig{
+				{
+					Model:  "virtio",
+					Bridge: "vmbr0",
+				},
+			},
+		},
 	}
 
 	for _, tt := range ipconfigTest {

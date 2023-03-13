@@ -66,7 +66,7 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, []string, error) {
 		}
 	}
 	for _, i := range c.Ipconfigs {
-		if i.Ip != "" {
+		if i.Ip != "" && i.Ip != "dhcp" {
 			_, _, err := net.ParseCIDR(i.Ip)
 			if err != nil {
 				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("could not parse ipconfig.ip: %s", err))
@@ -78,7 +78,7 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, []string, error) {
 				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("could not parse ipconfig.gateway: %s", err))
 			}
 		}
-		if i.Ip6 != "" {
+		if i.Ip6 != "" && i.Ip6 != "auto" && i.Ip6 != "dhcp" {
 			_, _, err := net.ParseCIDR(i.Ip6)
 			if err != nil {
 				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("could not parse ipconfig.ip6: %s", err))
