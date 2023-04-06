@@ -76,24 +76,32 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook,
 	}
 	preSteps := b.preSteps
 	for idx := range b.config.AdditionalISOFiles {
-		preSteps = append(preSteps,
-			&commonsteps.StepCreateCD{
-				Files:   b.config.AdditionalISOFiles[idx].CDConfig.CDFiles,
-				Content: b.config.AdditionalISOFiles[idx].CDConfig.CDContent,
-				Label:   b.config.AdditionalISOFiles[idx].CDConfig.CDLabel,
-			},
-			&commonsteps.StepDownload{
-				Checksum:    b.config.AdditionalISOFiles[idx].ISOChecksum,
-				Description: "additional ISO",
-				Extension:   b.config.AdditionalISOFiles[idx].TargetExtension,
-				ResultKey:   b.config.AdditionalISOFiles[idx].DownloadPathKey,
-				TargetPath:  b.config.AdditionalISOFiles[idx].DownloadPathKey,
-				Url:         b.config.AdditionalISOFiles[idx].ISOUrls,
-			},
-			&stepUploadAdditionalISO{
-				ISO: &b.config.AdditionalISOFiles[idx],
-			},
-		)
+		if b.config.AdditionalISOFiles[idx].ISODownloadPVE {
+			preSteps = append(preSteps,
+				&stepDownloadISOOnPVE{
+					ISO: &b.config.AdditionalISOFiles[idx],
+				},
+			)
+		} else {
+			preSteps = append(preSteps,
+				&commonsteps.StepCreateCD{
+					Files:   b.config.AdditionalISOFiles[idx].CDConfig.CDFiles,
+					Content: b.config.AdditionalISOFiles[idx].CDConfig.CDContent,
+					Label:   b.config.AdditionalISOFiles[idx].CDConfig.CDLabel,
+				},
+				&commonsteps.StepDownload{
+					Checksum:    b.config.AdditionalISOFiles[idx].ISOChecksum,
+					Description: "additional ISO",
+					Extension:   b.config.AdditionalISOFiles[idx].TargetExtension,
+					ResultKey:   b.config.AdditionalISOFiles[idx].DownloadPathKey,
+					TargetPath:  b.config.AdditionalISOFiles[idx].DownloadPathKey,
+					Url:         b.config.AdditionalISOFiles[idx].ISOUrls,
+				},
+				&stepUploadAdditionalISO{
+					ISO: &b.config.AdditionalISOFiles[idx],
+				},
+			)
+		}
 	}
 
 	steps := append(preSteps, coreSteps...)

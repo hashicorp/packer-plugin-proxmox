@@ -226,6 +226,7 @@ type additionalISOsConfig struct {
 	// Proxmox storage pool onto which to upload
 	// the ISO file.
 	ISOStoragePool string `mapstructure:"iso_storage_pool"`
+	ISODownloadPVE bool   `mapstructure:"iso_download_pve"`
 	// If true, remove the mounted ISO from the template after finishing. Defaults to `false`.
 	Unmount              bool   `mapstructure:"unmount"`
 	ShouldUploadISO      bool   `mapstructure-to-hcl2:",skip"`
@@ -756,6 +757,9 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		}
 		if options != 1 {
 			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("one of iso_file, iso_url, or a combination of cd_files and cd_content must be specified for AdditionalISO file %s", c.AdditionalISOFiles[idx].Device))
+		}
+		if len(c.AdditionalISOFiles[idx].ISOConfig.ISOUrls) == 0 && c.AdditionalISOFiles[idx].ISOConfig.RawSingleISOUrl == "" && c.AdditionalISOFiles[idx].ISODownloadPVE {
+			err = packersdk.MultiErrorAppend(errs, fmt.Errorf("iso_download_pve can only be used together with iso_url"))
 		}
 	}
 	if c.EFIDisk != "" {
