@@ -39,7 +39,11 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 	preSteps := []multistep.Step{}
 	if b.config.ISODownloadPVE {
 		preSteps = append(preSteps,
-			&stepDownloadISOOnPVE{},
+			&stepDownloadISOOnPVE{
+				ISOStoragePool: b.config.ISOStoragePool,
+				ISOUrls:        b.config.ISOUrls,
+				ISOChecksum:    b.config.ISOChecksum,
+			},
 		)
 	} else {
 		preSteps = append(preSteps,
