@@ -10,30 +10,44 @@
 # in `goreleaser` to indicate this is being used in a non-interactive mode.
 #
 name: release
+permissions:
+  contents: write
 on:
   push:
     tags:
       - 'v*'
 jobs:
+  get-go-version:
+    runs-on: ubuntu-latest
+    outputs:
+      go-version: ${{ steps.get-go-version.outputs.go-version }}
+    steps:
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      - name: 'Determine Go version'
+        id: get-go-version
+        run: |
+          echo "Found Go $(cat .go-version)"
+          echo "go-version=$(cat .go-version)" >> $GITHUB_OUTPUT
   goreleaser:
+    needs:
+      - get-go-version
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
       - name: Unshallow
         run: git fetch --prune --unshallow
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
-          go-version: 1.18
+          go-version: ${{ needs.get-go-version.outputs.go-version }}
       - name: Describe plugin
         id: plugin_describe
-        run: echo "::set-output name=api_version::$(go run . describe | jq -r '.api_version')"
+        run: echo "api_version=$(go run . describe | jq -r '.api_version')" >> "$GITHUB_OUTPUT"
       - name: Install signore
         uses: hashicorp/setup-signore-package@v1
-
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@f82d6c1c344bcacabba2c841718984797f664a6b # v4.2.0
         with:
           version: latest
           args: release --rm-dist
