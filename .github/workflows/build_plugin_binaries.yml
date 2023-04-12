@@ -1,4 +1,4 @@
-name: hashicorp/packer-plugin-amazon/build_plugin_binaries
+name: hashicorp/packer-plugin-proxmox/build_plugin_binaries
 permissions:
   contents: read
 on:
