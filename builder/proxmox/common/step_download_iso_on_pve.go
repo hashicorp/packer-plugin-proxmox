@@ -42,10 +42,7 @@ func Download_iso_on_pve(state multistep.StateBag, ISOUrls []string, ISOChecksum
 	for _, url := range ISOUrls {
 		var checksum string
 		var checksumType string
-		if ISOChecksum == "none" {
-			checksum = ""
-			checksumType = ""
-		} else {
+		if ISOChecksum != "none" {
 			gr := &getter.Request{
 				Src: url + "?checksum=" + ISOChecksum,
 			}
