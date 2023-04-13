@@ -28,6 +28,7 @@ func (s *stepDownloadISOOnPVE) Run(ctx context.Context, state multistep.StateBag
 	var isoStoragePath string
 	isoStoragePath = proxmoxcommon.Download_iso_on_pve(state, s.ISOUrls, s.ISOChecksum, s.ISOStoragePool)
 
+	// If available, set the file path to the downloaded iso file on the node
 	if isoStoragePath != "" {
 		state.Put("iso_file", isoStoragePath)
 		return multistep.ActionContinue
