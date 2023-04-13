@@ -140,6 +140,10 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 	var errs *packersdk.MultiError
 	var warnings []string
 
+	if c.Ctx.BuildType == "proxmox" {
+		warnings = append(warnings, "proxmox is deprecated, please use proxmox-iso instead")
+	}
+
 	// Default qemu_agent to true
 	if c.Agent != config.TriFalse {
 		c.Agent = config.TriTrue

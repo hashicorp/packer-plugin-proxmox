@@ -16,6 +16,9 @@ import (
 
 func main() {
 	pps := plugin.NewSet()
+	// When the builder was split, the alias "proxmox" was added to Packer for the iso builder.
+	// Registering 'plugin.DEFAULT_NAME' does the same for the external plugin.
+	pps.RegisterBuilder(plugin.DEFAULT_NAME, new(proxmoxiso.Builder))
 	pps.RegisterBuilder("iso", new(proxmoxiso.Builder))
 	pps.RegisterBuilder("clone", new(proxmoxclone.Builder))
 	pps.SetVersion(version.PluginVersion)
