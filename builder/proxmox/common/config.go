@@ -759,7 +759,7 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("one of iso_file, iso_url, or a combination of cd_files and cd_content must be specified for AdditionalISO file %s", c.AdditionalISOFiles[idx].Device))
 		}
 		if len(c.AdditionalISOFiles[idx].ISOConfig.ISOUrls) == 0 && c.AdditionalISOFiles[idx].ISOConfig.RawSingleISOUrl == "" && c.AdditionalISOFiles[idx].ISODownloadPVE {
-			err = packersdk.MultiErrorAppend(errs, fmt.Errorf("iso_download_pve can only be used together with iso_url"))
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("iso_download_pve can only be used together with iso_url"))
 		}
 	}
 	if c.EFIDisk != "" {
