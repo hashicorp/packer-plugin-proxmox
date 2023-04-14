@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 name: hashicorp/packer-plugin-proxmox/build_plugin_binaries
 permissions:
   contents: read
