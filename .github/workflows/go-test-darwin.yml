@@ -1,4 +1,7 @@
 #
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 # This GitHub action runs Packer go tests across
 # MacOS runners.
 #
