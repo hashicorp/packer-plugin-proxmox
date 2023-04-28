@@ -84,3 +84,6 @@ jobs:
       - run: |
           export PATH=$PATH:$(go env GOPATH)/bin
           make generate
+          git diff --exit-code || ( echo "Found diffs in generated code" \
+              && echo "You can use the command: \`make generate\` to reformat code." \
+              && false )
