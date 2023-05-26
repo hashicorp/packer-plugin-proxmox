@@ -220,13 +220,8 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 	// so let's make sure it's there.
 	if c.EFIConfig != (efiConfig{}) && c.Ctx.BuildType == "proxmox-clone" {
 		addEFIConfig := make(map[string]interface{})
-		err := config.CreateQemuEfiParams(addEFIConfig)
-		if err != nil {
-			err := fmt.Errorf("error creating EFI parameters: %s", err)
-			state.Put("error", err)
-			ui.Error(err.Error())
-		}
-		_, err = client.SetVmConfig(vmRef, addEFIConfig)
+		config.CreateQemuEfiParams(addEFIConfig)
+		_, err := client.SetVmConfig(vmRef, addEFIConfig)
 		if err != nil {
 			err := fmt.Errorf("error updating template: %s", err)
 			state.Put("error", err)
