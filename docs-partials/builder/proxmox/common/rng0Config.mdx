@@ -1,0 +1,30 @@
+<!-- Code generated from the comments of the rng0Config struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
+
+- `rng0` (object): Configure Random Number Generator via VirtIO.
+A virtual hardware-RNG can be used to provide entropy from the host system to a guest VM helping avoid entropy starvation which might cause the guest system slow down.
+The device is sourced from a host device and guest, his use can be limited: `max_bytes` bytes of data will become available on a `period` ms timer.
+[PVE documentation](https://pve.proxmox.com/pve-docs/pve-admin-guide.html) recommends to always use a limiter to avoid guests using too many host resources.
+
+HCL2 example:
+
+```hcl
+rng0 {
+  source    = "/dev/urandom"
+  max_bytes = 1024
+  period    = 1000
+}
+```
+
+JSON example:
+
+```json
+{
+    "rng0": {
+        "source": "/dev/urandom",
+        "max_bytes": 1024,
+        "period": 1000
+    }
+}
+```
+
+<!-- End of code generated from the comments of the rng0Config struct in builder/proxmox/common/config.go; -->

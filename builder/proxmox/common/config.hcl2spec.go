@@ -99,6 +99,7 @@ type FlatConfig struct {
 	EFIConfig                 *FlatefiConfig             `mapstructure:"efi_config" cty:"efi_config" hcl:"efi_config"`
 	EFIDisk                   *string                    `mapstructure:"efidisk" cty:"efidisk" hcl:"efidisk"`
 	Machine                   *string                    `mapstructure:"machine" cty:"machine" hcl:"machine"`
+	Rng0                      *Flatrng0Config            `mapstructure:"rng0" cty:"rng0" hcl:"rng0"`
 	VGA                       *FlatvgaConfig             `mapstructure:"vga" cty:"vga" hcl:"vga"`
 	NICs                      []FlatNICConfig            `mapstructure:"network_adapters" cty:"network_adapters" hcl:"network_adapters"`
 	Disks                     []FlatdiskConfig           `mapstructure:"disks" cty:"disks" hcl:"disks"`
@@ -216,6 +217,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"efi_config":                   &hcldec.BlockSpec{TypeName: "efi_config", Nested: hcldec.ObjectSpec((*FlatefiConfig)(nil).HCL2Spec())},
 		"efidisk":                      &hcldec.AttrSpec{Name: "efidisk", Type: cty.String, Required: false},
 		"machine":                      &hcldec.AttrSpec{Name: "machine", Type: cty.String, Required: false},
+		"rng0":                         &hcldec.BlockSpec{TypeName: "rng0", Nested: hcldec.ObjectSpec((*Flatrng0Config)(nil).HCL2Spec())},
 		"vga":                          &hcldec.BlockSpec{TypeName: "vga", Nested: hcldec.ObjectSpec((*FlatvgaConfig)(nil).HCL2Spec())},
 		"network_adapters":             &hcldec.BlockListSpec{TypeName: "network_adapters", Nested: hcldec.ObjectSpec((*FlatNICConfig)(nil).HCL2Spec())},
 		"disks":                        &hcldec.BlockListSpec{TypeName: "disks", Nested: hcldec.ObjectSpec((*FlatdiskConfig)(nil).HCL2Spec())},
@@ -376,6 +378,33 @@ func (*FlatefiConfig) HCL2Spec() map[string]hcldec.Spec {
 		"efi_storage_pool":  &hcldec.AttrSpec{Name: "efi_storage_pool", Type: cty.String, Required: false},
 		"pre_enrolled_keys": &hcldec.AttrSpec{Name: "pre_enrolled_keys", Type: cty.Bool, Required: false},
 		"efi_type":          &hcldec.AttrSpec{Name: "efi_type", Type: cty.String, Required: false},
+	}
+	return s
+}
+
+// Flatrng0Config is an auto-generated flat version of rng0Config.
+// Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
+type Flatrng0Config struct {
+	Source   *string `mapstructure:"source" required:"true" cty:"source" hcl:"source"`
+	MaxBytes *int    `mapstructure:"max_bytes" required:"true" cty:"max_bytes" hcl:"max_bytes"`
+	Period   *int    `mapstructure:"period" required:"false" cty:"period" hcl:"period"`
+}
+
+// FlatMapstructure returns a new Flatrng0Config.
+// Flatrng0Config is an auto-generated flat version of rng0Config.
+// Where the contents a fields with a `mapstructure:,squash` tag are bubbled up.
+func (*rng0Config) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Spec } {
+	return new(Flatrng0Config)
+}
+
+// HCL2Spec returns the hcl spec of a rng0Config.
+// This spec is used by HCL to read the fields of rng0Config.
+// The decoded values from this spec will then be applied to a Flatrng0Config.
+func (*Flatrng0Config) HCL2Spec() map[string]hcldec.Spec {
+	s := map[string]hcldec.Spec{
+		"source":    &hcldec.AttrSpec{Name: "source", Type: cty.String, Required: false},
+		"max_bytes": &hcldec.AttrSpec{Name: "max_bytes", Type: cty.Number, Required: false},
+		"period":    &hcldec.AttrSpec{Name: "period", Type: cty.Number, Required: false},
 	}
 	return s
 }

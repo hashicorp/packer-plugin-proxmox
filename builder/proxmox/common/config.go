@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //go:generate packer-sdc struct-markdown
-//go:generate packer-sdc mapstructure-to-hcl2 -type Config,NICConfig,diskConfig,vgaConfig,additionalISOsConfig,efiConfig
+//go:generate packer-sdc mapstructure-to-hcl2 -type Config,NICConfig,diskConfig,rng0Config,vgaConfig,additionalISOsConfig,efiConfig
 
 package proxmox
 
@@ -60,6 +60,7 @@ type Config struct {
 	EFIConfig      efiConfig      `mapstructure:"efi_config"`
 	EFIDisk        string         `mapstructure:"efidisk"`
 	Machine        string         `mapstructure:"machine"`
+	Rng0           rng0Config     `mapstructure:"rng0"`
 	VGA            vgaConfig      `mapstructure:"vga"`
 	NICs           []NICConfig    `mapstructure:"network_adapters"`
 	Disks          []diskConfig   `mapstructure:"disks"`
@@ -117,6 +118,50 @@ type efiConfig struct {
 	PreEnrolledKeys bool   `mapstructure:"pre_enrolled_keys"`
 	EFIType         string `mapstructure:"efi_type"`
 }
+
+// - `rng0` (object): Configure Random Number Generator via VirtIO.
+// A virtual hardware-RNG can be used to provide entropy from the host system to a guest VM helping avoid entropy starvation which might cause the guest system slow down.
+// The device is sourced from a host device and guest, his use can be limited: `max_bytes` bytes of data will become available on a `period` ms timer.
+// [PVE documentation](https://pve.proxmox.com/pve-docs/pve-admin-guide.html) recommends to always use a limiter to avoid guests using too many host resources.
+//
+// HCL2 example:
+//
+// ```hcl
+// rng0 {
+//   source    = "/dev/urandom"
+//   max_bytes = 1024
+//   period    = 1000
+// }
+// ```
+//
+// JSON example:
+//
+// ```json
+// {
+//     "rng0": {
+//         "source": "/dev/urandom",
+//         "max_bytes": 1024,
+//         "period": 1000
+//     }
+// }
+// ```
+type rng0Config struct {
+	// Device on the host to gather entropy from.
+	// `/dev/urandom` should be preferred over `/dev/random` as Proxmox PVE documentation suggests.
+	// `/dev/hwrng` can be used to pass through a hardware RNG.
+	// Can be one of `/dev/urandom`, `/dev/random`, `/dev/hwrng`.
+	Source string `mapstructure:"source" required:"true"`
+	// Maximum bytes of entropy allowed to get injected into the guest every `period` milliseconds.
+	// Use a lower value when using `/dev/random` since can lead to entropy starvation on the host system.
+	// `0` disables limiting and according to PVE documentation is potentially dangerous for the host.
+	// Recommended value: `1024`.
+	MaxBytes int `mapstructure:"max_bytes" required:"true"`
+	// Period in milliseconds on which the the entropy-injection quota is reset.
+	// Can be a positive value.
+	// Recommended value: `1000`.
+	Period int `mapstructure:"period" required:"false"`
+}
+
 type vgaConfig struct {
 	Type   string `mapstructure:"type"`
 	Memory int    `mapstructure:"memory"`
@@ -392,6 +437,21 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 	} else {
 		if c.EFIConfig.EFIType != "" || c.EFIConfig.PreEnrolledKeys {
 			errs = packersdk.MultiErrorAppend(errs, errors.New("efi_storage_pool not set for efi_config"))
+		}
+	}
+	if c.Rng0 != (rng0Config{}) {
+		if !(c.Rng0.Source == "/dev/urandom" || c.Rng0.Source == "/dev/random" || c.Rng0.Source == "/dev/hwrng") {
+			errs = packersdk.MultiErrorAppend(errs, errors.New("source must be one of \"/dev/urandom\", \"/dev/random\", \"/dev/hwrng\""))
+		}
+		if c.Rng0.MaxBytes < 0 {
+			errs = packersdk.MultiErrorAppend(errs, errors.New("max_bytes must be greather or equal than 0"))
+		} else {
+			if c.Rng0.MaxBytes == 0 {
+				warnings = append(warnings, "max_bytes is 0: potentially dangerous: this disables limiting the entropy allowed to get injected into the guest")
+			}
+		}
+		if c.Rng0.Period < 0 {
+			errs = packersdk.MultiErrorAppend(errs, errors.New("period must be greather than 0"))
 		}
 	}
 
