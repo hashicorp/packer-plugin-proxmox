@@ -123,6 +123,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		Bios:         c.BIOS,
 		EFIDisk:      generateProxmoxEfi(c.EFIConfig),
 		Machine:      c.Machine,
+		RNGDrive:     generateProxmoxRng0(c.Rng0),
 		QemuVga:      generateProxmoxVga(c.VGA),
 		QemuNetworks: generateProxmoxNetworkAdapters(c.NICs),
 		QemuDisks:    generateProxmoxDisks(c.Disks),
@@ -293,6 +294,19 @@ func generateProxmoxSerials(serials []string) proxmox.QemuDevices {
 		setDeviceParamIfDefined(devs[idx], "type", serials[idx])
 	}
 	return devs
+}
+
+func generateProxmoxRng0(rng0 rng0Config) proxmox.QemuDevice {
+	dev := make(proxmox.QemuDevice)
+	setDeviceParamIfDefined(dev, "source", rng0.Source)
+
+	if rng0.MaxBytes >= 0 {
+		dev["max_bytes"] = rng0.MaxBytes
+	}
+	if rng0.Period > 0 {
+		dev["period"] = rng0.Period
+	}
+	return dev
 }
 
 func generateProxmoxVga(vga vgaConfig) proxmox.QemuDevice {

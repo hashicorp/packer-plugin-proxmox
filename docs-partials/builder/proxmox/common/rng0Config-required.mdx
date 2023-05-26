@@ -1,0 +1,13 @@
+<!-- Code generated from the comments of the rng0Config struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
+
+- `source` (string) - Device on the host to gather entropy from.
+  `/dev/urandom` should be preferred over `/dev/random` as Proxmox PVE documentation suggests.
+  `/dev/hwrng` can be used to pass through a hardware RNG.
+  Can be one of `/dev/urandom`, `/dev/random`, `/dev/hwrng`.
+
+- `max_bytes` (int) - Maximum bytes of entropy allowed to get injected into the guest every `period` milliseconds.
+  Use a lower value when using `/dev/random` since can lead to entropy starvation on the host system.
+  `0` disables limiting and according to PVE documentation is potentially dangerous for the host.
+  Recommended value: `1024`.
+
+<!-- End of code generated from the comments of the rng0Config struct in builder/proxmox/common/config.go; -->
