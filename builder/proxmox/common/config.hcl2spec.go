@@ -286,6 +286,7 @@ type FlatadditionalISOsConfig struct {
 	Device          *string           `mapstructure:"device" cty:"device" hcl:"device"`
 	ISOFile         *string           `mapstructure:"iso_file" cty:"iso_file" hcl:"iso_file"`
 	ISOStoragePool  *string           `mapstructure:"iso_storage_pool" cty:"iso_storage_pool" hcl:"iso_storage_pool"`
+	ISODownloadPVE  *bool             `mapstructure:"iso_download_pve" cty:"iso_download_pve" hcl:"iso_download_pve"`
 	Unmount         *bool             `mapstructure:"unmount" cty:"unmount" hcl:"unmount"`
 	CDFiles         []string          `mapstructure:"cd_files" cty:"cd_files" hcl:"cd_files"`
 	CDContent       map[string]string `mapstructure:"cd_content" cty:"cd_content" hcl:"cd_content"`
@@ -312,6 +313,7 @@ func (*FlatadditionalISOsConfig) HCL2Spec() map[string]hcldec.Spec {
 		"device":               &hcldec.AttrSpec{Name: "device", Type: cty.String, Required: false},
 		"iso_file":             &hcldec.AttrSpec{Name: "iso_file", Type: cty.String, Required: false},
 		"iso_storage_pool":     &hcldec.AttrSpec{Name: "iso_storage_pool", Type: cty.String, Required: false},
+		"iso_download_pve":     &hcldec.AttrSpec{Name: "iso_download_pve", Type: cty.Bool, Required: false},
 		"unmount":              &hcldec.AttrSpec{Name: "unmount", Type: cty.Bool, Required: false},
 		"cd_files":             &hcldec.AttrSpec{Name: "cd_files", Type: cty.List(cty.String), Required: false},
 		"cd_content":           &hcldec.AttrSpec{Name: "cd_content", Type: cty.Map(cty.String), Required: false},
