@@ -1,0 +1,40 @@
+name: Notify Integration Release (Tag)
+on:
+  push:
+    tags:
+      - '*.*.*'   # Proper releases
+      - '*.*.*-*' # Pre releases
+jobs:
+  notify-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+        with:
+          ref: ${{ github.ref }}
+      # Ensure that Docs are Compiled
+      - uses: actions/setup-go@v4
+      - shell: bash
+        run: make build-docs
+      - shell: bash
+        run: |
+          if [[ -z "$(git status -s)" ]]; then
+            echo "OK"
+          else
+            echo "Docs have been updated, but the compiled docs have not been committed."
+            echo "Run 'make build-docs', and commit the result to resolve this error."
+            exit 1
+          fi
+      # Perform the Release
+      - name: Checkout integration-release-action
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+        with:
+          repository: hashicorp/integration-release-action
+          path: ./integration-release-action
+      - name: Notify Release
+        uses: ./integration-release-action
+        with:
+          integration_identifier: 'packer/hashicorp/proxmox'
+          release_version: ${{ github.ref_name }}
+          release_sha: ${{ github.ref }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
