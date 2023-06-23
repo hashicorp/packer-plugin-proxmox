@@ -109,6 +109,8 @@ type diskConfig struct {
 	CacheMode       string `mapstructure:"cache_mode"`
 	DiskFormat      string `mapstructure:"format"`
 	IOThread        bool   `mapstructure:"io_thread"`
+	Discard         bool   `mapstructure:"discard"`
+	SSD             bool   `mapstructure:"ssd"`
 }
 type efiConfig struct {
 	EFIStoragePool  string `mapstructure:"efi_storage_pool"`

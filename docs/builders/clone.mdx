@@ -49,7 +49,7 @@ in the image's Cloud-Init settings for provisioning.
 - `username` (string) - Username when authenticating to Proxmox, including
   the realm. For example `user@pve` to use the local Proxmox realm. When using
   token authentication, the username must include the token id after an exclamation
-  mark. For example, `user@pve!tokenid`. 
+  mark. For example, `user@pve!tokenid`.
   Can also be set via the `PROXMOX_USERNAME` environment variable.
 
 - `password` (string) - Password for the user.
@@ -228,6 +228,12 @@ or responding to pattern `/dev/.+`. Example:
     multiple disks are used. Requires `virtio-scsi-single` controller and a
     `scsi` or `virtio` disk. Defaults to `false`.
 
+  - `discard` (bool) - Relay TRIM commands to the underlying storage. Defaults
+    to false.
+
+  - `ssd` (bool) - Drive will be represented to the guest as solid-state drive
+    rather than a rotational disk.
+
 - `template_name` (string) - Name of the template. Defaults to the generated
   name used during creation.
 
@@ -261,7 +267,7 @@ or responding to pattern `/dev/.+`. Example:
 
 - `ipconfig` (array of objects) - Set IP address and gateway via Cloud-Init.
   If you have configured more than one network interface, make sure to match the order of
-  `network_adapters` and `ipconfig`. 
+  `network_adapters` and `ipconfig`.
 
   Usage example (JSON):
 
