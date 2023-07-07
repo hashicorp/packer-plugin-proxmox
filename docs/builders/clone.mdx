@@ -229,7 +229,9 @@ or responding to pattern `/dev/.+`. Example:
     `scsi` or `virtio` disk. Defaults to `false`.
 
   - `discard` (bool) - Relay TRIM commands to the underlying storage. Defaults
-    to false.
+    to false. See the
+    [Proxmox documentation](https://pve.proxmox.com/pve-docs/pve-admin-guide.html#qm_hard_disk_discard)
+    for for further information.
 
   - `ssd` (bool) - Drive will be presented to the guest as solid-state drive
     rather than a rotational disk.
