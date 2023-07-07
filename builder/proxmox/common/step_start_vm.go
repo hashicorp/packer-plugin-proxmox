@@ -287,7 +287,7 @@ func generateProxmoxDisks(disks []diskConfig) proxmox.QemuDevices {
 		if devs[idx]["type"] == "scsi" || devs[idx]["type"] == "virtio" {
 			setDeviceParamIfDefined(devs[idx], "iothread", strconv.FormatBool(disks[idx].IOThread))
 		}
-		// Proxmox API expectes the value of discard to bei either "off" or "on"
+		// Proxmox API expects the value of discard to be either "off" or "on"
 		setDeviceParamIfDefined(devs[idx], "discard", func() string {
 			if disks[idx].Discard {
 				return "on"
