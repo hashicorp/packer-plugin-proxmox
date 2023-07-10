@@ -294,7 +294,7 @@ func generateProxmoxDisks(disks []diskConfig) proxmox.QemuDevices {
 			}
 			return "ignore"
 		}())
-		setDeviceParamIfDefined(devs[idx], "ssd", strconv.FormatBool(disks[idx].IOThread))
+		setDeviceParamIfDefined(devs[idx], "ssd", strconv.FormatBool(disks[idx].SSD))
 	}
 	return devs
 }
