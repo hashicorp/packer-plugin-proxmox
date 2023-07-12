@@ -127,23 +127,27 @@ type efiConfig struct {
 // HCL2 example:
 //
 // ```hcl
-// rng0 {
-//   source    = "/dev/urandom"
-//   max_bytes = 1024
-//   period    = 1000
-// }
+//
+//	rng0 {
+//	  source    = "/dev/urandom"
+//	  max_bytes = 1024
+//	  period    = 1000
+//	}
+//
 // ```
 //
 // JSON example:
 //
 // ```json
-// {
-//     "rng0": {
-//         "source": "/dev/urandom",
-//         "max_bytes": 1024,
-//         "period": 1000
-//     }
-// }
+//
+//	{
+//	    "rng0": {
+//	        "source": "/dev/urandom",
+//	        "max_bytes": 1024,
+//	        "period": 1000
+//	    }
+//	}
+//
 // ```
 type rng0Config struct {
 	// Device on the host to gather entropy from.
@@ -444,14 +448,14 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 			errs = packersdk.MultiErrorAppend(errs, errors.New("source must be one of \"/dev/urandom\", \"/dev/random\", \"/dev/hwrng\""))
 		}
 		if c.Rng0.MaxBytes < 0 {
-			errs = packersdk.MultiErrorAppend(errs, errors.New("max_bytes must be greather or equal than 0"))
+			errs = packersdk.MultiErrorAppend(errs, errors.New("max_bytes must be >= 0"))
 		} else {
 			if c.Rng0.MaxBytes == 0 {
 				warnings = append(warnings, "max_bytes is 0: potentially dangerous: this disables limiting the entropy allowed to get injected into the guest")
 			}
 		}
 		if c.Rng0.Period < 0 {
-			errs = packersdk.MultiErrorAppend(errs, errors.New("period must be greather than 0"))
+			errs = packersdk.MultiErrorAppend(errs, errors.New("period must be >= 0"))
 		}
 	}
 
