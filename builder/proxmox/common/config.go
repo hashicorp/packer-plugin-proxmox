@@ -172,29 +172,31 @@ type vgaConfig struct {
 	Memory int    `mapstructure:"memory"`
 }
 
-// - `pci_devices` (array of objects) - Passthrough a host PCI device into the VM.
-// For example, a graphics card or a network adapter. Devices that are mapped into a guest VM are no longer available on the host. A minimal configuration only requires either the `host` or the `mapping` key to be specifed. Note: VMs with passed-through devices cannot be migrated.
+// Allows passing through a host PCI device into the VM. For example, a graphics card
+// or a network adapter. Devices that are mapped into a guest VM are no longer available
+// on the host. A minimal configuration only requires either the `host` or the `mapping`
+// key to be specifed.
+//
+// Note: VMs with passed-through devices cannot be migrated.
 //
 // Example configuration (HCL):
 //
-// ```hcl
-//
+//	```hcl
 //	pci_devices {
-//	  host          = "0000:0d:00.1"
-//	  pcie          = false
-//	  device_id     = "1003"
-//	  legacy_igd    = false
-//	  mapping       = "someNic"
-//	  mdev          = "some-model"
-//	  rombar        = true
-//	  romfile       = "vbios.bin"
-//	  sub_device_id = ""
-//	  sub_vendor_id = ""
-//	  vendor_id     = "15B3"
-//	  x_vga         = false
+//	host          = "0000:0d:00.1"
+//	pcie          = false
+//	device_id     = "1003"
+//	legacy_igd    = false
+//	mapping       = "someNic"
+//	mdev          = "some-model"
+//	rombar        = true
+//	romfile       = "vbios.bin"
+//	sub_device_id = ""
+//	sub_vendor_id = ""
+//	vendor_id     = "15B3"
+//	x_vga         = false
 //	}
-//
-// ```
+//	```
 type pciDeviceConfig struct {
 	// The PCI ID of a host’s PCI device or a PCI virtual function. You can us the `lspci` command to list existing PCI devices. Either this or the `mapping` key must be set.
 	Host string `mapstructure:"host" required:"true"`
