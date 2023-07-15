@@ -29,9 +29,12 @@ There are many configuration options available for the builder. They are
 segmented below into two categories: required and optional parameters. Within
 each category, the available configuration keys are alphabetized.
 
-In addition to the options listed here, a
-[communicator](/packer/docs/templates/legacy_json_templates/communicator) can be configured for this
-builder.
+In addition to the items listed here, you will want to look at the general
+configuration references for
+[VirtIO RNG device](#virtio-rng-device),
+[PCI Devices](#pci-devices),
+and [Communicator](/packer/docs/templates/legacy_json_templates/communicator)
+configuration references, which can be found further down the page.
 
 If no communicator is defined, an SSH key is generated for use, and is used
 in the image's Cloud-Init settings for provisioning.
@@ -247,13 +250,6 @@ or responding to pattern `/dev/.+`. Example:
   - `ssd` (bool) - Drive will be presented to the guest as solid-state drive
     rather than a rotational disk.
 
-@include 'builder/proxmox/common/pciDeviceConfig.mdx'
-##### Required:
-
-  @include 'builder/proxmox/common/pciDeviceConfig-required.mdx'
-##### Optional:
-
-  @include 'builder/proxmox/common/pciDeviceConfig-not-required.mdx'
 - `template_name` (string) - Name of the template. Defaults to the generated
   name used during creation.
 
@@ -428,6 +424,18 @@ or responding to pattern `/dev/.+`. Example:
 ##### Optional:
 
 @include 'builder/proxmox/common/rng0Config-not-required.mdx'
+
+### PCI devices
+
+@include 'builder/proxmox/common/pciDeviceConfig.mdx'
+
+#### Required:
+
+@include 'builder/proxmox/common/pciDeviceConfig-required.mdx'
+
+#### Optional:
+
+@include 'builder/proxmox/common/pciDeviceConfig-not-required.mdx'
 
 ## Boot Command
 
