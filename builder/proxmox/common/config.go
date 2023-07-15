@@ -512,9 +512,13 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		}
 	}
 
+	validPCIIDre := regexp.MustCompile(`^(?:[0-9a-fA-F]{4}:)?[0-9a-fA-F]{2}:[0-9a-fA-F]{2}\.[0-9a-fA-F]$`)
 	for _, device := range c.PCIDevices {
 		if device.Host == "" && device.Mapping == "" {
 			errs = packersdk.MultiErrorAppend(errs, errors.New("either the host or the mapping key must be specified"))
+		}
+		if device.Host != "" && !validPCIIDre.MatchString(device.Host) {
+			errs = packersdk.MultiErrorAppend(errs, errors.New("host contains invalid PCI ID"))
 		}
 		if device.LegacyIGD {
 			if c.Machine != "pc" && !strings.HasPrefix(c.Machine, "pc-i440fx") {
