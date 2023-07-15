@@ -425,45 +425,49 @@ func TestVMID(t *testing.T) {
 
 func TestPCIDeviceMapping(t *testing.T) {
 	testCases := []struct {
-		expectedToFail  bool
+		expectedError   error
 		pciDeviceConfig pciDeviceConfig
 		machine         string
 		vga             vgaConfig
 	}{
 		// Host PCI ID / Mapping
 		{
-			expectedToFail: true,
-			// This test fails because we haven't specified either of the two required
-			// keys - `host` or `mapping`.
+			expectedError: fmt.Errorf("either the host or the mapping key must be specified"),
 		},
 		{
-			expectedToFail: false,
+			expectedError: fmt.Errorf("host contains invalid PCI ID"),
+			pciDeviceConfig: pciDeviceConfig{
+				Host: "invalid-pci-id",
+			},
+		},
+		{
 			pciDeviceConfig: pciDeviceConfig{
 				Host: "0000:03:00.0",
 			},
 		},
 		{
-			expectedToFail: false,
 			pciDeviceConfig: pciDeviceConfig{
 				Mapping: "someNic",
 			},
 		},
 		// Legacy IGD
 		{
-			expectedToFail: true,
+			expectedError: fmt.Errorf("legacy_igd requires pc-i440fx machine type"),
 			pciDeviceConfig: pciDeviceConfig{
+				Host:      "0000:03:00.0",
 				LegacyIGD: true,
 			},
 		},
 		{
-			expectedToFail: true,
+			expectedError: fmt.Errorf("legacy_igd requires vga.type set to none"),
 			pciDeviceConfig: pciDeviceConfig{
+				Host:      "0000:03:00.0",
 				LegacyIGD: true,
 			},
 			machine: "pc",
 		},
 		{
-			expectedToFail: true,
+			expectedError: fmt.Errorf("legacy_igd requires vga.type set to none"),
 			pciDeviceConfig: pciDeviceConfig{
 				Host:      "0000:03:00.0",
 				LegacyIGD: true,
@@ -474,7 +478,6 @@ func TestPCIDeviceMapping(t *testing.T) {
 			},
 		},
 		{
-			expectedToFail: false,
 			pciDeviceConfig: pciDeviceConfig{
 				Host:      "0000:03:00.0",
 				LegacyIGD: true,
@@ -486,7 +489,7 @@ func TestPCIDeviceMapping(t *testing.T) {
 		},
 		// PCIe
 		{
-			expectedToFail: true,
+			expectedError: fmt.Errorf("pcie requires q35 machine type"),
 			pciDeviceConfig: pciDeviceConfig{
 				Host: "0000:03:00.0",
 				PCIe: true,
@@ -494,7 +497,6 @@ func TestPCIDeviceMapping(t *testing.T) {
 			machine: "pc",
 		},
 		{
-			expectedToFail: false,
 			pciDeviceConfig: pciDeviceConfig{
 				Host: "0000:03:00.0",
 				PCIe: true,
@@ -502,7 +504,6 @@ func TestPCIDeviceMapping(t *testing.T) {
 			machine: "q35",
 		},
 		{
-			expectedToFail: false,
 			pciDeviceConfig: pciDeviceConfig{
 				Host: "0000:03:00.0",
 				PCIe: true,
@@ -512,7 +513,7 @@ func TestPCIDeviceMapping(t *testing.T) {
 	}
 
 	for idx, tc := range testCases {
-		t.Run(fmt.Sprintf("%d,expected_to_fail:%t", idx, tc.expectedToFail), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%d,expected_to_fail:%t", idx, tc.expectedError != nil), func(t *testing.T) {
 			device := make(map[string]interface{})
 			device["host"] = tc.pciDeviceConfig.Host
 			device["device_id"] = tc.pciDeviceConfig.DeviceID
@@ -538,12 +539,13 @@ func TestPCIDeviceMapping(t *testing.T) {
 			var c Config
 			_, _, err := c.Prepare(&c, cfg)
 
-			if tc.expectedToFail == true && err == nil {
-				t.Error("expected config preparation to fail, but no error occured")
-			}
-
-			if tc.expectedToFail == false && err != nil {
+			switch {
+			case tc.expectedError == nil && err != nil:
 				t.Errorf("expected config preparation to succeed, but %s", err.Error())
+			case tc.expectedError != nil && err == nil:
+				t.Error("expected config preparation to fail, but no error occured")
+			case tc.expectedError != nil && !strings.Contains(err.Error(), tc.expectedError.Error()):
+				t.Errorf("expected config preparation errors to match - want %q, got %q", tc.expectedError, err)
 			}
 		})
 	}
