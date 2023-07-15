@@ -291,7 +291,10 @@ func generateProxmoxDisks(disks []diskConfig) proxmox.QemuDevices {
 			}
 			return "ignore"
 		}())
-		setDeviceParamIfDefined(devs[idx], "ssd", strconv.FormatBool(disks[idx].SSD))
+		// SSD emulation is not supported on virtio device type
+		if devs[idx]["type"] != "virtio" {
+			setDeviceParamIfDefined(devs[idx], "ssd", strconv.FormatBool(disks[idx].SSD))
+		}
 	}
 	return devs
 }
