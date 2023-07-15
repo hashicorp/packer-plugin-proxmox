@@ -521,7 +521,7 @@ func TestPCIDeviceMapping(t *testing.T) {
 			device["mapping"] = tc.pciDeviceConfig.Mapping
 			device["pcie"] = tc.pciDeviceConfig.PCIe
 			device["mdev"] = tc.pciDeviceConfig.MDEV
-			device["rombar"] = tc.pciDeviceConfig.HideROMBAR
+			device["hide_rombar"] = tc.pciDeviceConfig.HideROMBAR
 			device["romfile"] = tc.pciDeviceConfig.ROMFile
 			device["sub_device_id"] = tc.pciDeviceConfig.SubDeviceID
 			device["sub_vendor_id"] = tc.pciDeviceConfig.SubVendorID
