@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/stretchr/testify/assert"
 )
 
 type startedVMCleanerMock struct {
@@ -438,6 +439,62 @@ func TestStartVMWithForce(t *testing.T) {
 			if !deleteWasCalled && c.expectedCallToDelete {
 				t.Error("Expected call of deleteVm")
 			}
+		})
+	}
+}
+
+func TestStartVM_AssertInitialQuemuConfig(t *testing.T) {
+	testCases := []struct {
+		name             string
+		config           *Config
+		assertQemuConfig func(t *testing.T, config proxmox.ConfigQemu)
+	}{
+		{
+			name: "Inverts HideROMBAR value for PCI devices",
+			config: &Config{
+				PCIDevices: []pciDeviceConfig{
+					{
+						HideROMBAR: false,
+					},
+				},
+			},
+			assertQemuConfig: func(t *testing.T, config proxmox.ConfigQemu) {
+				assert.Equal(t, "true", config.QemuPCIDevices[0]["rombar"])
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			startVMWasCalled := false
+			qemuConfig := proxmox.ConfigQemu{}
+			mock := &startVMMock{
+				create: func(vmRef *proxmox.VmRef, config proxmox.ConfigQemu, state multistep.StateBag) error {
+					qemuConfig = config
+					return nil
+				},
+				startVm: func(*proxmox.VmRef) (string, error) {
+					startVMWasCalled = true
+					return "", nil
+				},
+				getNextID: func(id int) (int, error) {
+					return 101, nil
+				},
+			}
+			state := new(multistep.BasicStateBag)
+			state.Put("ui", packersdk.TestUi(t))
+			state.Put("config", tc.config)
+			state.Put("proxmoxClient", mock)
+			s := stepStartVM{vmCreator: mock}
+
+			action := s.Run(context.TODO(), state)
+			if action != multistep.ActionContinue {
+				t.Errorf("Expected action continue, got %s", action)
+			}
+			if !startVMWasCalled {
+				t.Error("Expect a call of startVm")
+			}
+			tc.assertQemuConfig(t, qemuConfig)
 		})
 	}
 }
