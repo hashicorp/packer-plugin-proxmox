@@ -393,7 +393,7 @@ type FlatpciDeviceConfig struct {
 	Mapping     *string `mapstructure:"mapping" required:"true" cty:"mapping" hcl:"mapping"`
 	PCIe        *bool   `mapstructure:"pcie" cty:"pcie" hcl:"pcie"`
 	MDEV        *string `mapstructure:"mdev" cty:"mdev" hcl:"mdev"`
-	HideROMBAR  *bool   `mapstructure:"rombar" cty:"rombar" hcl:"rombar"`
+	HideROMBAR  *bool   `mapstructure:"hide_rombar" cty:"hide_rombar" hcl:"hide_rombar"`
 	ROMFile     *string `mapstructure:"romfile" cty:"romfile" hcl:"romfile"`
 	SubDeviceID *string `mapstructure:"sub_device_id" cty:"sub_device_id" hcl:"sub_device_id"`
 	SubVendorID *string `mapstructure:"sub_vendor_id" cty:"sub_vendor_id" hcl:"sub_vendor_id"`
@@ -419,7 +419,7 @@ func (*FlatpciDeviceConfig) HCL2Spec() map[string]hcldec.Spec {
 		"mapping":       &hcldec.AttrSpec{Name: "mapping", Type: cty.String, Required: false},
 		"pcie":          &hcldec.AttrSpec{Name: "pcie", Type: cty.Bool, Required: false},
 		"mdev":          &hcldec.AttrSpec{Name: "mdev", Type: cty.String, Required: false},
-		"rombar":        &hcldec.AttrSpec{Name: "rombar", Type: cty.Bool, Required: false},
+		"hide_rombar":   &hcldec.AttrSpec{Name: "hide_rombar", Type: cty.Bool, Required: false},
 		"romfile":       &hcldec.AttrSpec{Name: "romfile", Type: cty.String, Required: false},
 		"sub_device_id": &hcldec.AttrSpec{Name: "sub_device_id", Type: cty.String, Required: false},
 		"sub_vendor_id": &hcldec.AttrSpec{Name: "sub_vendor_id", Type: cty.String, Required: false},
