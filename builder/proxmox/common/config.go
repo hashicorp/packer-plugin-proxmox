@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //go:generate packer-sdc struct-markdown
-//go:generate packer-sdc mapstructure-to-hcl2 -type Config,NICConfig,diskConfig,rng0Config,vgaConfig,additionalISOsConfig,efiConfig
+//go:generate packer-sdc mapstructure-to-hcl2 -type Config,NICConfig,diskConfig,rng0Config,pciDeviceConfig,vgaConfig,additionalISOsConfig,efiConfig
 
 package proxmox
 
@@ -48,27 +48,28 @@ type Config struct {
 	VMName string `mapstructure:"vm_name"`
 	VMID   int    `mapstructure:"vm_id"`
 
-	Boot           string         `mapstructure:"boot"`
-	Memory         int            `mapstructure:"memory"`
-	BalloonMinimum int            `mapstructure:"ballooning_minimum"`
-	Cores          int            `mapstructure:"cores"`
-	CPUType        string         `mapstructure:"cpu_type"`
-	Sockets        int            `mapstructure:"sockets"`
-	Numa           bool           `mapstructure:"numa"`
-	OS             string         `mapstructure:"os"`
-	BIOS           string         `mapstructure:"bios"`
-	EFIConfig      efiConfig      `mapstructure:"efi_config"`
-	EFIDisk        string         `mapstructure:"efidisk"`
-	Machine        string         `mapstructure:"machine"`
-	Rng0           rng0Config     `mapstructure:"rng0"`
-	VGA            vgaConfig      `mapstructure:"vga"`
-	NICs           []NICConfig    `mapstructure:"network_adapters"`
-	Disks          []diskConfig   `mapstructure:"disks"`
-	Serials        []string       `mapstructure:"serials"`
-	Agent          config.Trilean `mapstructure:"qemu_agent"`
-	SCSIController string         `mapstructure:"scsi_controller"`
-	Onboot         bool           `mapstructure:"onboot"`
-	DisableKVM     bool           `mapstructure:"disable_kvm"`
+	Boot           string            `mapstructure:"boot"`
+	Memory         int               `mapstructure:"memory"`
+	BalloonMinimum int               `mapstructure:"ballooning_minimum"`
+	Cores          int               `mapstructure:"cores"`
+	CPUType        string            `mapstructure:"cpu_type"`
+	Sockets        int               `mapstructure:"sockets"`
+	Numa           bool              `mapstructure:"numa"`
+	OS             string            `mapstructure:"os"`
+	BIOS           string            `mapstructure:"bios"`
+	EFIConfig      efiConfig         `mapstructure:"efi_config"`
+	EFIDisk        string            `mapstructure:"efidisk"`
+	Machine        string            `mapstructure:"machine"`
+	Rng0           rng0Config        `mapstructure:"rng0"`
+	VGA            vgaConfig         `mapstructure:"vga"`
+	NICs           []NICConfig       `mapstructure:"network_adapters"`
+	Disks          []diskConfig      `mapstructure:"disks"`
+	PCIDevices     []pciDeviceConfig `mapstructure:"pci_devices"`
+	Serials        []string          `mapstructure:"serials"`
+	Agent          config.Trilean    `mapstructure:"qemu_agent"`
+	SCSIController string            `mapstructure:"scsi_controller"`
+	Onboot         bool              `mapstructure:"onboot"`
+	DisableKVM     bool              `mapstructure:"disable_kvm"`
 
 	TemplateName        string `mapstructure:"template_name"`
 	TemplateDescription string `mapstructure:"template_description"`
@@ -169,6 +170,20 @@ type rng0Config struct {
 type vgaConfig struct {
 	Type   string `mapstructure:"type"`
 	Memory int    `mapstructure:"memory"`
+}
+type pciDeviceConfig struct {
+	Host        string `mapstructure:"host"`
+	DeviceID    string `mapstructure:"device_id"`
+	LegacyIGD   *bool  `mapstructure:"legacy_igd"`
+	Mapping     string `mapstructure:"mapping"`
+	PCIe        *bool  `mapstructure:"pcie"`
+	MDEV        string `mapstructure:"mdev"`
+	ROMBar      *bool  `mapstructure:"rombar"`
+	ROMFile     string `mapstructure:"romfile"`
+	SubDeviceID string `mapstructure:"sub_device_id"`
+	SubVendorID string `mapstructure:"sub_vendor_id"`
+	VendorID    string `mapstructure:"vendor_id"`
+	XVGA        *bool  `mapstructure:"x_vga"`
 }
 
 func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []string, error) {
@@ -306,6 +321,11 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 	if c.SCSIController == "" {
 		log.Printf("SCSI controller not set, using default 'lsi'")
 		c.SCSIController = "lsi"
+	}
+	for idx, device := range c.PCIDevices {
+		if device.ROMBar == nil {
+			c.PCIDevices[idx].ROMBar = boolPtr(true)
+		}
 	}
 
 	errs = packersdk.MultiErrorAppend(errs, c.Comm.Prepare(&c.Ctx)...)
@@ -459,8 +479,31 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		}
 	}
 
+	for _, device := range c.PCIDevices {
+		if device.Host == "" && device.Mapping == "" {
+			errs = packersdk.MultiErrorAppend(errs, errors.New("either the host or the mapping key must be specified"))
+		}
+		if device.LegacyIGD != nil && *device.LegacyIGD {
+			if c.Machine != "pc" && !strings.HasPrefix(c.Machine, "pc-i440fx") {
+				errs = packersdk.MultiErrorAppend(errs, errors.New("legacy_igd requires pc-i440fx machine type"))
+			}
+			if c.VGA.Type != "none" {
+				errs = packersdk.MultiErrorAppend(errs, errors.New("legacy_igd requires vga.type set to none"))
+			}
+		}
+		if device.PCIe != nil && *device.PCIe {
+			if c.Machine != "q35" && !strings.HasPrefix(c.Machine, "pc-q35") {
+				errs = packersdk.MultiErrorAppend(errs, errors.New("pcie requires q35 machine type"))
+			}
+		}
+	}
+
 	if errs != nil && len(errs.Errors) > 0 {
 		return nil, warnings, errs
 	}
 	return nil, warnings, nil
+}
+
+func boolPtr(v bool) *bool {
+	return &v
 }

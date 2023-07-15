@@ -247,6 +247,51 @@ or responding to pattern `/dev/.+`. Example:
   - `ssd` (bool) - Drive will be presented to the guest as solid-state drive
     rather than a rotational disk.
 
+- `pci_devices` (array of objects) - Passthrough a host PCI device into the VM. For example, a graphics card or a network adapter. Devices that are mapped into a guest VM are no longer available on the host. A minimal configuration only requires either the `host` or the `mapping` key to be specifed. Note: VMs with passed-through devices cannot be migrated.
+
+  Example configuration (HCL):
+
+  ```hcl
+  pci_devices {
+    host          = "0000:0d:00.1"
+    pcie          = false
+    device_id     = "1003"
+    legacy_igd    = false
+    mapping       = "someNic"
+    mdev          = "some-model"
+    rombar        = true
+    romfile       = "vbios.bin"
+    sub_device_id = ""
+    sub_vendor_id = ""
+    vendor_id     = "15B3"
+    x_vga         = false
+  }
+  ```
+
+  - `host` (string) - The PCI ID of a host’s PCI device or a PCI virtual function. You can us the `lspci` command to list existing PCI devices. Either this or the `mapping` key must be set.
+
+  - `mapping` (string) - The ID of a cluster wide mapping. Either this or the `host` key must be set. 
+
+  - `pcie` (bool) - Present the device as a PCIe device (needs `q35` machine model). Defaults to `false`.
+
+  - `device_id` (string) - Override PCI device ID visible to guest.
+
+  - `legacy_igd` (bool) - Pass this device in legacy IGD mode, making it the primary and exclusive graphics device in the VM. Requires `pc-i440fx` machine type and VGA set to `none`. Defaults to `false`.
+
+  - `mdev` (string) - The type of mediated device to use. An instance of this type will be created on startup of the VM and will be cleaned up when the VM stops.
+
+  - `rombar` (bool) - Specify whether or not the device’s ROM will be visible in the guest’s memory map. Defaults to `true`.
+
+  - `romfile` (string) - Custom PCI device rom filename (must be located in `/usr/share/kvm/`). 
+
+  - `sub_device_id` (string) - Override PCI subsystem device ID visible to guest.
+
+  - `sub_vendor_id` (string) - Override PCI subsystem vendor ID visible to guest.
+
+  - `vendor_id` (string) - Override PCI vendor ID visible to guest.
+
+  - `x_vga` (bool) - Enable vfio-vga device support. Defaults to `false`.
+
 - `template_name` (string) - Name of the template. Defaults to the generated
   name used during creation.
 
@@ -310,6 +355,7 @@ or responding to pattern `/dev/.+`. Example:
   - `unmount` (bool) - If true, remove the mounted ISO from the template after finishing. Defaults to `false`.
 
   ### Optional
+
     - `cd_files` ([]string) - A list of files to place onto a CD that is attached when the VM is
       booted. This can include either files or directories; any directories
       will be copied onto the CD recursively, preserving directory structure

@@ -110,27 +110,28 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 	}
 
 	config := proxmox.ConfigQemu{
-		Name:         c.VMName,
-		Agent:        agent,
-		QemuKVM:      &kvm,
-		Boot:         c.Boot, // Boot priority, example: "order=virtio0;ide2;net0", virtio0:Disk0 -> ide0:CDROM -> net0:Network
-		QemuCpu:      c.CPUType,
-		Description:  "Packer ephemeral build VM",
-		Memory:       c.Memory,
-		QemuCores:    c.Cores,
-		QemuSockets:  c.Sockets,
-		QemuNuma:     &c.Numa,
-		QemuOs:       c.OS,
-		Bios:         c.BIOS,
-		EFIDisk:      generateProxmoxEfi(c.EFIConfig),
-		Machine:      c.Machine,
-		RNGDrive:     generateProxmoxRng0(c.Rng0),
-		QemuVga:      generateProxmoxVga(c.VGA),
-		QemuNetworks: generateProxmoxNetworkAdapters(c.NICs),
-		QemuDisks:    generateProxmoxDisks(c.Disks),
-		QemuSerials:  generateProxmoxSerials(c.Serials),
-		Scsihw:       c.SCSIController,
-		Onboot:       &c.Onboot,
+		Name:           c.VMName,
+		Agent:          agent,
+		QemuKVM:        &kvm,
+		Boot:           c.Boot, // Boot priority, example: "order=virtio0;ide2;net0", virtio0:Disk0 -> ide0:CDROM -> net0:Network
+		QemuCpu:        c.CPUType,
+		Description:    "Packer ephemeral build VM",
+		Memory:         c.Memory,
+		QemuCores:      c.Cores,
+		QemuSockets:    c.Sockets,
+		QemuNuma:       &c.Numa,
+		QemuOs:         c.OS,
+		Bios:           c.BIOS,
+		EFIDisk:        generateProxmoxEfi(c.EFIConfig),
+		Machine:        c.Machine,
+		RNGDrive:       generateProxmoxRng0(c.Rng0),
+		QemuVga:        generateProxmoxVga(c.VGA),
+		QemuNetworks:   generateProxmoxNetworkAdapters(c.NICs),
+		QemuDisks:      generateProxmoxDisks(c.Disks),
+		QemuPCIDevices: generateProxmoxPCIDeviceMap(c.PCIDevices),
+		QemuSerials:    generateProxmoxSerials(c.Serials),
+		Scsihw:         c.SCSIController,
+		Onboot:         &c.Onboot,
 	}
 
 	// 0 disables the ballooning device, which is useful for all VMs
@@ -295,6 +296,26 @@ func generateProxmoxDisks(disks []diskConfig) proxmox.QemuDevices {
 	return devs
 }
 
+func generateProxmoxPCIDeviceMap(devices []pciDeviceConfig) proxmox.QemuDevices {
+	devs := make(proxmox.QemuDevices)
+	for idx := range devices {
+		devs[idx] = make(proxmox.QemuDevice)
+		setDeviceParamIfDefined(devs[idx], "host", devices[idx].Host)
+		setDeviceParamIfDefined(devs[idx], "device-id", devices[idx].DeviceID)
+		setDeviceParamIfDefined(devs[idx], "legacy-igd", formatBoolPointer(devices[idx].LegacyIGD))
+		setDeviceParamIfDefined(devs[idx], "mapping", devices[idx].Mapping)
+		setDeviceParamIfDefined(devs[idx], "mdev", devices[idx].MDEV)
+		setDeviceParamIfDefined(devs[idx], "pcie", formatBoolPointer(devices[idx].PCIe))
+		setDeviceParamIfDefined(devs[idx], "rombar", formatBoolPointer(devices[idx].ROMBar))
+		setDeviceParamIfDefined(devs[idx], "romfile", devices[idx].ROMFile)
+		setDeviceParamIfDefined(devs[idx], "sub-device-id", devices[idx].SubDeviceID)
+		setDeviceParamIfDefined(devs[idx], "sub-vendor-id", devices[idx].SubVendorID)
+		setDeviceParamIfDefined(devs[idx], "vendor-id", devices[idx].VendorID)
+		setDeviceParamIfDefined(devs[idx], "x-vga", formatBoolPointer(devices[idx].XVGA))
+	}
+	return devs
+}
+
 func generateProxmoxSerials(serials []string) proxmox.QemuDevices {
 	devs := make(proxmox.QemuDevices)
 	for idx := range serials {
@@ -341,6 +362,13 @@ func generateProxmoxEfi(efi efiConfig) proxmox.QemuDevice {
 		}
 	}
 	return dev
+}
+
+func formatBoolPointer(v *bool) string {
+	if v == nil {
+		return ""
+	}
+	return strconv.FormatBool(*v)
 }
 
 func setDeviceParamIfDefined(dev proxmox.QemuDevice, key, value string) {
