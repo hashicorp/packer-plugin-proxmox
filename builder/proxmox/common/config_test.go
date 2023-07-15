@@ -4,6 +4,7 @@
 package proxmox
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -417,6 +418,132 @@ func TestVMID(t *testing.T) {
 
 			if err == nil && tt.expectFailure {
 				t.Errorf("expected failure, but prepare succeeded")
+			}
+		})
+	}
+}
+
+func TestPCIDeviceMapping(t *testing.T) {
+	testCases := []struct {
+		expectedToFail  bool
+		pciDeviceConfig pciDeviceConfig
+		machine         string
+		vga             vgaConfig
+	}{
+		// Host PCI ID / Mapping
+		{
+			expectedToFail: true,
+			// This test fails because we haven't specified either of the two required
+			// keys - `host` or `mapping`.
+		},
+		{
+			expectedToFail: false,
+			pciDeviceConfig: pciDeviceConfig{
+				Host: "0000:03:00.0",
+			},
+		},
+		{
+			expectedToFail: false,
+			pciDeviceConfig: pciDeviceConfig{
+				Mapping: "someNic",
+			},
+		},
+		// Legacy IGD
+		{
+			expectedToFail: true,
+			pciDeviceConfig: pciDeviceConfig{
+				LegacyIGD: boolPtr(true),
+			},
+		},
+		{
+			expectedToFail: true,
+			pciDeviceConfig: pciDeviceConfig{
+				LegacyIGD: boolPtr(true),
+			},
+			machine: "pc",
+		},
+		{
+			expectedToFail: true,
+			pciDeviceConfig: pciDeviceConfig{
+				Host:      "0000:03:00.0",
+				LegacyIGD: boolPtr(true),
+			},
+			machine: "pc",
+			vga: vgaConfig{
+				Type: "std",
+			},
+		},
+		{
+			expectedToFail: false,
+			pciDeviceConfig: pciDeviceConfig{
+				Host:      "0000:03:00.0",
+				LegacyIGD: boolPtr(true),
+			},
+			machine: "pc",
+			vga: vgaConfig{
+				Type: "none",
+			},
+		},
+		// PCIe
+		{
+			expectedToFail: true,
+			pciDeviceConfig: pciDeviceConfig{
+				Host: "0000:03:00.0",
+				PCIe: boolPtr(true),
+			},
+			machine: "pc",
+		},
+		{
+			expectedToFail: false,
+			pciDeviceConfig: pciDeviceConfig{
+				Host: "0000:03:00.0",
+				PCIe: boolPtr(true),
+			},
+			machine: "q35",
+		},
+		{
+			expectedToFail: false,
+			pciDeviceConfig: pciDeviceConfig{
+				Host: "0000:03:00.0",
+				PCIe: boolPtr(true),
+			},
+			machine: "pc-q35",
+		},
+	}
+
+	for idx, tc := range testCases {
+		t.Run(fmt.Sprintf("%d,expected_to_fail:%t", idx, tc.expectedToFail), func(t *testing.T) {
+			device := make(map[string]interface{})
+			device["host"] = tc.pciDeviceConfig.Host
+			device["device_id"] = tc.pciDeviceConfig.DeviceID
+			device["legacy_igd"] = tc.pciDeviceConfig.LegacyIGD
+			device["mapping"] = tc.pciDeviceConfig.Mapping
+			device["pcie"] = tc.pciDeviceConfig.PCIe
+			device["mdev"] = tc.pciDeviceConfig.MDEV
+			device["rombar"] = tc.pciDeviceConfig.ROMBar
+			device["romfile"] = tc.pciDeviceConfig.ROMFile
+			device["sub_device_id"] = tc.pciDeviceConfig.SubDeviceID
+			device["sub_vendor_id"] = tc.pciDeviceConfig.SubVendorID
+			device["vendor_id"] = tc.pciDeviceConfig.VendorID
+			device["x_vga"] = tc.pciDeviceConfig.XVGA
+
+			devices := make([]map[string]interface{}, 0)
+			devices = append(devices, device)
+
+			cfg := mandatoryConfig(t)
+			cfg["pci_devices"] = devices
+			cfg["vga"] = map[string]interface{}{"type": tc.vga.Type}
+			cfg["machine"] = tc.machine
+
+			var c Config
+			_, _, err := c.Prepare(&c, cfg)
+
+			if tc.expectedToFail == true && err == nil {
+				t.Error("expected config preparation to fail, but no error occured")
+			}
+
+			if tc.expectedToFail == false && err != nil {
+				t.Errorf("expected config preparation to succeed, but %s", err.Error())
 			}
 		})
 	}

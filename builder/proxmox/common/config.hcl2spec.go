@@ -103,6 +103,7 @@ type FlatConfig struct {
 	VGA                       *FlatvgaConfig             `mapstructure:"vga" cty:"vga" hcl:"vga"`
 	NICs                      []FlatNICConfig            `mapstructure:"network_adapters" cty:"network_adapters" hcl:"network_adapters"`
 	Disks                     []FlatdiskConfig           `mapstructure:"disks" cty:"disks" hcl:"disks"`
+	PCIDevices                []FlatpciDeviceConfig      `mapstructure:"pci_devices" cty:"pci_devices" hcl:"pci_devices"`
 	Serials                   []string                   `mapstructure:"serials" cty:"serials" hcl:"serials"`
 	Agent                     *bool                      `mapstructure:"qemu_agent" cty:"qemu_agent" hcl:"qemu_agent"`
 	SCSIController            *string                    `mapstructure:"scsi_controller" cty:"scsi_controller" hcl:"scsi_controller"`
@@ -221,6 +222,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"vga":                          &hcldec.BlockSpec{TypeName: "vga", Nested: hcldec.ObjectSpec((*FlatvgaConfig)(nil).HCL2Spec())},
 		"network_adapters":             &hcldec.BlockListSpec{TypeName: "network_adapters", Nested: hcldec.ObjectSpec((*FlatNICConfig)(nil).HCL2Spec())},
 		"disks":                        &hcldec.BlockListSpec{TypeName: "disks", Nested: hcldec.ObjectSpec((*FlatdiskConfig)(nil).HCL2Spec())},
+		"pci_devices":                  &hcldec.BlockListSpec{TypeName: "pci_devices", Nested: hcldec.ObjectSpec((*FlatpciDeviceConfig)(nil).HCL2Spec())},
 		"serials":                      &hcldec.AttrSpec{Name: "serials", Type: cty.List(cty.String), Required: false},
 		"qemu_agent":                   &hcldec.AttrSpec{Name: "qemu_agent", Type: cty.Bool, Required: false},
 		"scsi_controller":              &hcldec.AttrSpec{Name: "scsi_controller", Type: cty.String, Required: false},
@@ -405,6 +407,51 @@ func (*Flatrng0Config) HCL2Spec() map[string]hcldec.Spec {
 		"source":    &hcldec.AttrSpec{Name: "source", Type: cty.String, Required: false},
 		"max_bytes": &hcldec.AttrSpec{Name: "max_bytes", Type: cty.Number, Required: false},
 		"period":    &hcldec.AttrSpec{Name: "period", Type: cty.Number, Required: false},
+	}
+	return s
+}
+
+// FlatpciDeviceConfig is an auto-generated flat version of pciDeviceConfig.
+// Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
+type FlatpciDeviceConfig struct {
+	Host        *string `mapstructure:"host" cty:"host" hcl:"host"`
+	DeviceID    *string `mapstructure:"device_id" cty:"device_id" hcl:"device_id"`
+	LegacyIGD   *bool   `mapstructure:"legacy_igd" cty:"legacy_igd" hcl:"legacy_igd"`
+	Mapping     *string `mapstructure:"mapping" cty:"mapping" hcl:"mapping"`
+	PCIe        *bool   `mapstructure:"pcie" cty:"pcie" hcl:"pcie"`
+	MDEV        *string `mapstructure:"mdev" cty:"mdev" hcl:"mdev"`
+	ROMBar      *bool   `mapstructure:"rombar" cty:"rombar" hcl:"rombar"`
+	ROMFile     *string `mapstructure:"romfile" cty:"romfile" hcl:"romfile"`
+	SubDeviceID *string `mapstructure:"sub_device_id" cty:"sub_device_id" hcl:"sub_device_id"`
+	SubVendorID *string `mapstructure:"sub_vendor_id" cty:"sub_vendor_id" hcl:"sub_vendor_id"`
+	VendorID    *string `mapstructure:"vendor_id" cty:"vendor_id" hcl:"vendor_id"`
+	XVGA        *bool   `mapstructure:"x_vga" cty:"x_vga" hcl:"x_vga"`
+}
+
+// FlatMapstructure returns a new FlatpciDeviceConfig.
+// FlatpciDeviceConfig is an auto-generated flat version of pciDeviceConfig.
+// Where the contents a fields with a `mapstructure:,squash` tag are bubbled up.
+func (*pciDeviceConfig) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Spec } {
+	return new(FlatpciDeviceConfig)
+}
+
+// HCL2Spec returns the hcl spec of a pciDeviceConfig.
+// This spec is used by HCL to read the fields of pciDeviceConfig.
+// The decoded values from this spec will then be applied to a FlatpciDeviceConfig.
+func (*FlatpciDeviceConfig) HCL2Spec() map[string]hcldec.Spec {
+	s := map[string]hcldec.Spec{
+		"host":          &hcldec.AttrSpec{Name: "host", Type: cty.String, Required: false},
+		"device_id":     &hcldec.AttrSpec{Name: "device_id", Type: cty.String, Required: false},
+		"legacy_igd":    &hcldec.AttrSpec{Name: "legacy_igd", Type: cty.Bool, Required: false},
+		"mapping":       &hcldec.AttrSpec{Name: "mapping", Type: cty.String, Required: false},
+		"pcie":          &hcldec.AttrSpec{Name: "pcie", Type: cty.Bool, Required: false},
+		"mdev":          &hcldec.AttrSpec{Name: "mdev", Type: cty.String, Required: false},
+		"rombar":        &hcldec.AttrSpec{Name: "rombar", Type: cty.Bool, Required: false},
+		"romfile":       &hcldec.AttrSpec{Name: "romfile", Type: cty.String, Required: false},
+		"sub_device_id": &hcldec.AttrSpec{Name: "sub_device_id", Type: cty.String, Required: false},
+		"sub_vendor_id": &hcldec.AttrSpec{Name: "sub_vendor_id", Type: cty.String, Required: false},
+		"vendor_id":     &hcldec.AttrSpec{Name: "vendor_id", Type: cty.String, Required: false},
+		"x_vga":         &hcldec.AttrSpec{Name: "x_vga", Type: cty.Bool, Required: false},
 	}
 	return s
 }
