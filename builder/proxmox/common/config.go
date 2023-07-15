@@ -189,7 +189,7 @@ type vgaConfig struct {
 //	legacy_igd    = false
 //	mapping       = "someNic"
 //	mdev          = "some-model"
-//	rombar        = true
+//	hide_rombar   = false
 //	romfile       = "vbios.bin"
 //	sub_device_id = ""
 //	sub_vendor_id = ""
