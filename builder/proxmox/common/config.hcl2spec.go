@@ -384,43 +384,16 @@ func (*FlatefiConfig) HCL2Spec() map[string]hcldec.Spec {
 	return s
 }
 
-// Flatrng0Config is an auto-generated flat version of rng0Config.
-// Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
-type Flatrng0Config struct {
-	Source   *string `mapstructure:"source" required:"true" cty:"source" hcl:"source"`
-	MaxBytes *int    `mapstructure:"max_bytes" required:"true" cty:"max_bytes" hcl:"max_bytes"`
-	Period   *int    `mapstructure:"period" required:"false" cty:"period" hcl:"period"`
-}
-
-// FlatMapstructure returns a new Flatrng0Config.
-// Flatrng0Config is an auto-generated flat version of rng0Config.
-// Where the contents a fields with a `mapstructure:,squash` tag are bubbled up.
-func (*rng0Config) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Spec } {
-	return new(Flatrng0Config)
-}
-
-// HCL2Spec returns the hcl spec of a rng0Config.
-// This spec is used by HCL to read the fields of rng0Config.
-// The decoded values from this spec will then be applied to a Flatrng0Config.
-func (*Flatrng0Config) HCL2Spec() map[string]hcldec.Spec {
-	s := map[string]hcldec.Spec{
-		"source":    &hcldec.AttrSpec{Name: "source", Type: cty.String, Required: false},
-		"max_bytes": &hcldec.AttrSpec{Name: "max_bytes", Type: cty.Number, Required: false},
-		"period":    &hcldec.AttrSpec{Name: "period", Type: cty.Number, Required: false},
-	}
-	return s
-}
-
 // FlatpciDeviceConfig is an auto-generated flat version of pciDeviceConfig.
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatpciDeviceConfig struct {
-	Host        *string `mapstructure:"host" cty:"host" hcl:"host"`
+	Host        *string `mapstructure:"host" required:"true" cty:"host" hcl:"host"`
 	DeviceID    *string `mapstructure:"device_id" cty:"device_id" hcl:"device_id"`
 	LegacyIGD   *bool   `mapstructure:"legacy_igd" cty:"legacy_igd" hcl:"legacy_igd"`
-	Mapping     *string `mapstructure:"mapping" cty:"mapping" hcl:"mapping"`
+	Mapping     *string `mapstructure:"mapping" required:"true" cty:"mapping" hcl:"mapping"`
 	PCIe        *bool   `mapstructure:"pcie" cty:"pcie" hcl:"pcie"`
 	MDEV        *string `mapstructure:"mdev" cty:"mdev" hcl:"mdev"`
-	ROMBar      *bool   `mapstructure:"rombar" cty:"rombar" hcl:"rombar"`
+	HideROMBAR  *bool   `mapstructure:"rombar" cty:"rombar" hcl:"rombar"`
 	ROMFile     *string `mapstructure:"romfile" cty:"romfile" hcl:"romfile"`
 	SubDeviceID *string `mapstructure:"sub_device_id" cty:"sub_device_id" hcl:"sub_device_id"`
 	SubVendorID *string `mapstructure:"sub_vendor_id" cty:"sub_vendor_id" hcl:"sub_vendor_id"`
@@ -452,6 +425,33 @@ func (*FlatpciDeviceConfig) HCL2Spec() map[string]hcldec.Spec {
 		"sub_vendor_id": &hcldec.AttrSpec{Name: "sub_vendor_id", Type: cty.String, Required: false},
 		"vendor_id":     &hcldec.AttrSpec{Name: "vendor_id", Type: cty.String, Required: false},
 		"x_vga":         &hcldec.AttrSpec{Name: "x_vga", Type: cty.Bool, Required: false},
+	}
+	return s
+}
+
+// Flatrng0Config is an auto-generated flat version of rng0Config.
+// Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
+type Flatrng0Config struct {
+	Source   *string `mapstructure:"source" required:"true" cty:"source" hcl:"source"`
+	MaxBytes *int    `mapstructure:"max_bytes" required:"true" cty:"max_bytes" hcl:"max_bytes"`
+	Period   *int    `mapstructure:"period" required:"false" cty:"period" hcl:"period"`
+}
+
+// FlatMapstructure returns a new Flatrng0Config.
+// Flatrng0Config is an auto-generated flat version of rng0Config.
+// Where the contents a fields with a `mapstructure:,squash` tag are bubbled up.
+func (*rng0Config) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Spec } {
+	return new(Flatrng0Config)
+}
+
+// HCL2Spec returns the hcl spec of a rng0Config.
+// This spec is used by HCL to read the fields of rng0Config.
+// The decoded values from this spec will then be applied to a Flatrng0Config.
+func (*Flatrng0Config) HCL2Spec() map[string]hcldec.Spec {
+	s := map[string]hcldec.Spec{
+		"source":    &hcldec.AttrSpec{Name: "source", Type: cty.String, Required: false},
+		"max_bytes": &hcldec.AttrSpec{Name: "max_bytes", Type: cty.Number, Required: false},
+		"period":    &hcldec.AttrSpec{Name: "period", Type: cty.Number, Required: false},
 	}
 	return s
 }
