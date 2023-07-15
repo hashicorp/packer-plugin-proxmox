@@ -211,7 +211,7 @@ type pciDeviceConfig struct {
 	// The type of mediated device to use. An instance of this type will be created on startup of the VM and will be cleaned up when the VM stops.
 	MDEV string `mapstructure:"mdev"`
 	// Specify whether or not the device’s ROM BAR will be visible in the guest’s memory map. Defaults to `false`.
-	HideROMBAR bool `mapstructure:"rombar"`
+	HideROMBAR bool `mapstructure:"hide_rombar"`
 	// Custom PCI device rom filename (must be located in `/usr/share/kvm/`).
 	ROMFile string `mapstructure:"romfile"`
 	//Override PCI subsystem device ID visible to guest.
