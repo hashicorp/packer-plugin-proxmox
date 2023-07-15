@@ -452,13 +452,13 @@ func TestPCIDeviceMapping(t *testing.T) {
 		{
 			expectedToFail: true,
 			pciDeviceConfig: pciDeviceConfig{
-				LegacyIGD: boolPtr(true),
+				LegacyIGD: true,
 			},
 		},
 		{
 			expectedToFail: true,
 			pciDeviceConfig: pciDeviceConfig{
-				LegacyIGD: boolPtr(true),
+				LegacyIGD: true,
 			},
 			machine: "pc",
 		},
@@ -466,7 +466,7 @@ func TestPCIDeviceMapping(t *testing.T) {
 			expectedToFail: true,
 			pciDeviceConfig: pciDeviceConfig{
 				Host:      "0000:03:00.0",
-				LegacyIGD: boolPtr(true),
+				LegacyIGD: true,
 			},
 			machine: "pc",
 			vga: vgaConfig{
@@ -477,7 +477,7 @@ func TestPCIDeviceMapping(t *testing.T) {
 			expectedToFail: false,
 			pciDeviceConfig: pciDeviceConfig{
 				Host:      "0000:03:00.0",
-				LegacyIGD: boolPtr(true),
+				LegacyIGD: true,
 			},
 			machine: "pc",
 			vga: vgaConfig{
@@ -489,7 +489,7 @@ func TestPCIDeviceMapping(t *testing.T) {
 			expectedToFail: true,
 			pciDeviceConfig: pciDeviceConfig{
 				Host: "0000:03:00.0",
-				PCIe: boolPtr(true),
+				PCIe: true,
 			},
 			machine: "pc",
 		},
@@ -497,7 +497,7 @@ func TestPCIDeviceMapping(t *testing.T) {
 			expectedToFail: false,
 			pciDeviceConfig: pciDeviceConfig{
 				Host: "0000:03:00.0",
-				PCIe: boolPtr(true),
+				PCIe: true,
 			},
 			machine: "q35",
 		},
@@ -505,7 +505,7 @@ func TestPCIDeviceMapping(t *testing.T) {
 			expectedToFail: false,
 			pciDeviceConfig: pciDeviceConfig{
 				Host: "0000:03:00.0",
-				PCIe: boolPtr(true),
+				PCIe: true,
 			},
 			machine: "pc-q35",
 		},
@@ -520,7 +520,7 @@ func TestPCIDeviceMapping(t *testing.T) {
 			device["mapping"] = tc.pciDeviceConfig.Mapping
 			device["pcie"] = tc.pciDeviceConfig.PCIe
 			device["mdev"] = tc.pciDeviceConfig.MDEV
-			device["rombar"] = tc.pciDeviceConfig.ROMBar
+			device["rombar"] = tc.pciDeviceConfig.HideROMBAR
 			device["romfile"] = tc.pciDeviceConfig.ROMFile
 			device["sub_device_id"] = tc.pciDeviceConfig.SubDeviceID
 			device["sub_vendor_id"] = tc.pciDeviceConfig.SubVendorID

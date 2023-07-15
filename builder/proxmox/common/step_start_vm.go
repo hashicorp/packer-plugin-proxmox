@@ -302,16 +302,16 @@ func generateProxmoxPCIDeviceMap(devices []pciDeviceConfig) proxmox.QemuDevices 
 		devs[idx] = make(proxmox.QemuDevice)
 		setDeviceParamIfDefined(devs[idx], "host", devices[idx].Host)
 		setDeviceParamIfDefined(devs[idx], "device-id", devices[idx].DeviceID)
-		setDeviceParamIfDefined(devs[idx], "legacy-igd", formatBoolPointer(devices[idx].LegacyIGD))
+		setDeviceParamIfDefined(devs[idx], "legacy-igd", strconv.FormatBool(devices[idx].LegacyIGD))
 		setDeviceParamIfDefined(devs[idx], "mapping", devices[idx].Mapping)
 		setDeviceParamIfDefined(devs[idx], "mdev", devices[idx].MDEV)
-		setDeviceParamIfDefined(devs[idx], "pcie", formatBoolPointer(devices[idx].PCIe))
-		setDeviceParamIfDefined(devs[idx], "rombar", formatBoolPointer(devices[idx].ROMBar))
+		setDeviceParamIfDefined(devs[idx], "pcie", strconv.FormatBool(devices[idx].PCIe))
+		setDeviceParamIfDefined(devs[idx], "rombar", strconv.FormatBool(devices[idx].HideROMBAR))
 		setDeviceParamIfDefined(devs[idx], "romfile", devices[idx].ROMFile)
 		setDeviceParamIfDefined(devs[idx], "sub-device-id", devices[idx].SubDeviceID)
 		setDeviceParamIfDefined(devs[idx], "sub-vendor-id", devices[idx].SubVendorID)
 		setDeviceParamIfDefined(devs[idx], "vendor-id", devices[idx].VendorID)
-		setDeviceParamIfDefined(devs[idx], "x-vga", formatBoolPointer(devices[idx].XVGA))
+		setDeviceParamIfDefined(devs[idx], "x-vga", strconv.FormatBool(devices[idx].XVGA))
 	}
 	return devs
 }
@@ -362,13 +362,6 @@ func generateProxmoxEfi(efi efiConfig) proxmox.QemuDevice {
 		}
 	}
 	return dev
-}
-
-func formatBoolPointer(v *bool) string {
-	if v == nil {
-		return ""
-	}
-	return strconv.FormatBool(*v)
 }
 
 func setDeviceParamIfDefined(dev proxmox.QemuDevice, key, value string) {

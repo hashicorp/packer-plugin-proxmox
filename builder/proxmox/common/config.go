@@ -174,16 +174,16 @@ type vgaConfig struct {
 type pciDeviceConfig struct {
 	Host        string `mapstructure:"host"`
 	DeviceID    string `mapstructure:"device_id"`
-	LegacyIGD   *bool  `mapstructure:"legacy_igd"`
 	Mapping     string `mapstructure:"mapping"`
-	PCIe        *bool  `mapstructure:"pcie"`
 	MDEV        string `mapstructure:"mdev"`
-	ROMBar      *bool  `mapstructure:"rombar"`
 	ROMFile     string `mapstructure:"romfile"`
+	LegacyIGD bool `mapstructure:"legacy_igd"`
+	PCIe bool `mapstructure:"pcie"`
+	HideROMBAR bool `mapstructure:"rombar"`
 	SubDeviceID string `mapstructure:"sub_device_id"`
 	SubVendorID string `mapstructure:"sub_vendor_id"`
 	VendorID    string `mapstructure:"vendor_id"`
-	XVGA        *bool  `mapstructure:"x_vga"`
+	XVGA bool `mapstructure:"x_vga"`
 }
 
 func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []string, error) {
@@ -321,11 +321,6 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 	if c.SCSIController == "" {
 		log.Printf("SCSI controller not set, using default 'lsi'")
 		c.SCSIController = "lsi"
-	}
-	for idx, device := range c.PCIDevices {
-		if device.ROMBar == nil {
-			c.PCIDevices[idx].ROMBar = boolPtr(true)
-		}
 	}
 
 	errs = packersdk.MultiErrorAppend(errs, c.Comm.Prepare(&c.Ctx)...)
@@ -483,7 +478,7 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		if device.Host == "" && device.Mapping == "" {
 			errs = packersdk.MultiErrorAppend(errs, errors.New("either the host or the mapping key must be specified"))
 		}
-		if device.LegacyIGD != nil && *device.LegacyIGD {
+		if device.LegacyIGD {
 			if c.Machine != "pc" && !strings.HasPrefix(c.Machine, "pc-i440fx") {
 				errs = packersdk.MultiErrorAppend(errs, errors.New("legacy_igd requires pc-i440fx machine type"))
 			}
@@ -491,7 +486,7 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 				errs = packersdk.MultiErrorAppend(errs, errors.New("legacy_igd requires vga.type set to none"))
 			}
 		}
-		if device.PCIe != nil && *device.PCIe {
+		if device.PCIe {
 			if c.Machine != "q35" && !strings.HasPrefix(c.Machine, "pc-q35") {
 				errs = packersdk.MultiErrorAppend(errs, errors.New("pcie requires q35 machine type"))
 			}
@@ -502,8 +497,4 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		return nil, warnings, errs
 	}
 	return nil, warnings, nil
-}
-
-func boolPtr(v bool) *bool {
-	return &v
 }
