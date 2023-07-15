@@ -1,0 +1,23 @@
+<!-- Code generated from the comments of the pciDeviceConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
+
+- `device_id` (string) - Override PCI device ID visible to guest.
+
+- `legacy_igd` (bool) - Pass this device in legacy IGD mode, making it the primary and exclusive graphics device in the VM. Requires `pc-i440fx` machine type and VGA set to `none`. Defaults to `false`.
+
+- `pcie` (bool) - Present the device as a PCIe device (needs `q35` machine model). Defaults to `false`.
+
+- `mdev` (string) - The type of mediated device to use. An instance of this type will be created on startup of the VM and will be cleaned up when the VM stops.
+
+- `rombar` (bool) - Specify whether or not the device’s ROM BAR will be visible in the guest’s memory map. Defaults to `false`.
+
+- `romfile` (string) - Custom PCI device rom filename (must be located in `/usr/share/kvm/`).
+
+- `sub_device_id` (string) - Override PCI subsystem device ID visible to guest.
+
+- `sub_vendor_id` (string) - Override PCI subsystem vendor ID visible to guest.
+
+- `vendor_id` (string) - Override PCI vendor ID visible to guest.
+
+- `x_vga` (bool) - Enable vfio-vga device support. Defaults to `false`.
+
+<!-- End of code generated from the comments of the pciDeviceConfig struct in builder/proxmox/common/config.go; -->

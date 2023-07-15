@@ -171,18 +171,54 @@ type vgaConfig struct {
 	Type   string `mapstructure:"type"`
 	Memory int    `mapstructure:"memory"`
 }
+
+// - `pci_devices` (array of objects) - Passthrough a host PCI device into the VM.
+// For example, a graphics card or a network adapter. Devices that are mapped into a guest VM are no longer available on the host. A minimal configuration only requires either the `host` or the `mapping` key to be specifed. Note: VMs with passed-through devices cannot be migrated.
+//
+// Example configuration (HCL):
+//
+// ```hcl
+//
+//	pci_devices {
+//	  host          = "0000:0d:00.1"
+//	  pcie          = false
+//	  device_id     = "1003"
+//	  legacy_igd    = false
+//	  mapping       = "someNic"
+//	  mdev          = "some-model"
+//	  rombar        = true
+//	  romfile       = "vbios.bin"
+//	  sub_device_id = ""
+//	  sub_vendor_id = ""
+//	  vendor_id     = "15B3"
+//	  x_vga         = false
+//	}
+//
+// ```
 type pciDeviceConfig struct {
-	Host        string `mapstructure:"host"`
-	DeviceID    string `mapstructure:"device_id"`
-	Mapping     string `mapstructure:"mapping"`
-	MDEV        string `mapstructure:"mdev"`
-	ROMFile     string `mapstructure:"romfile"`
+	// The PCI ID of a host’s PCI device or a PCI virtual function. You can us the `lspci` command to list existing PCI devices. Either this or the `mapping` key must be set.
+	Host string `mapstructure:"host" required:"true"`
+	// Override PCI device ID visible to guest.
+	DeviceID string `mapstructure:"device_id"`
+	// Pass this device in legacy IGD mode, making it the primary and exclusive graphics device in the VM. Requires `pc-i440fx` machine type and VGA set to `none`. Defaults to `false`.
 	LegacyIGD bool `mapstructure:"legacy_igd"`
+	// The ID of a cluster wide mapping. Either this or the `host` key must be set.
+	Mapping string `mapstructure:"mapping" required:"true"`
+	// Present the device as a PCIe device (needs `q35` machine model). Defaults to `false`.
 	PCIe bool `mapstructure:"pcie"`
+	// The type of mediated device to use. An instance of this type will be created on startup of the VM and will be cleaned up when the VM stops.
+	MDEV string `mapstructure:"mdev"`
+	// Specify whether or not the device’s ROM BAR will be visible in the guest’s memory map. Defaults to `false`.
 	HideROMBAR bool `mapstructure:"rombar"`
+	// Custom PCI device rom filename (must be located in `/usr/share/kvm/`).
+	ROMFile string `mapstructure:"romfile"`
+	//Override PCI subsystem device ID visible to guest.
 	SubDeviceID string `mapstructure:"sub_device_id"`
+	// Override PCI subsystem vendor ID visible to guest.
 	SubVendorID string `mapstructure:"sub_vendor_id"`
-	VendorID    string `mapstructure:"vendor_id"`
+	// Override PCI vendor ID visible to guest.
+	VendorID string `mapstructure:"vendor_id"`
+	// Enable vfio-vga device support. Defaults to `false`.
 	XVGA bool `mapstructure:"x_vga"`
 }
 
