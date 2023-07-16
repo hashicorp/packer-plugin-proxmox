@@ -189,10 +189,28 @@ type diskConfig struct {
 	// rather than a rotational disk.
 	SSD bool `mapstructure:"ssd"`
 }
+
+// - `efi_config` - (object) - Set the efidisk storage options. This needs to be set if you use ovmf uefi boot
+//   (supersedes the `efidisk` option).
+//
+//   Usage example (JSON):
+//
+//   ```json
+//   {
+//     "efi_storage_pool": "local",
+//     "pre_enrolled_keys": true,
+//     "efi_type": "4m"
+//   }
+//   ```
 type efiConfig struct {
-	EFIStoragePool  string `mapstructure:"efi_storage_pool"`
-	PreEnrolledKeys bool   `mapstructure:"pre_enrolled_keys"`
-	EFIType         string `mapstructure:"efi_type"`
+	// Name of the Proxmox storage pool to store the EFI disk on.
+	EFIStoragePool string `mapstructure:"efi_storage_pool"`
+	// Whether Microsoft Standard Secure Boot keys should be pre-loaded on
+	// the EFI disk. Defaults to `false`.
+	PreEnrolledKeys bool `mapstructure:"pre_enrolled_keys"`
+	// Specifies the version of the OVMF firmware to be used. Can be `2m` or `4m`.
+	// Defaults to `4m`.
+	EFIType string `mapstructure:"efi_type"`
 }
 
 // - `rng0` (object): Configure Random Number Generator via VirtIO.

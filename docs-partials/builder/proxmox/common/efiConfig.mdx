@@ -1,0 +1,16 @@
+<!-- Code generated from the comments of the efiConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
+
+- `efi_config` - (object) - Set the efidisk storage options. This needs to be set if you use ovmf uefi boot
+  (supersedes the `efidisk` option).
+
+  Usage example (JSON):
+
+  ```json
+  {
+    "efi_storage_pool": "local",
+    "pre_enrolled_keys": true,
+    "efi_type": "4m"
+  }
+  ```
+
+<!-- End of code generated from the comments of the efiConfig struct in builder/proxmox/common/config.go; -->

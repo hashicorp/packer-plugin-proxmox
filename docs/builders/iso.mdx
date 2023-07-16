@@ -314,26 +314,13 @@ or responding to pattern `/dev/.+`. Example:
 
 - `bios` - (string) - Set the machine bios. This can be set to ovmf or seabios. The default value is seabios.
 
-- `efi_config` - (object) - Set the efidisk storage options. This needs to be set if you use ovmf uefi boot
-  (supersedes the `efidisk` option).
+### EFI Config
 
-  Usage example (JSON):
+@include 'builder/proxmox/common/efiConfig.mdx'
 
-  ```json
-  {
-    "efi_storage_pool": "local",
-    "pre_enrolled_keys": true,
-    "efi_type": "4m"
-  }
-  ```
+#### Optional:
 
-  - `storage_pool` - (string) - Name of the Proxmox storage pool to store the EFI disk on.
-
-  - `efitype` - (string) - Specifies the version of the OVMF firmware to be used. Can be `2m` or `4m`.
-    Defaults to `4m`.
-
-  - `pre_enrolled_keys` - (boolean) - Whether Microsoft Standard Secure Boot keys should be pre-loaded on
-    the EFI disk. Defaults to `false`.
+@include 'builder/proxmox/common/efiConfig-not-required.mdx'
 
 - `efidisk` - (string) - This option is deprecated, please use `efi_config` instead.
 
