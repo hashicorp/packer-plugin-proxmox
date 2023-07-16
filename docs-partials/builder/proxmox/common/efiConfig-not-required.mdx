@@ -1,9 +1,11 @@
 <!-- Code generated from the comments of the efiConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
-- `efi_storage_pool` (string) - EFI Storage Pool
+- `efi_storage_pool` (string) - Name of the Proxmox storage pool to store the EFI disk on.
 
-- `pre_enrolled_keys` (bool) - Pre Enrolled Keys
+- `pre_enrolled_keys` (bool) - Whether Microsoft Standard Secure Boot keys should be pre-loaded on
+  the EFI disk. Defaults to `false`.
 
-- `efi_type` (string) - EFI Type
+- `efi_type` (string) - Specifies the version of the OVMF firmware to be used. Can be `2m` or `4m`.
+  Defaults to `4m`.
 
 <!-- End of code generated from the comments of the efiConfig struct in builder/proxmox/common/config.go; -->
