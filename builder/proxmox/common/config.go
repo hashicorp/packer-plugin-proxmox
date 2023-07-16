@@ -94,14 +94,51 @@ type additionalISOsConfig struct {
 	commonsteps.CDConfig  `mapstructure:",squash"`
 }
 
+// - `network_adapters` (array of objects) - Network adapters attached to the
+//   virtual machine. Example:
+//
+//   ```json
+//   [
+//     {
+//       "model": "virtio",
+//       "bridge": "vmbr0",
+//       "vlan_tag": "10",
+//       "firewall": true
+//     }
+//   ]
+//   ```
 type NICConfig struct {
-	Model        string `mapstructure:"model"`
-	PacketQueues int    `mapstructure:"packet_queues"`
-	MACAddress   string `mapstructure:"mac_address"`
-	MTU          int    `mapstructure:"mtu"`
-	Bridge       string `mapstructure:"bridge"`
-	VLANTag      string `mapstructure:"vlan_tag"`
-	Firewall     bool   `mapstructure:"firewall"`
+	// Model of the virtual network adapter. Can be
+	// `rtl8139`, `ne2k_pci`, `e1000`, `pcnet`, `virtio`, `ne2k_isa`,
+	// `i82551`, `i82557b`, `i82559er`, `vmxnet3`, `e1000-82540em`,
+	// `e1000-82544gc` or `e1000-82545em`. Defaults to `e1000`.
+	Model string `mapstructure:"model"`
+	// Number of packet queues to be used on the device.
+	// Values greater than 1 indicate that the multiqueue feature is activated.
+	// For best performance, set this to the number of cores available to the
+	// virtual machine. CPU load on the host and guest systems will increase as
+	// the traffic increases, so activate this option only when the VM has to
+	// handle a great number of incoming connections, such as when the VM is
+	// operating as a router, reverse proxy or a busy HTTP server. Requires
+	// `virtio` network adapter. Defaults to `0`.
+	PacketQueues int `mapstructure:"packet_queues"`
+	// Give the adapter a specific MAC address. If
+	// not set, defaults to a random MAC. If value is "repeatable", value of MAC
+	// address is deterministic based on VM ID and NIC ID.
+	MACAddress string `mapstructure:"mac_address"`
+	// Set the maximum transmission unit for the adapter. Valid
+	// range: 0 - 65520. If set to `1`, the MTU is inherited from the bridge
+	// the adapter is attached to. Defaults to `0` (use Proxmox default).
+	MTU int `mapstructure:"mtu"`
+	// Required. Which Proxmox bridge to attach the
+	// adapter to.
+	Bridge string `mapstructure:"bridge"`
+	// If the adapter should tag packets. Defaults to
+	// no tagging.
+	VLANTag string `mapstructure:"vlan_tag"`
+	// If the interface should be protected by the firewall.
+	// Defaults to `false`.
+	Firewall bool `mapstructure:"firewall"`
 }
 type diskConfig struct {
 	Type            string `mapstructure:"type"`
