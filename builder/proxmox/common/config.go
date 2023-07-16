@@ -140,16 +140,54 @@ type NICConfig struct {
 	// Defaults to `false`.
 	Firewall bool `mapstructure:"firewall"`
 }
+
+// - `disks` (array of objects) - Disks attached to the virtual machine.
+//   Example:
+//
+//   ```json
+//   [
+//     {
+//       "type": "scsi",
+//       "disk_size": "5G",
+//       "storage_pool": "local-lvm",
+//       "storage_pool_type": "lvm"
+//     }
+//   ]
+//  ```
 type diskConfig struct {
-	Type            string `mapstructure:"type"`
-	StoragePool     string `mapstructure:"storage_pool"`
+	// The type of disk. Can be `scsi`, `sata`, `virtio` or
+	// `ide`. Defaults to `scsi`.
+	Type string `mapstructure:"type"`
+	// Required. Name of the Proxmox storage pool
+	// to store the virtual machine disk on. A `local-lvm` pool is allocated
+	// by the installer, for example.
+	StoragePool string `mapstructure:"storage_pool"`
+	// This option is deprecated.
 	StoragePoolType string `mapstructure:"storage_pool_type"`
-	Size            string `mapstructure:"disk_size"`
-	CacheMode       string `mapstructure:"cache_mode"`
-	DiskFormat      string `mapstructure:"format"`
-	IOThread        bool   `mapstructure:"io_thread"`
-	Discard         bool   `mapstructure:"discard"`
-	SSD             bool   `mapstructure:"ssd"`
+	// The size of the disk, including a unit suffix, such
+	// as `10G` to indicate 10 gigabytes.
+	Size string `mapstructure:"disk_size"`
+	// How to cache operations to the disk. Can be
+	// `none`, `writethrough`, `writeback`, `unsafe` or `directsync`.
+	// Defaults to `none`.
+	CacheMode string `mapstructure:"cache_mode"`
+	// The format of the file backing the disk. Can be
+	// `raw`, `cow`, `qcow`, `qed`, `qcow2`, `vmdk` or `cloop`. Defaults to
+	// `raw`.
+	DiskFormat string `mapstructure:"format"`
+	// Create one I/O thread per storage controller, rather
+	// than a single thread for all I/O. This can increase performance when
+	// multiple disks are used. Requires `virtio-scsi-single` controller and a
+	// `scsi` or `virtio` disk. Defaults to `false`.
+	IOThread bool `mapstructure:"io_thread"`
+	// Relay TRIM commands to the underlying storage. Defaults
+	// to false. See the
+	// [Proxmox documentation](https://pve.proxmox.com/pve-docs/pve-admin-guide.html#qm_hard_disk_discard)
+	// for for further information.
+	Discard bool `mapstructure:"discard"`
+	// Drive will be presented to the guest as solid-state drive
+	// rather than a rotational disk.
+	SSD bool `mapstructure:"ssd"`
 }
 type efiConfig struct {
 	EFIStoragePool  string `mapstructure:"efi_storage_pool"`
