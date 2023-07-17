@@ -1,9 +1,12 @@
 <!-- Code generated from the comments of the vgaConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
-- `type` (string) - Can be `cirrus`, `none`, `qxl`,`qxl2`, `qxl3`,
-  `qxl4`, `serial0`, `serial1`, `serial2`, `serial3`, `std`, `virtio`, `vmware`.
-  Defaults to `std`.
+- `vga` (object) - The graphics adapter to use. Example:
 
-- `memory` (int) - How much memory to assign.
+ ```json
+ {
+   "type": "vmware",
+   "memory": 32
+ }
+ ```
 
 <!-- End of code generated from the comments of the vgaConfig struct in builder/proxmox/common/config.go; -->
