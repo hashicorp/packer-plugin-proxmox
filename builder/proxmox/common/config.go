@@ -199,13 +199,13 @@ type vgaConfig struct {
 //	```
 type pciDeviceConfig struct {
 	// The PCI ID of a host’s PCI device or a PCI virtual function. You can us the `lspci` command to list existing PCI devices. Either this or the `mapping` key must be set.
-	Host string `mapstructure:"host" required:"true"`
+	Host string `mapstructure:"host"`
 	// Override PCI device ID visible to guest.
 	DeviceID string `mapstructure:"device_id"`
 	// Pass this device in legacy IGD mode, making it the primary and exclusive graphics device in the VM. Requires `pc-i440fx` machine type and VGA set to `none`. Defaults to `false`.
 	LegacyIGD bool `mapstructure:"legacy_igd"`
 	// The ID of a cluster wide mapping. Either this or the `host` key must be set.
-	Mapping string `mapstructure:"mapping" required:"true"`
+	Mapping string `mapstructure:"mapping"`
 	// Present the device as a PCIe device (needs `q35` machine model). Defaults to `false`.
 	PCIe bool `mapstructure:"pcie"`
 	// The type of mediated device to use. An instance of this type will be created on startup of the VM and will be cleaned up when the VM stops.
