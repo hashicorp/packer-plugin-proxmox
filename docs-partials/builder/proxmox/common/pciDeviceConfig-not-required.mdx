@@ -1,8 +1,12 @@
 <!-- Code generated from the comments of the pciDeviceConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
+- `host` (string) - The PCI ID of a host’s PCI device or a PCI virtual function. You can us the `lspci` command to list existing PCI devices. Either this or the `mapping` key must be set.
+
 - `device_id` (string) - Override PCI device ID visible to guest.
 
 - `legacy_igd` (bool) - Pass this device in legacy IGD mode, making it the primary and exclusive graphics device in the VM. Requires `pc-i440fx` machine type and VGA set to `none`. Defaults to `false`.
+
+- `mapping` (string) - The ID of a cluster wide mapping. Either this or the `host` key must be set.
 
 - `pcie` (bool) - Present the device as a PCIe device (needs `q35` machine model). Defaults to `false`.
 

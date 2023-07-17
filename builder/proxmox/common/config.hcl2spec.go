@@ -387,10 +387,10 @@ func (*FlatefiConfig) HCL2Spec() map[string]hcldec.Spec {
 // FlatpciDeviceConfig is an auto-generated flat version of pciDeviceConfig.
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatpciDeviceConfig struct {
-	Host        *string `mapstructure:"host" required:"true" cty:"host" hcl:"host"`
+	Host        *string `mapstructure:"host" cty:"host" hcl:"host"`
 	DeviceID    *string `mapstructure:"device_id" cty:"device_id" hcl:"device_id"`
 	LegacyIGD   *bool   `mapstructure:"legacy_igd" cty:"legacy_igd" hcl:"legacy_igd"`
-	Mapping     *string `mapstructure:"mapping" required:"true" cty:"mapping" hcl:"mapping"`
+	Mapping     *string `mapstructure:"mapping" cty:"mapping" hcl:"mapping"`
 	PCIe        *bool   `mapstructure:"pcie" cty:"pcie" hcl:"pcie"`
 	MDEV        *string `mapstructure:"mdev" cty:"mdev" hcl:"mdev"`
 	HideROMBAR  *bool   `mapstructure:"hide_rombar" cty:"hide_rombar" hcl:"hide_rombar"`
