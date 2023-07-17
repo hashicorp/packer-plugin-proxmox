@@ -260,9 +260,21 @@ type rng0Config struct {
 	Period int `mapstructure:"period" required:"false"`
 }
 
+// - `vga` (object) - The graphics adapter to use. Example:
+//
+//  ```json
+//  {
+//    "type": "vmware",
+//    "memory": 32
+//  }
+//  ```
 type vgaConfig struct {
-	Type   string `mapstructure:"type"`
-	Memory int    `mapstructure:"memory"`
+	// Can be `cirrus`, `none`, `qxl`,`qxl2`, `qxl3`,
+	// `qxl4`, `serial0`, `serial1`, `serial2`, `serial3`, `std`, `virtio`, `vmware`.
+	// Defaults to `std`.
+	Type string `mapstructure:"type"`
+	// How much memory to assign.
+	Memory int `mapstructure:"memory"`
 }
 
 // Allows passing through a host PCI device into the VM. For example, a graphics card
