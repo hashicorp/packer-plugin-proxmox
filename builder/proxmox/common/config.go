@@ -518,6 +518,9 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		if device.Host == "" && device.Mapping == "" {
 			errs = packersdk.MultiErrorAppend(errs, errors.New("either the host or the mapping key must be specified"))
 		}
+		if device.Host != "" && device.Mapping != "" {
+			errs = packersdk.MultiErrorAppend(errs, errors.New("the host and the mapping key cannot both be set"))
+		}
 		if device.Host != "" && !validPCIIDre.MatchString(device.Host) {
 			errs = packersdk.MultiErrorAppend(errs, errors.New("host contains invalid PCI ID"))
 		}

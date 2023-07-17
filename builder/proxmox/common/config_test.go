@@ -435,6 +435,13 @@ func TestPCIDeviceMapping(t *testing.T) {
 			expectedError: fmt.Errorf("either the host or the mapping key must be specified"),
 		},
 		{
+			expectedError: fmt.Errorf("the host and the mapping key cannot both be set"),
+			pciDeviceConfig: pciDeviceConfig{
+				Host:    "0000:03:00.0",
+				Mapping: "someNic",
+			},
+		},
+		{
 			expectedError: fmt.Errorf("host contains invalid PCI ID"),
 			pciDeviceConfig: pciDeviceConfig{
 				Host: "invalid-pci-id",
