@@ -196,8 +196,7 @@ type vgaConfig struct {
 // vendor_id     = "15B3"
 // x_vga         = false
 // }
-//
-//	```
+// ```
 type pciDeviceConfig struct {
 	// The PCI ID of a host’s PCI device or a PCI virtual function. You can us the `lspci` command to list existing PCI devices. Either this or the `mapping` key must be set.
 	Host string `mapstructure:"host"`
