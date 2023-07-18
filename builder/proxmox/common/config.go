@@ -328,6 +328,8 @@ type diskConfig struct {
 	Discard bool `mapstructure:"discard"`
 	// Drive will be presented to the guest as solid-state drive
 	// rather than a rotational disk.
+	//
+	// This cannot work with virtio disks.
 	SSD bool `mapstructure:"ssd"`
 }
 
@@ -609,6 +611,12 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 				if !(disk.Type == "scsi" || disk.Type == "virtio") {
 					errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("io thread option requires scsi or a virtio disk"))
 				}
+			}
+		}
+		if disk.SSD {
+			// SSD emulation is not supported on virtio device type
+			if disk.Type == "virtio" {
+				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("SSD emulation is not supported on a virtio disk"))
 			}
 		}
 		if disk.StoragePool == "" {

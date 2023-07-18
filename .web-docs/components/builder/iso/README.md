@@ -651,6 +651,8 @@ Example:
 
 - `ssd` (bool) - Drive will be presented to the guest as solid-state drive
   rather than a rotational disk.
+  
+  This cannot work with virtio disks.
 
 <!-- End of code generated from the comments of the diskConfig struct in builder/proxmox/common/config.go; -->
 
