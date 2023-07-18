@@ -1,11 +1,19 @@
 <!-- Code generated from the comments of the additionalISOsConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
-- `device` (string) - Device
+- `device` (string) - Bus type and bus index that the ISO will be mounted on. Can be `ideX`,
+  `sataX` or `scsiX`.
+  For `ide` the bus index ranges from 0 to 3, for `sata` form 0 to 5 and for
+  `scsi` from 0 to 30.
+  Defaults to `ide3` since `ide2` is generally the boot drive.
 
-- `iso_file` (string) - ISO File
+- `iso_file` (string) - Path to the ISO file to boot from, expressed as a
+  proxmox datastore path, for example
+  `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
+  Either `iso_file` OR `iso_url` must be specifed.
 
-- `iso_storage_pool` (string) - ISO Storage Pool
+- `iso_storage_pool` (string) - Proxmox storage pool onto which to upload
+  the ISO file.
 
-- `unmount` (bool) - Unmount
+- `unmount` (bool) - If true, remove the mounted ISO from the template after finishing. Defaults to `false`.
 
 <!-- End of code generated from the comments of the additionalISOsConfig struct in builder/proxmox/common/config.go; -->
