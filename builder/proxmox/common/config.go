@@ -179,23 +179,46 @@ type vgaConfig struct {
 //
 // Note: VMs with passed-through devices cannot be migrated.
 //
-// Example configuration (HCL):
+// HCL2 example:
 //
 // ```hcl
-// pci_devices {
-// host          = "0000:0d:00.1"
-// pcie          = false
-// device_id     = "1003"
-// legacy_igd    = false
-// mapping       = "someNic"
-// mdev          = "some-model"
-// hide_rombar   = false
-// romfile       = "vbios.bin"
-// sub_device_id = ""
-// sub_vendor_id = ""
-// vendor_id     = "15B3"
-// x_vga         = false
-// }
+//
+//	pci_devices {
+//	  host          = "0000:0d:00.1"
+//	  pcie          = false
+//	  device_id     = "1003"
+//	  legacy_igd    = false
+//	  mdev          = "some-model"
+//	  hide_rombar   = false
+//	  romfile       = "vbios.bin"
+//	  sub_device_id = ""
+//	  sub_vendor_id = ""
+//	  vendor_id     = "15B3"
+//	  x_vga         = false
+//	}
+//
+// ```
+//
+// JSON example:
+//
+// ```json
+//
+//	{
+//	  "pci_devices": {
+//	    "host"          : "0000:0d:00.1",
+//	    "pcie"          : false,
+//	    "device_id"     : "1003",
+//	    "legacy_igd"    : false,
+//	    "mdev"          : "some-model",
+//	    "hide_rombar"   : false,
+//	    "romfile"       : "vbios.bin",
+//	    "sub_device_id" : "",
+//	    "sub_vendor_id" : "",
+//	    "vendor_id"     : "15B3",
+//	    "x_vga"         : false
+//	  }
+//	}
+//
 // ```
 type pciDeviceConfig struct {
 	// The PCI ID of a host’s PCI device or a PCI virtual function. You can us the `lspci` command to list existing PCI devices. Either this or the `mapping` key must be set.
