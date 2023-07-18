@@ -83,15 +83,40 @@ type Config struct {
 	Ctx interpolate.Context `mapstructure-to-hcl2:",skip"`
 }
 
+// - `additional_iso_files` (array of objects) - Additional ISO files attached to the virtual machine.
+//   Example:
+//
+//   ```json
+//   [
+//     {
+//       "device": "scsi5",
+//       "iso_file": "local:iso/virtio-win-0.1.185.iso",
+//       "unmount": true,
+//       "iso_checksum": "af2b3cc9fa7905dea5e58d31508d75bba717c2b0d5553962658a47aebc9cc386"
+//     }
+//   ]
+//   ```
 type additionalISOsConfig struct {
 	commonsteps.ISOConfig `mapstructure:",squash"`
-	Device                string `mapstructure:"device"`
-	ISOFile               string `mapstructure:"iso_file"`
-	ISOStoragePool        string `mapstructure:"iso_storage_pool"`
-	Unmount               bool   `mapstructure:"unmount"`
-	ShouldUploadISO       bool   `mapstructure-to-hcl2:",skip"`
-	DownloadPathKey       string `mapstructure-to-hcl2:",skip"`
-	commonsteps.CDConfig  `mapstructure:",squash"`
+	// Bus type and bus index that the ISO will be mounted on. Can be `ideX`,
+	// `sataX` or `scsiX`.
+	// For `ide` the bus index ranges from 0 to 3, for `sata` form 0 to 5 and for
+	// `scsi` from 0 to 30.
+	// Defaults to `ide3` since `ide2` is generally the boot drive.
+	Device string `mapstructure:"device"`
+	// Path to the ISO file to boot from, expressed as a
+	// proxmox datastore path, for example
+	// `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
+	// Either `iso_file` OR `iso_url` must be specifed.
+	ISOFile string `mapstructure:"iso_file"`
+	// Proxmox storage pool onto which to upload
+	// the ISO file.
+	ISOStoragePool string `mapstructure:"iso_storage_pool"`
+	// If true, remove the mounted ISO from the template after finishing. Defaults to `false`.
+	Unmount              bool   `mapstructure:"unmount"`
+	ShouldUploadISO      bool   `mapstructure-to-hcl2:",skip"`
+	DownloadPathKey      string `mapstructure-to-hcl2:",skip"`
+	commonsteps.CDConfig `mapstructure:",squash"`
 }
 
 // - `network_adapters` (array of objects) - Network adapters attached to the
