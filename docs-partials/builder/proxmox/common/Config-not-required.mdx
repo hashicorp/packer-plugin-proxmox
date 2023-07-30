@@ -2,80 +2,134 @@
 
 - `boot_key_interval` (duration string | ex: "1h5m2s") - Boot Key Interval
 
-- `proxmox_url` (string) - Proxmox URL Raw
+- `proxmox_url` (string) - URL to the Proxmox API, including the full path,
+  so `https://<server>:<port>/api2/json` for example.
+  Can also be set via the `PROXMOX_URL` environment variable.
 
-- `insecure_skip_tls_verify` (bool) - Skip Cert Validation
+- `insecure_skip_tls_verify` (bool) - Skip validating the certificate.
 
-- `username` (string) - Username
+- `username` (string) - Username when authenticating to Proxmox, including
+  the realm. For example `user@pve` to use the local Proxmox realm. When using
+  token authentication, the username must include the token id after an exclamation
+  mark. For example, `user@pve!tokenid`.
+  Can also be set via the `PROXMOX_USERNAME` environment variable.
 
-- `password` (string) - Password
+- `password` (string) - Password for the user.
+  For API tokens please use `token`.
+  Can also be set via the `PROXMOX_PASSWORD` environment variable.
+  Either `password` or `token` must be specifed. If both are set,
+  `token` takes precedence.
 
-- `token` (string) - Token
+- `token` (string) - Token for authenticating API calls.
+  This allows the API client to work with API tokens instead of user passwords.
+  Can also be set via the `PROXMOX_TOKEN` environment variable.
+  Either `password` or `token` must be specifed. If both are set,
+  `token` takes precedence.
 
-- `node` (string) - Node
+- `node` (string) - Which node in the Proxmox cluster to start the virtual
+  machine on during creation.
 
-- `pool` (string) - Pool
+- `pool` (string) - Name of resource pool to create virtual machine in.
 
-- `task_timeout` (duration string | ex: "1h5m2s") - Task Timeout
+- `task_timeout` (duration string | ex: "1h5m2s") - `task_timeout` (duration string | ex: "10m") - The timeout for
+   Promox API operations, e.g. clones. Defaults to 1 minute.
 
-- `vm_name` (string) - VM Name
+- `vm_name` (string) - Name of the virtual machine during creation. If not
+  given, a random uuid will be used.
 
-- `vm_id` (int) - VMID
+- `vm_id` (int) - `vm_id` (int) - The ID used to reference the virtual machine. This will
+  also be the ID of the final template. Proxmox VMIDs are unique cluster-wide
+  and are limited to the range 100-999999999.
+  If not given, the next free ID on the cluster will be used.
 
-- `boot` (string) - Boot
+- `boot` (string) - Override default boot order. Format example `order=virtio0;ide2;net0`.
+  Prior to Proxmox 6.2-15 the format was `cdn` (c:CDROM -> d:Disk -> n:Network)
 
-- `memory` (int) - Memory
+- `memory` (int) - How much memory (in megabytes) to give the virtual
+  machine. If `ballooning_minimum` is also set, `memory` defines the maximum amount
+  of memory the VM will be able to use.
+  Defaults to `512`.
 
-- `ballooning_minimum` (int) - Balloon Minimum
+- `ballooning_minimum` (int) - Setting this option enables KVM memory ballooning and
+  defines the minimum amount of memory (in megabytes) the VM will have.
+  Defaults to `0` (memory ballooning disabled).
 
-- `cores` (int) - Cores
+- `cores` (int) - How many CPU cores to give the virtual machine. Defaults
+  to `1`.
 
-- `cpu_type` (string) - CPU Type
+- `cpu_type` (string) - The CPU type to emulate. See the Proxmox API
+  documentation for the complete list of accepted values. For best
+  performance, set this to `host`. Defaults to `kvm64`.
 
-- `sockets` (int) - Sockets
+- `sockets` (int) - How many CPU sockets to give the virtual machine.
+  Defaults to `1`
 
-- `numa` (bool) - Numa
+- `numa` (bool) - If true, support for non-uniform memory access (NUMA)
+  is enabled. Defaults to `false`.
 
-- `os` (string) - OS
+- `os` (string) - The operating system. Can be `wxp`, `w2k`, `w2k3`, `w2k8`,
+  `wvista`, `win7`, `win8`, `win10`, `l24` (Linux 2.4), `l26` (Linux 2.6+),
+  `solaris` or `other`. Defaults to `other`.
 
-- `bios` (string) - BIOS
+- `bios` (string) - Set the machine bios. This can be set to ovmf or seabios. The default value is seabios.
 
-- `efi_config` (efiConfig) - EFI Config
+- `efi_config` (efiConfig) - Set the efidisk storage options. See [EFI Config](#efi-config).
 
-- `efidisk` (string) - EFI Disk
+- `efidisk` (string) - This option is deprecated, please use `efi_config` instead.
 
-- `machine` (string) - Machine
+- `machine` (string) - Set the machine type. Supported values are 'pc' or 'q35'.
 
-- `rng0` (rng0Config) - Rng 0
+- `rng0` (rng0Config) - Configure Random Number Generator via VirtIO. See [VirtIO RNG device](#virtio-rng-device)
 
-- `vga` (vgaConfig) - VGA
+- `vga` (vgaConfig) - The graphics adapter to use. See [VGA Config](#vga-config).
 
-- `network_adapters` ([]NICConfig) - NI Cs
+- `network_adapters` ([]NICConfig) - The graphics adapter to use. See [Network Adapters](#network-adapters)
 
-- `disks` ([]diskConfig) - Disks
+- `disks` ([]diskConfig) - Disks attached to the virtual machine. See [Disks](#disks)
 
-- `pci_devices` ([]pciDeviceConfig) - PCI Devices
+- `pci_devices` ([]pciDeviceConfig) - Allows passing through a host PCI device into the VM. See [PCI Devices](#pci-devices)
 
-- `serials` ([]string) - Serials
+- `serials` ([]string) - A list (max 4 elements) of serial ports attached to
+  the virtual machine. It may pass through a host serial device `/dev/ttyS0`
+  or create unix socket on the host `socket`. Each element can be `socket`
+  or responding to pattern `/dev/.+`. Example:
+  
+    ```json
+    [
+      "socket",
+      "/dev/ttyS1"
+    ]
+    ```
 
-- `qemu_agent` (boolean) - Agent
+- `qemu_agent` (boolean) - Enables QEMU Agent option for this VM. When enabled,
+  then `qemu-guest-agent` must be installed on the guest. When disabled, then
+  `ssh_host` should be used. Defaults to `true`.
 
-- `scsi_controller` (string) - SCSI Controller
+- `scsi_controller` (string) - The SCSI controller model to emulate. Can be `lsi`,
+  `lsi53c810`, `virtio-scsi-pci`, `virtio-scsi-single`, `megasas`, or `pvscsi`.
+  Defaults to `lsi`.
 
-- `onboot` (bool) - Onboot
+- `onboot` (bool) - Specifies whether a VM will be started during system
+  bootup. Defaults to `false`.
 
-- `disable_kvm` (bool) - Disable KVM
+- `disable_kvm` (bool) - Disables KVM hardware virtualization. Defaults to `false`.
 
-- `template_name` (string) - Template Name
+- `template_name` (string) - Name of the template. Defaults to the generated
+  name used during creation.
 
-- `template_description` (string) - Template Description
+- `template_description` (string) - Description of the template, visible in
+  the Proxmox interface.
 
-- `cloud_init` (bool) - Cloud Init
+- `cloud_init` (bool) - If true, add an empty Cloud-Init CDROM drive after the virtual
+  machine has been converted to a template. Defaults to `false`.
 
-- `cloud_init_storage_pool` (string) - Cloud Init Storage Pool
+- `cloud_init_storage_pool` (string) - Name of the Proxmox storage pool
+  to store the Cloud-Init CDROM on. If not given, the storage pool of the boot device will be used.
 
-- `additional_iso_files` ([]additionalISOsConfig) - Additional ISO Files
+- `additional_iso_files` ([]additionalISOsConfig) - Additional ISO files attached to the virtual machine.
+  See [Additional ISO Files](#additional-iso-files).
 
-- `vm_interface` (string) - VM Interface
+- `vm_interface` (string) - Name of the network interface that Packer gets
+  the VMs IP from. Defaults to the first non loopback interface.
 
 <!-- End of code generated from the comments of the Config struct in builder/proxmox/common/config.go; -->

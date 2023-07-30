@@ -1,0 +1,14 @@
+<!-- Code generated from the comments of the Config struct in builder/proxmox/clone/config.go; DO NOT EDIT MANUALLY -->
+
+- `full_clone` (boolean) - Whether to run a full or shallow clone from the base clone_vm. Defaults to `true`.
+
+- `nameserver` (string) - Set nameserver IP address(es) via Cloud-Init.
+  If not given, the same setting as on the host is used.
+
+- `searchdomain` (string) - Set the DNS searchdomain via Cloud-Init.
+  If not given, the same setting as on the host is used.
+
+- `ipconfig` ([]cloudInitIpconfig) - Set IP address and gateway via Cloud-Init.
+  See the [CloudInit Ip Configuration](#cloudinit-ip-configuration) documentation for fields.
+
+<!-- End of code generated from the comments of the Config struct in builder/proxmox/clone/config.go; -->

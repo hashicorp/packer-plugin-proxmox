@@ -1,0 +1,19 @@
+<!-- Code generated from the comments of the cloudInitIpconfig struct in builder/proxmox/clone/config.go; DO NOT EDIT MANUALLY -->
+
+If you have configured more than one network interface, make sure to match the order of
+ `network_adapters` and `ipconfig`.
+
+ Usage example (JSON):
+
+ ```json
+ [
+   {
+     "ip": "192.168.1.55/24",
+     "gateway": "192.168.1.1",
+     "ip6": "fda8:a260:6eda:20::4da/128",
+     "gateway6": "fda8:a260:6eda:20::1"
+   }
+ ]
+ ```
+
+<!-- End of code generated from the comments of the cloudInitIpconfig struct in builder/proxmox/clone/config.go; -->

@@ -28,6 +28,21 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+// There are many configuration options available for the builder. They are
+// segmented below into two categories: required and optional parameters. Within
+// each category, the available configuration keys are alphabetized.
+//
+// You may also want to take look at the general configuration references for
+// [VirtIO RNG device](#virtio-rng-device)
+// and [PCI Devices](#pci-devices)
+// configuration references, which can be found further down the page.
+//
+// In addition to the options listed here, a
+// [communicator](/packer/docs/templates/legacy_json_templates/communicator) can be configured for this
+// builder.
+//
+// If no communicator is defined, an SSH key is generated for use, and is used
+// in the image's Cloud-Init settings for provisioning.
 type Config struct {
 	common.PackerConfig    `mapstructure:",squash"`
 	commonsteps.HTTPConfig `mapstructure:",squash"`
@@ -35,50 +50,142 @@ type Config struct {
 	BootKeyInterval        time.Duration       `mapstructure:"boot_key_interval"`
 	Comm                   communicator.Config `mapstructure:",squash"`
 
-	ProxmoxURLRaw      string `mapstructure:"proxmox_url"`
-	proxmoxURL         *url.URL
-	SkipCertValidation bool          `mapstructure:"insecure_skip_tls_verify"`
-	Username           string        `mapstructure:"username"`
-	Password           string        `mapstructure:"password"`
-	Token              string        `mapstructure:"token"`
-	Node               string        `mapstructure:"node"`
-	Pool               string        `mapstructure:"pool"`
-	TaskTimeout        time.Duration `mapstructure:"task_timeout"`
+	// URL to the Proxmox API, including the full path,
+	// so `https://<server>:<port>/api2/json` for example.
+	// Can also be set via the `PROXMOX_URL` environment variable.
+	ProxmoxURLRaw string `mapstructure:"proxmox_url"`
+	proxmoxURL    *url.URL
+	// Skip validating the certificate.
+	SkipCertValidation bool `mapstructure:"insecure_skip_tls_verify"`
+	// Username when authenticating to Proxmox, including
+	// the realm. For example `user@pve` to use the local Proxmox realm. When using
+	// token authentication, the username must include the token id after an exclamation
+	// mark. For example, `user@pve!tokenid`.
+	// Can also be set via the `PROXMOX_USERNAME` environment variable.
+	Username string `mapstructure:"username"`
+	// Password for the user.
+	// For API tokens please use `token`.
+	// Can also be set via the `PROXMOX_PASSWORD` environment variable.
+	// Either `password` or `token` must be specifed. If both are set,
+	// `token` takes precedence.
+	Password string `mapstructure:"password"`
+	// Token for authenticating API calls.
+	// This allows the API client to work with API tokens instead of user passwords.
+	// Can also be set via the `PROXMOX_TOKEN` environment variable.
+	// Either `password` or `token` must be specifed. If both are set,
+	// `token` takes precedence.
+	Token string `mapstructure:"token"`
+	// Which node in the Proxmox cluster to start the virtual
+	// machine on during creation.
+	Node string `mapstructure:"node"`
+	// Name of resource pool to create virtual machine in.
+	Pool string `mapstructure:"pool"`
+	// `task_timeout` (duration string | ex: "10m") - The timeout for
+	//  Promox API operations, e.g. clones. Defaults to 1 minute.
+	TaskTimeout time.Duration `mapstructure:"task_timeout"`
 
+	// Name of the virtual machine during creation. If not
+	// given, a random uuid will be used.
 	VMName string `mapstructure:"vm_name"`
-	VMID   int    `mapstructure:"vm_id"`
+	// `vm_id` (int) - The ID used to reference the virtual machine. This will
+	// also be the ID of the final template. Proxmox VMIDs are unique cluster-wide
+	// and are limited to the range 100-999999999.
+	// If not given, the next free ID on the cluster will be used.
+	VMID int `mapstructure:"vm_id"`
 
-	Boot           string            `mapstructure:"boot"`
-	Memory         int               `mapstructure:"memory"`
-	BalloonMinimum int               `mapstructure:"ballooning_minimum"`
-	Cores          int               `mapstructure:"cores"`
-	CPUType        string            `mapstructure:"cpu_type"`
-	Sockets        int               `mapstructure:"sockets"`
-	Numa           bool              `mapstructure:"numa"`
-	OS             string            `mapstructure:"os"`
-	BIOS           string            `mapstructure:"bios"`
-	EFIConfig      efiConfig         `mapstructure:"efi_config"`
-	EFIDisk        string            `mapstructure:"efidisk"`
-	Machine        string            `mapstructure:"machine"`
-	Rng0           rng0Config        `mapstructure:"rng0"`
-	VGA            vgaConfig         `mapstructure:"vga"`
-	NICs           []NICConfig       `mapstructure:"network_adapters"`
-	Disks          []diskConfig      `mapstructure:"disks"`
-	PCIDevices     []pciDeviceConfig `mapstructure:"pci_devices"`
-	Serials        []string          `mapstructure:"serials"`
-	Agent          config.Trilean    `mapstructure:"qemu_agent"`
-	SCSIController string            `mapstructure:"scsi_controller"`
-	Onboot         bool              `mapstructure:"onboot"`
-	DisableKVM     bool              `mapstructure:"disable_kvm"`
+	// Override default boot order. Format example `order=virtio0;ide2;net0`.
+	// Prior to Proxmox 6.2-15 the format was `cdn` (c:CDROM -> d:Disk -> n:Network)
+	Boot string `mapstructure:"boot"`
+	// How much memory (in megabytes) to give the virtual
+	// machine. If `ballooning_minimum` is also set, `memory` defines the maximum amount
+	// of memory the VM will be able to use.
+	// Defaults to `512`.
+	Memory int `mapstructure:"memory"`
+	// Setting this option enables KVM memory ballooning and
+	// defines the minimum amount of memory (in megabytes) the VM will have.
+	// Defaults to `0` (memory ballooning disabled).
+	BalloonMinimum int `mapstructure:"ballooning_minimum"`
+	// How many CPU cores to give the virtual machine. Defaults
+	// to `1`.
+	Cores int `mapstructure:"cores"`
+	// The CPU type to emulate. See the Proxmox API
+	// documentation for the complete list of accepted values. For best
+	// performance, set this to `host`. Defaults to `kvm64`.
+	CPUType string `mapstructure:"cpu_type"`
+	// How many CPU sockets to give the virtual machine.
+	// Defaults to `1`
+	Sockets int `mapstructure:"sockets"`
+	// If true, support for non-uniform memory access (NUMA)
+	// is enabled. Defaults to `false`.
+	Numa bool `mapstructure:"numa"`
+	// The operating system. Can be `wxp`, `w2k`, `w2k3`, `w2k8`,
+	// `wvista`, `win7`, `win8`, `win10`, `l24` (Linux 2.4), `l26` (Linux 2.6+),
+	// `solaris` or `other`. Defaults to `other`.
+	OS string `mapstructure:"os"`
+	// Set the machine bios. This can be set to ovmf or seabios. The default value is seabios.
+	BIOS string `mapstructure:"bios"`
+	// Set the efidisk storage options. See [EFI Config](#efi-config).
+	EFIConfig efiConfig `mapstructure:"efi_config"`
+	// This option is deprecated, please use `efi_config` instead.
+	EFIDisk string `mapstructure:"efidisk"`
+	// Set the machine type. Supported values are 'pc' or 'q35'.
+	Machine string `mapstructure:"machine"`
+	// Configure Random Number Generator via VirtIO. See [VirtIO RNG device](#virtio-rng-device)
+	Rng0 rng0Config `mapstructure:"rng0"`
+	// The graphics adapter to use. See [VGA Config](#vga-config).
+	VGA vgaConfig `mapstructure:"vga"`
+	// The graphics adapter to use. See [Network Adapters](#network-adapters)
+	NICs []NICConfig `mapstructure:"network_adapters"`
+	// Disks attached to the virtual machine. See [Disks](#disks)
+	Disks []diskConfig `mapstructure:"disks"`
+	// Allows passing through a host PCI device into the VM. See [PCI Devices](#pci-devices)
+	PCIDevices []pciDeviceConfig `mapstructure:"pci_devices"`
+	// A list (max 4 elements) of serial ports attached to
+	// the virtual machine. It may pass through a host serial device `/dev/ttyS0`
+	// or create unix socket on the host `socket`. Each element can be `socket`
+	// or responding to pattern `/dev/.+`. Example:
+	//
+	//   ```json
+	//   [
+	//     "socket",
+	//     "/dev/ttyS1"
+	//   ]
+	//   ```
+	Serials []string `mapstructure:"serials"`
+	// Enables QEMU Agent option for this VM. When enabled,
+	// then `qemu-guest-agent` must be installed on the guest. When disabled, then
+	// `ssh_host` should be used. Defaults to `true`.
+	Agent config.Trilean `mapstructure:"qemu_agent"`
+	// The SCSI controller model to emulate. Can be `lsi`,
+	// `lsi53c810`, `virtio-scsi-pci`, `virtio-scsi-single`, `megasas`, or `pvscsi`.
+	// Defaults to `lsi`.
+	SCSIController string `mapstructure:"scsi_controller"`
+	// Specifies whether a VM will be started during system
+	// bootup. Defaults to `false`.
+	Onboot bool `mapstructure:"onboot"`
+	// Disables KVM hardware virtualization. Defaults to `false`.
+	DisableKVM bool `mapstructure:"disable_kvm"`
 
-	TemplateName        string `mapstructure:"template_name"`
+	// Name of the template. Defaults to the generated
+	// name used during creation.
+	TemplateName string `mapstructure:"template_name"`
+	// Description of the template, visible in
+	// the Proxmox interface.
 	TemplateDescription string `mapstructure:"template_description"`
 
-	CloudInit            bool   `mapstructure:"cloud_init"`
+	// If true, add an empty Cloud-Init CDROM drive after the virtual
+	// machine has been converted to a template. Defaults to `false`.
+	CloudInit bool `mapstructure:"cloud_init"`
+	// Name of the Proxmox storage pool
+	// to store the Cloud-Init CDROM on. If not given, the storage pool of the boot device will be used.
 	CloudInitStoragePool string `mapstructure:"cloud_init_storage_pool"`
 
+	// Additional ISO files attached to the virtual machine.
+	// See [Additional ISO Files](#additional-iso-files).
 	AdditionalISOFiles []additionalISOsConfig `mapstructure:"additional_iso_files"`
-	VMInterface        string                 `mapstructure:"vm_interface"`
+	// Name of the network interface that Packer gets
+	// the VMs IP from. Defaults to the first non loopback interface.
+	VMInterface string `mapstructure:"vm_interface"`
 
 	Ctx interpolate.Context `mapstructure-to-hcl2:",skip"`
 }
