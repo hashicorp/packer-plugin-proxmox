@@ -1,6 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
+//go:generate packer-sdc struct-markdown
 //go:generate packer-sdc mapstructure-to-hcl2 -type Config,cloudInitIpconfig
 
 package proxmoxclone
@@ -20,19 +21,51 @@ import (
 type Config struct {
 	proxmoxcommon.Config `mapstructure:",squash"`
 
-	CloneVM   string         `mapstructure:"clone_vm" required:"true"`
-	CloneVMID int            `mapstructure:"clone_vm_id" required:"true"`
+	// The name of the VM Packer should clone and build from.
+	// Either `clone_vm` or `clone_vm_id` must be specifed.
+	CloneVM string `mapstructure:"clone_vm" required:"true"`
+	// The ID of the VM Packer should clone and build from.
+	// Proxmox VMIDs are limited to the range 100-999999999.
+	// Either `clone_vm` or `clone_vm_id` must be specifed.
+	CloneVMID int `mapstructure:"clone_vm_id" required:"true"`
+	// Whether to run a full or shallow clone from the base clone_vm. Defaults to `true`.
 	FullClone config.Trilean `mapstructure:"full_clone" required:"false"`
 
-	Nameserver   string              `mapstructure:"nameserver" required:"false"`
-	Searchdomain string              `mapstructure:"searchdomain" required:"false"`
-	Ipconfigs    []cloudInitIpconfig `mapstructure:"ipconfig" required:"false"`
+	// Set nameserver IP address(es) via Cloud-Init.
+	// If not given, the same setting as on the host is used.
+	Nameserver string `mapstructure:"nameserver" required:"false"`
+	// Set the DNS searchdomain via Cloud-Init.
+	// If not given, the same setting as on the host is used.
+	Searchdomain string `mapstructure:"searchdomain" required:"false"`
+	// Set IP address and gateway via Cloud-Init.
+	// See the [CloudInit Ip Configuration](#cloudinit-ip-configuration) documentation for fields.
+	Ipconfigs []cloudInitIpconfig `mapstructure:"ipconfig" required:"false"`
 }
 
+//  If you have configured more than one network interface, make sure to match the order of
+//  `network_adapters` and `ipconfig`.
+//
+//  Usage example (JSON):
+//
+//  ```json
+//  [
+//    {
+//      "ip": "192.168.1.55/24",
+//      "gateway": "192.168.1.1",
+//      "ip6": "fda8:a260:6eda:20::4da/128",
+//      "gateway6": "fda8:a260:6eda:20::1"
+//    }
+//  ]
+//  ```
+//
 type cloudInitIpconfig struct {
-	Ip       string `mapstructure:"ip" required:"false"`
-	Gateway  string `mapstructure:"gateway" required:"false"`
-	Ip6      string `mapstructure:"ip6" required:"false"`
+	// Either an IPv4 address (CIDR notation) or `dhcp`.
+	Ip string `mapstructure:"ip" required:"false"`
+	// IPv4 gateway.
+	Gateway string `mapstructure:"gateway" required:"false"`
+	// Can be an IPv6 address (CIDR notation), `auto` (enables SLAAC), or `dhcp`.
+	Ip6 string `mapstructure:"ip6" required:"false"`
+	// IPv6 gateway.
 	Gateway6 string `mapstructure:"gateway6" required:"false"`
 }
 

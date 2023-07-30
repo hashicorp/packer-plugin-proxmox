@@ -1,6 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
+//go:generate packer-sdc struct-markdown
 //go:generate packer-sdc mapstructure-to-hcl2 -type Config,nicConfig,diskConfig,vgaConfig,additionalISOsConfig
 
 package proxmoxiso
@@ -22,11 +23,23 @@ type Config struct {
 	proxmoxcommon.Config `mapstructure:",squash"`
 
 	commonsteps.ISOConfig `mapstructure:",squash"`
-	ISOFile               string `mapstructure:"iso_file"`
-	ISOStoragePool        string `mapstructure:"iso_storage_pool"`
-	ISODownloadPVE        bool   `mapstructure:"iso_download_pve"`
-	UnmountISO            bool   `mapstructure:"unmount_iso"`
-	shouldUploadISO       bool
+	// Path to the ISO file to boot from, expressed as a
+	// proxmox datastore path, for example
+	// `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
+	// Either `iso_file` OR `iso_url` must be specifed.
+	ISOFile string `mapstructure:"iso_file"`
+	// Proxmox storage pool onto which to upload
+	// the ISO file.
+	ISOStoragePool string `mapstructure:"iso_storage_pool"`
+	// Download the specified `iso_url` directly from
+	// the PVE node. Defaults to `false`.
+	// By default Packer downloads the ISO and uploads it in a second step, this
+	// option lets Proxmox handle downloading the ISO directly from the server.
+	ISODownloadPVE bool `mapstructure:"iso_download_pve"`
+	// If true, remove the mounted ISO from the template
+	// after finishing. Defaults to `false`.
+	UnmountISO      bool `mapstructure:"unmount_iso"`
+	shouldUploadISO bool
 }
 
 func (c *Config) Prepare(raws ...interface{}) ([]string, []string, error) {

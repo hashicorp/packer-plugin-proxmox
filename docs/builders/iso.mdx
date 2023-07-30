@@ -25,62 +25,16 @@ to you to use it or delete it.
 
 ## Configuration Reference
 
-There are many configuration options available for the builder. They are
-segmented below into two categories: required and optional parameters. Within
-each category, the available configuration keys are alphabetized.
-
-You may also want to take look at the general configuration references for
-[VirtIO RNG device](#virtio-rng-device)
-and [PCI Devices](#pci-devices)
-configuration references, which can be found further down the page.
-
-In addition to the options listed here, a
-[communicator](/packer/docs/templates/legacy_json_templates/communicator) can be configured for this
-builder.
-
-If no communicator is defined, an SSH key is generated for use, and is used
-in the image's Cloud-Init settings for provisioning.
+@include 'builder/proxmox/common/Config.mdx'
 
 ### Required:
 
 @include 'packer-plugin-sdk/multistep/commonsteps/ISOConfig-required.mdx'
 
-- `proxmox_url` (string) - URL to the Proxmox API, including the full path,
-  so `https://<server>:<port>/api2/json` for example.
-  Can also be set via the `PROXMOX_URL` environment variable.
-
-- `username` (string) - Username when authenticating to Proxmox, including
-  the realm. For example `user@pve` to use the local Proxmox realm. When using
-  token authentication, the username must include the token id after an exclamation
-  mark. For example, `user@pve!tokenid`.
-  Can also be set via the `PROXMOX_USERNAME` environment variable.
-
-- `password` (string) - Password for the user.
-  For API tokens please use `token`.
-  Can also be set via the `PROXMOX_PASSWORD` environment variable.
-  Either `password` or `token` must be specifed. If both are set,
-  `token` takes precedence.
-
-- `token` (string) - Token for authenticating API calls.
-  This allows the API client to work with API tokens instead of user passwords.
-  Can also be set via the `PROXMOX_TOKEN` environment variable.
-  Either `password` or `token` must be specifed. If both are set,
-  `token` takes precedence.
-
-- `node` (string) - Which node in the Proxmox cluster to start the virtual
-  machine on during creation.
-
-- `iso_file` (string) - Path to the ISO file to boot from, expressed as a
-  proxmox datastore path, for example
-  `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
-  Either `iso_file` OR `iso_url` must be specifed.
-
-- `iso_storage_pool` (string) - Proxmox storage pool onto which to upload
-  the ISO file.
-
 ### Additional ISO Files
 
 @include 'builder/proxmox/common/additionalISOsConfig.mdx'
+
 @include 'packer-plugin-sdk/multistep/commonsteps/ISOConfig.mdx'
 
 #### Required
@@ -90,57 +44,20 @@ in the image's Cloud-Init settings for provisioning.
 #### Optional
 
 @include 'packer-plugin-sdk/multistep/commonsteps/ISOConfig-not-required.mdx'
+
 @include 'builder/proxmox/common/additionalISOsConfig-not-required.mdx'
+
+@include 'packer-plugin-sdk/multistep/commonsteps/CDConfig.mdx'
+
+@include 'packer-plugin-sdk/multistep/commonsteps/CDConfig-not-required.mdx'
 
 ### Optional:
 
+@include 'builder/proxmox/common/Config-not-required.mdx'
+
+@include 'builder/proxmox/iso/Config-not-required.mdx'
+
 @include 'packer-plugin-sdk/multistep/commonsteps/ISOConfig-not-required.mdx'
-
-- `iso_download_pve` (bool) - Download the specified `iso_url` directly from
-  the PVE node. Defaults to `false`.
-  By default Packer downloads the ISO and uploads it in a second step, this
-  option lets Proxmox handle downloading the ISO directly from the server.
-
-- `insecure_skip_tls_verify` (bool) - Skip validating the certificate.
-
-- `task_timeout` (duration string | ex: "10m") - The timeout for
-  Promox API operations, e.g. clones. Defaults to 1 minute.
-
-- `pool` (string) - Name of resource pool to create virtual machine in.
-
-- `vm_name` (string) - Name of the virtual machine during creation. If not
-  given, a random uuid will be used.
-
-- `vm_id` (int) - The ID used to reference the virtual machine. This will
-  also be the ID of the final template. Proxmox VMIDs are unique cluster-wide
-  and are limited to the range 100-999999999.
-  If not given, the next free ID on the cluster will be used.
-
-- `memory` (int) - How much memory (in megabytes) to give the virtual
-  machine. If `ballooning_minimum` is also set, `memory` defines the maximum amount
-  of memory the VM will be able to use.
-  Defaults to `512`.
-
-- `ballooning_minimum` (int) - Setting this option enables KVM memory ballooning and
-  defines the minimum amount of memory (in megabytes) the VM will have.
-  Defaults to `0` (memory ballooning disabled).
-
-- `cores` (int) - How many CPU cores to give the virtual machine. Defaults
-  to `1`.
-
-- `sockets` (int) - How many CPU sockets to give the virtual machine.
-  Defaults to `1`
-
-- `cpu_type` (string) - The CPU type to emulate. See the Proxmox API
-  documentation for the complete list of accepted values. For best
-  performance, set this to `host`. Defaults to `kvm64`.
-
-- `numa` (bool) - If true, support for non-uniform memory access (NUMA)
-  is enabled. Defaults to `false`.
-
-- `os` (string) - The operating system. Can be `wxp`, `w2k`, `w2k3`, `w2k8`,
-  `wvista`, `win7`, `win8`, `win10`, `l24` (Linux 2.4), `l26` (Linux 2.6+),
-  `solaris` or `other`. Defaults to `other`.
 
 ### VGA Config
 
@@ -158,18 +75,6 @@ in the image's Cloud-Init settings for provisioning.
 
 @include 'builder/proxmox/common/NICConfig-not-required.mdx'
 
-- `serials` ([]string) - A list (max 4 elements) of serial ports attached to
-the virtual machine. It may pass through a host serial device `/dev/ttyS0`
-or create unix socket on the host `socket`. Each element can be `socket`
-or responding to pattern `/dev/.+`. Example:
-
-  ```json
-  [
-    "socket",
-    "/dev/ttyS1"
-  ]
-  ```
-
 ### Disks
 
 @include 'builder/proxmox/common/diskConfig.mdx'
@@ -178,110 +83,6 @@ or responding to pattern `/dev/.+`. Example:
 
 @include 'builder/proxmox/common/diskConfig-not-required.mdx'
 
-- `template_name` (string) - Name of the template. Defaults to the generated
-  name used during creation.
-
-- `template_description` (string) - Description of the template, visible in
-  the Proxmox interface.
-
-- `unmount_iso` (bool) - If true, remove the mounted ISO from the template
-  after finishing. Defaults to `false`.
-
-- `onboot` (boolean) - Specifies whether a VM will be started during system
-  bootup. Defaults to `false`.
-
-- `qemu_agent` (boolean) - Enables QEMU Agent option for this VM. When enabled,
-  then `qemu-guest-agent` must be installed on the guest. When disabled, then
-  `ssh_host` should be used. Defaults to `true`.
-
-- `disable_kvm` (boolean) - Disables KVM hardware virtualization. Defaults to `false`.
-
-- `scsi_controller` (string) - The SCSI controller model to emulate. Can be `lsi`,
-  `lsi53c810`, `virtio-scsi-pci`, `virtio-scsi-single`, `megasas`, or `pvscsi`.
-  Defaults to `lsi`.
-
-- `cloud_init` (bool) - If true, add an empty Cloud-Init CDROM drive after the virtual
-  machine has been converted to a template. Defaults to `false`.
-
-- `cloud_init_storage_pool` (string) - Name of the Proxmox storage pool
-  to store the Cloud-Init CDROM on. If not given, the storage pool of the boot device will be used.
-
-  ### Optional
-
-    - `cd_files` ([]string) - A list of files to place onto a CD that is attached when the VM is
-      booted. This can include either files or directories; any directories
-      will be copied onto the CD recursively, preserving directory structure
-      hierarchy. Symlinks will have the link's target copied into the directory
-      tree on the CD where the symlink was. File globbing is allowed. Overrides
-      any of `iso_file` or `iso_url` set. Requires `iso_storage_pool` to be set
-
-      Usage example (JSON):
-
-      ```json
-      "cd_files": ["./somedirectory/meta-data", "./somedirectory/user-data"],
-      "cd_label": "cidata",
-      ```
-
-      Usage example (HCL):
-
-      ```hcl
-      cd_files = ["./somedirectory/meta-data", "./somedirectory/user-data"]
-      cd_label = "cidata"
-      ```
-
-      The above will create a CD with two files, user-data and meta-data in the
-      CD root. This specific example is how you would create a CD that can be
-      used for an Ubuntu 20.04 autoinstall.
-
-      Since globbing is also supported,
-
-      ```hcl
-      cd_files = ["./somedirectory/*"]
-      cd_label = "cidata"
-      ```
-
-      Would also be an acceptable way to define the above cd. The difference
-      between providing the directory with or without the glob is whether the
-      directory itself or its contents will be at the CD root.
-
-      Use of this option assumes that you have a command line tool installed
-      that can handle the iso creation. Packer will use one of the following
-      tools:
-
-        * xorriso
-        * mkisofs
-        * hdiutil (normally found in macOS)
-        * oscdimg (normally found in Windows as part of the Windows ADK)
-
-    - `cd_content` (map[string]string) - Key/Values to add to the CD. The keys represent the paths, and the values
-      contents. It can be used alongside `cd_files`, which is useful to add large
-      files without loading them into memory. If any paths are specified by both,
-      the contents in `cd_content` will take precedence.
-
-      Usage example (HCL):
-
-      ```hcl
-      cd_files = ["vendor-data"]
-      cd_content = {
-        "meta-data" = jsonencode(local.instance_data)
-        "user-data" = templatefile("user-data", { packages = ["nginx"] })
-      }
-      cd_label = "cidata"
-      ```
-
-    - `cd_label` (string) - CD Label
-
-- `http_interface` - (string) - Name of the network interface that Packer gets
-  `HTTPIP` from. Defaults to the first non loopback interface.
-
-- `vm_interface` - (string) - Name of the network interface that Packer gets
-  the VMs IP from. Defaults to the first non loopback interface.
-
-- `boot` - (string) - Override default boot order. Format example `order=virtio0;ide2;net0`.
-  Prior to Proxmox 6.2-15 the format was `cdn` (c:CDROM -> d:Disk -> n:Network)
-
-- `bios` - (string) - Set the machine bios. This can be set to ovmf or seabios. The default value is seabios.
-
 ### EFI Config
 
 @include 'builder/proxmox/common/efiConfig.mdx'
@@ -289,10 +90,6 @@ or responding to pattern `/dev/.+`. Example:
 #### Optional:
 
 @include 'builder/proxmox/common/efiConfig-not-required.mdx'
-
-- `efidisk` - (string) - This option is deprecated, please use `efi_config` instead.
-
-- `machine` - (string) - Set the machine type. Supported values are 'pc' or 'q35'.
 
 ### VirtIO RNG device
 
@@ -319,6 +116,7 @@ or responding to pattern `/dev/.+`. Example:
 @include 'packer-plugin-sdk/bootcommand/BootConfig.mdx'
 
 ### Optional:
+
 @include 'packer-plugin-sdk/bootcommand/BootConfig-not-required.mdx'
 
 ## Http directory configuration
@@ -328,6 +126,9 @@ or responding to pattern `/dev/.+`. Example:
 ### Optional:
 
 @include 'packer-plugin-sdk/multistep/commonsteps/HTTPConfig-not-required.mdx'
+
+- `http_interface` - (string) - Name of the network interface that Packer gets
+  `HTTPIP` from. Defaults to the first non loopback interface.
 
 ## Example: Fedora with kickstart
 
