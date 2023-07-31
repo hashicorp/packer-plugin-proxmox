@@ -31,6 +31,14 @@ to you to use it or delete it.
 
 @include 'packer-plugin-sdk/multistep/commonsteps/ISOConfig-required.mdx'
 
+### Optional:
+
+@include 'builder/proxmox/common/Config-not-required.mdx'
+
+@include 'builder/proxmox/iso/Config-not-required.mdx'
+
+@include 'packer-plugin-sdk/multistep/commonsteps/ISOConfig-not-required.mdx'
+
 ### Additional ISO Files
 
 @include 'builder/proxmox/common/additionalISOsConfig.mdx'
@@ -50,14 +58,6 @@ to you to use it or delete it.
 @include 'packer-plugin-sdk/multistep/commonsteps/CDConfig.mdx'
 
 @include 'packer-plugin-sdk/multistep/commonsteps/CDConfig-not-required.mdx'
-
-### Optional:
-
-@include 'builder/proxmox/common/Config-not-required.mdx'
-
-@include 'builder/proxmox/iso/Config-not-required.mdx'
-
-@include 'packer-plugin-sdk/multistep/commonsteps/ISOConfig-not-required.mdx'
 
 ### VGA Config
 
@@ -111,19 +111,19 @@ to you to use it or delete it.
 
 @include 'builder/proxmox/common/pciDeviceConfig-not-required.mdx'
 
-## Boot Command
+### Boot Command
 
 @include 'packer-plugin-sdk/bootcommand/BootConfig.mdx'
 
-### Optional:
+#### Optional:
 
 @include 'packer-plugin-sdk/bootcommand/BootConfig-not-required.mdx'
 
-## Http directory configuration
+### Http directory configuration
 
 @include 'packer-plugin-sdk/multistep/commonsteps/HTTPConfig.mdx'
 
-### Optional:
+#### Optional:
 
 @include 'packer-plugin-sdk/multistep/commonsteps/HTTPConfig-not-required.mdx'
 
