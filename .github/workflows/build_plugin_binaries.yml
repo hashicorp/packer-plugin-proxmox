@@ -15,7 +15,7 @@ jobs:
         working-directory: ~/go/src/github.com/hashicorp/packer-plugin-proxmox
     runs-on: ubuntu-latest
     container:
-      image: docker.mirror.hashicorp.services/cimg/go:1.18
+      image: docker.mirror.hashicorp.services/cimg/go:1.19
     steps:
     - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
     - uses: "./.github/actions/build-and-persist-plugin-binary"
@@ -32,7 +32,7 @@ jobs:
         working-directory: ~/go/src/github.com/hashicorp/packer-plugin-proxmox
     runs-on: ubuntu-latest
     container:
-      image: docker.mirror.hashicorp.services/cimg/go:1.18
+      image: docker.mirror.hashicorp.services/cimg/go:1.19
     steps:
     - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
     - uses: "./.github/actions/build-and-persist-plugin-binary"
@@ -53,7 +53,7 @@ jobs:
         working-directory: ~/go/src/github.com/hashicorp/packer-plugin-proxmox
     runs-on: ubuntu-latest
     container:
-      image: docker.mirror.hashicorp.services/cimg/go:1.18
+      image: docker.mirror.hashicorp.services/cimg/go:1.19
     steps:
     - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
     - uses: "./.github/actions/build-and-persist-plugin-binary"
@@ -78,7 +78,7 @@ jobs:
         working-directory: ~/go/src/github.com/hashicorp/packer-plugin-proxmox
     runs-on: ubuntu-latest
     container:
-      image: docker.mirror.hashicorp.services/cimg/go:1.18
+      image: docker.mirror.hashicorp.services/cimg/go:1.19
     steps:
     - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
     - uses: "./.github/actions/build-and-persist-plugin-binary"
@@ -99,7 +99,7 @@ jobs:
         working-directory: ~/go/src/github.com/hashicorp/packer-plugin-proxmox
     runs-on: ubuntu-latest
     container:
-      image: docker.mirror.hashicorp.services/cimg/go:1.18
+      image: docker.mirror.hashicorp.services/cimg/go:1.19
     steps:
     - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
     - uses: "./.github/actions/build-and-persist-plugin-binary"
@@ -120,7 +120,7 @@ jobs:
         working-directory: ~/go/src/github.com/hashicorp/packer-plugin-proxmox
     runs-on: ubuntu-latest
     container:
-      image: docker.mirror.hashicorp.services/cimg/go:1.18
+      image: docker.mirror.hashicorp.services/cimg/go:1.19
     steps:
     - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
     - uses: "./.github/actions/build-and-persist-plugin-binary"
@@ -133,7 +133,7 @@ jobs:
         working-directory: ~/go/src/github.com/hashicorp/packer-plugin-proxmox
     runs-on: ubuntu-latest
     container:
-      image: docker.mirror.hashicorp.services/cimg/go:1.18
+      image: docker.mirror.hashicorp.services/cimg/go:1.19
     steps:
     - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
     - uses: "./.github/actions/build-and-persist-plugin-binary"
