@@ -1,6 +1,6 @@
 module github.com/hashicorp/packer-plugin-proxmox
 
-go 1.18
+go 1.19
 
 require (
 	github.com/Telmate/proxmox-api-go v0.0.0-20230524203107-41e6ffadedb1
