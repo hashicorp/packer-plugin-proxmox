@@ -613,11 +613,8 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 				}
 			}
 		}
-		if disk.SSD {
-			// SSD emulation is not supported on virtio device type
-			if disk.Type == "virtio" {
-				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("SSD emulation is not supported on a virtio disk"))
-			}
+		if disk.SSD && disk.Type == "virtio" {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("SSD emulation is not supported on virtio disks"))
 		}
 		if disk.StoragePool == "" {
 			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("disks[%d].storage_pool must be specified", idx))
