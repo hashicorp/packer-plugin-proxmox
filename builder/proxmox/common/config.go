@@ -207,7 +207,7 @@ type additionalISOsConfig struct {
 	commonsteps.ISOConfig `mapstructure:",squash"`
 	// Bus type and bus index that the ISO will be mounted on. Can be `ideX`,
 	// `sataX` or `scsiX`.
-	// For `ide` the bus index ranges from 0 to 3, for `sata` form 0 to 5 and for
+	// For `ide` the bus index ranges from 0 to 3, for `sata` from 0 to 5 and for
 	// `scsi` from 0 to 30.
 	// Defaults to `ide3` since `ide2` is generally the boot drive.
 	Device string `mapstructure:"device"`
