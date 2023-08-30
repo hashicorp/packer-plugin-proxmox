@@ -42,22 +42,23 @@ type Config struct {
 	Ipconfigs []cloudInitIpconfig `mapstructure:"ipconfig" required:"false"`
 }
 
-//  If you have configured more than one network interface, make sure to match the order of
-//  `network_adapters` and `ipconfig`.
+// If you have configured more than one network interface, make sure to match the order of
+// `network_adapters` and `ipconfig`.
 //
-//  Usage example (JSON):
+// Usage example (JSON):
 //
-//  ```json
-//  [
-//    {
-//      "ip": "192.168.1.55/24",
-//      "gateway": "192.168.1.1",
-//      "ip6": "fda8:a260:6eda:20::4da/128",
-//      "gateway6": "fda8:a260:6eda:20::1"
-//    }
-//  ]
-//  ```
+// ```json
+// [
 //
+//	{
+//	  "ip": "192.168.1.55/24",
+//	  "gateway": "192.168.1.1",
+//	  "ip6": "fda8:a260:6eda:20::4da/128",
+//	  "gateway6": "fda8:a260:6eda:20::1"
+//	}
+//
+// ]
+// ```
 type cloudInitIpconfig struct {
 	// Either an IPv4 address (CIDR notation) or `dhcp`.
 	Ip string `mapstructure:"ip" required:"false"`
