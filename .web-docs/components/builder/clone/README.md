@@ -294,12 +294,12 @@ boot time.
 
 - `vga` (object) - The graphics adapter to use. Example:
 
- ```json
- {
-   "type": "vmware",
-   "memory": 32
- }
- ```
+	```json
+	{
+	  "type": "vmware",
+	  "memory": 32
+	}
+	```
 
 <!-- End of code generated from the comments of the vgaConfig struct in builder/proxmox/common/config.go; -->
 
@@ -322,18 +322,18 @@ boot time.
 <!-- Code generated from the comments of the NICConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
 - `network_adapters` (array of objects) - Network adapters attached to the
-  virtual machine. Example:
+    virtual machine. Example:
 
-  ```json
-  [
+    ```json
+    [
     {
-      "model": "virtio",
-      "bridge": "vmbr0",
-      "vlan_tag": "10",
-      "firewall": true
+    "model": "virtio",
+    "bridge": "vmbr0",
+    "vlan_tag": "10",
+    "firewall": true
     }
-  ]
-  ```
+    ]
+    ```
 
 <!-- End of code generated from the comments of the NICConfig struct in builder/proxmox/common/config.go; -->
 
@@ -381,18 +381,18 @@ boot time.
 <!-- Code generated from the comments of the diskConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
 - `disks` (array of objects) - Disks attached to the virtual machine.
-  Example:
+    Example:
 
-  ```json
-  [
+    ```json
+    [
     {
-      "type": "scsi",
-      "disk_size": "5G",
-      "storage_pool": "local-lvm",
-      "storage_pool_type": "lvm"
+    "type": "scsi",
+    "disk_size": "5G",
+    "storage_pool": "local-lvm",
+    "storage_pool_type": "lvm"
     }
-  ]
- ```
+    ]
+    ```
 
 <!-- End of code generated from the comments of the diskConfig struct in builder/proxmox/common/config.go; -->
 
@@ -442,20 +442,22 @@ boot time.
 <!-- Code generated from the comments of the cloudInitIpconfig struct in builder/proxmox/clone/config.go; DO NOT EDIT MANUALLY -->
 
 If you have configured more than one network interface, make sure to match the order of
- `network_adapters` and `ipconfig`.
+`network_adapters` and `ipconfig`.
 
- Usage example (JSON):
+Usage example (JSON):
 
- ```json
- [
-   {
-     "ip": "192.168.1.55/24",
-     "gateway": "192.168.1.1",
-     "ip6": "fda8:a260:6eda:20::4da/128",
-     "gateway6": "fda8:a260:6eda:20::1"
-   }
- ]
- ```
+```json
+[
+
+	{
+	  "ip": "192.168.1.55/24",
+	  "gateway": "192.168.1.1",
+	  "ip6": "fda8:a260:6eda:20::4da/128",
+	  "gateway6": "fda8:a260:6eda:20::1"
+	}
+
+]
+```
 
 <!-- End of code generated from the comments of the cloudInitIpconfig struct in builder/proxmox/clone/config.go; -->
 
@@ -478,18 +480,18 @@ If you have configured more than one network interface, make sure to match the o
 <!-- Code generated from the comments of the additionalISOsConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
 - `additional_iso_files` (array of objects) - Additional ISO files attached to the virtual machine.
-  Example:
+    Example:
 
-  ```json
-  [
+    ```json
+    [
     {
-      "device": "scsi5",
-      "iso_file": "local:iso/virtio-win-0.1.185.iso",
-      "unmount": true,
-      "iso_checksum": "af2b3cc9fa7905dea5e58d31508d75bba717c2b0d5553962658a47aebc9cc386"
+    "device": "scsi5",
+    "iso_file": "local:iso/virtio-win-0.1.185.iso",
+    "unmount": true,
+    "iso_checksum": "af2b3cc9fa7905dea5e58d31508d75bba717c2b0d5553962658a47aebc9cc386"
     }
-  ]
-  ```
+    ]
+    ```
 
 <!-- End of code generated from the comments of the additionalISOsConfig struct in builder/proxmox/common/config.go; -->
 
@@ -734,17 +736,17 @@ boot time.
 <!-- Code generated from the comments of the efiConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
 - `efi_config` - (object) - Set the efidisk storage options. This needs to be set if you use ovmf uefi boot
-  (supersedes the `efidisk` option).
+    (supersedes the `efidisk` option).
 
-  Usage example (JSON):
+    Usage example (JSON):
 
-  ```json
-  {
+    ```json
+    {
     "efi_storage_pool": "local",
     "pre_enrolled_keys": true,
     "efi_type": "4m"
-  }
-  ```
+    }
+    ```
 
 <!-- End of code generated from the comments of the efiConfig struct in builder/proxmox/common/config.go; -->
 
