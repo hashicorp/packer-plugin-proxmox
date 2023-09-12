@@ -261,7 +261,10 @@ func generateProxmoxNetworkAdapters(nics []NICConfig) proxmox.QemuDevices {
 		setDeviceParamIfDefined(devs[idx], "macaddr", nics[idx].MACAddress)
 		setDeviceParamIfDefined(devs[idx], "bridge", nics[idx].Bridge)
 		setDeviceParamIfDefined(devs[idx], "tag", nics[idx].VLANTag)
-		setDeviceParamIfDefined(devs[idx], "firewall", strconv.FormatBool(nics[idx].Firewall))
+
+		if nics[idx].Firewall {
+			devs[idx]["firewall"] = nics[idx].Firewall
+		}
 
 		if nics[idx].MTU > 0 {
 			devs[idx]["mtu"] = nics[idx].MTU
@@ -281,16 +284,18 @@ func generateProxmoxDisks(disks []diskConfig) proxmox.QemuDevices {
 		setDeviceParamIfDefined(devs[idx], "storage", disks[idx].StoragePool)
 		setDeviceParamIfDefined(devs[idx], "cache", disks[idx].CacheMode)
 		setDeviceParamIfDefined(devs[idx], "format", disks[idx].DiskFormat)
-		if devs[idx]["type"] == "scsi" || devs[idx]["type"] == "virtio" {
-			setDeviceParamIfDefined(devs[idx], "iothread", strconv.FormatBool(disks[idx].IOThread))
+
+		if devs[idx]["type"] == "scsi" || devs[idx]["type"] == "virtio" &&
+			disks[idx].IOThread {
+			devs[idx]["iothread"] = "true"
 		}
-		// Proxmox API expects the value of discard to be either "on" or "ignore"
-		setDeviceParamIfDefined(devs[idx], "discard", func() string {
-			if disks[idx].Discard {
-				return "on"
-			}
-			return "ignore"
-		}())
+
+		if disks[idx].Discard {
+			devs[idx]["discard"] = "on"
+		} else {
+			devs[idx]["discard"] = "ignore"
+		}
+
 		// Add SSD flag only if true
 		if disks[idx].SSD {
 			devs[idx]["ssd"] = "1"
