@@ -190,19 +190,22 @@ type Config struct {
 	Ctx interpolate.Context `mapstructure-to-hcl2:",skip"`
 }
 
-//   - `additional_iso_files` (array of objects) - Additional ISO files attached to the virtual machine.
-//     Example:
+// Additional ISO files attached to the virtual machine.
 //
-//     ```json
-//     [
-//     {
-//     "device": "scsi5",
-//     "iso_file": "local:iso/virtio-win-0.1.185.iso",
-//     "unmount": true,
-//     "iso_checksum": "af2b3cc9fa7905dea5e58d31508d75bba717c2b0d5553962658a47aebc9cc386"
-//     }
-//     ]
-//     ```
+// Example:
+//
+// ```json
+// [
+//
+//	{
+//	  "device": "scsi5",
+//	  "iso_file": "local:iso/virtio-win-0.1.185.iso",
+//	  "unmount": true,
+//	  "iso_checksum": "af2b3cc9fa7905dea5e58d31508d75bba717c2b0d5553962658a47aebc9cc386"
+//	}
+//
+// ]
+// ```
 type additionalISOsConfig struct {
 	commonsteps.ISOConfig `mapstructure:",squash"`
 	// Bus type and bus index that the ISO will be mounted on. Can be `ideX`,
@@ -226,19 +229,22 @@ type additionalISOsConfig struct {
 	commonsteps.CDConfig `mapstructure:",squash"`
 }
 
-//   - `network_adapters` (array of objects) - Network adapters attached to the
-//     virtual machine. Example:
+// Network adapters attached to the virtual machine.
 //
-//     ```json
-//     [
-//     {
-//     "model": "virtio",
-//     "bridge": "vmbr0",
-//     "vlan_tag": "10",
-//     "firewall": true
-//     }
-//     ]
-//     ```
+// Example:
+//
+// ```json
+// [
+//
+//	{
+//	  "model": "virtio",
+//	  "bridge": "vmbr0",
+//	  "vlan_tag": "10",
+//	  "firewall": true
+//	}
+//
+// ]
+// ```
 type NICConfig struct {
 	// Model of the virtual network adapter. Can be
 	// `rtl8139`, `ne2k_pci`, `e1000`, `pcnet`, `virtio`, `ne2k_isa`,
@@ -273,19 +279,22 @@ type NICConfig struct {
 	Firewall bool `mapstructure:"firewall"`
 }
 
-//   - `disks` (array of objects) - Disks attached to the virtual machine.
-//     Example:
+// Disks attached to the virtual machine.
 //
-//     ```json
-//     [
-//     {
-//     "type": "scsi",
-//     "disk_size": "5G",
-//     "storage_pool": "local-lvm",
-//     "storage_pool_type": "lvm"
-//     }
-//     ]
-//     ```
+// Example:
+//
+// ```json
+// [
+//
+//	{
+//	  "type": "scsi",
+//	  "disk_size": "5G",
+//	  "storage_pool": "local-lvm",
+//	  "storage_pool_type": "lvm"
+//	}
+//
+// ]
+// ```
 type diskConfig struct {
 	// The type of disk. Can be `scsi`, `sata`, `virtio` or
 	// `ide`. Defaults to `scsi`.
@@ -322,18 +331,20 @@ type diskConfig struct {
 	SSD bool `mapstructure:"ssd"`
 }
 
-//   - `efi_config` - (object) - Set the efidisk storage options. This needs to be set if you use ovmf uefi boot
-//     (supersedes the `efidisk` option).
+// Set the efidisk storage options.
+// This needs to be set if you use ovmf uefi boot (supersedes the `efidisk` option).
 //
-//     Usage example (JSON):
+// Usage example (JSON):
 //
-//     ```json
-//     {
-//     "efi_storage_pool": "local",
-//     "pre_enrolled_keys": true,
-//     "efi_type": "4m"
-//     }
-//     ```
+// ```json
+//
+//	{
+//	  "efi_storage_pool": "local",
+//	  "pre_enrolled_keys": true,
+//	  "efi_type": "4m"
+//	}
+//
+// ```
 type efiConfig struct {
 	// Name of the Proxmox storage pool to store the EFI disk on.
 	EFIStoragePool string `mapstructure:"efi_storage_pool"`

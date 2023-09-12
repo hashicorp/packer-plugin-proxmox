@@ -245,19 +245,22 @@ in the image's Cloud-Init settings for provisioning.
 
 <!-- Code generated from the comments of the additionalISOsConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
-- `additional_iso_files` (array of objects) - Additional ISO files attached to the virtual machine.
-    Example:
+Additional ISO files attached to the virtual machine.
 
-    ```json
-    [
-    {
-    "device": "scsi5",
-    "iso_file": "local:iso/virtio-win-0.1.185.iso",
-    "unmount": true,
-    "iso_checksum": "af2b3cc9fa7905dea5e58d31508d75bba717c2b0d5553962658a47aebc9cc386"
-    }
-    ]
-    ```
+Example:
+
+```json
+[
+
+	{
+	  "device": "scsi5",
+	  "iso_file": "local:iso/virtio-win-0.1.185.iso",
+	  "unmount": true,
+	  "iso_checksum": "af2b3cc9fa7905dea5e58d31508d75bba717c2b0d5553962658a47aebc9cc386"
+	}
+
+]
+```
 
 <!-- End of code generated from the comments of the additionalISOsConfig struct in builder/proxmox/common/config.go; -->
 
@@ -530,19 +533,22 @@ boot time.
 
 <!-- Code generated from the comments of the NICConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
-- `network_adapters` (array of objects) - Network adapters attached to the
-    virtual machine. Example:
+Network adapters attached to the virtual machine.
 
-    ```json
-    [
-    {
-    "model": "virtio",
-    "bridge": "vmbr0",
-    "vlan_tag": "10",
-    "firewall": true
-    }
-    ]
-    ```
+Example:
+
+```json
+[
+
+	{
+	  "model": "virtio",
+	  "bridge": "vmbr0",
+	  "vlan_tag": "10",
+	  "firewall": true
+	}
+
+]
+```
 
 <!-- End of code generated from the comments of the NICConfig struct in builder/proxmox/common/config.go; -->
 
@@ -589,19 +595,22 @@ boot time.
 
 <!-- Code generated from the comments of the diskConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
-- `disks` (array of objects) - Disks attached to the virtual machine.
-    Example:
+Disks attached to the virtual machine.
 
-    ```json
-    [
-    {
-    "type": "scsi",
-    "disk_size": "5G",
-    "storage_pool": "local-lvm",
-    "storage_pool_type": "lvm"
-    }
-    ]
-    ```
+Example:
+
+```json
+[
+
+	{
+	  "type": "scsi",
+	  "disk_size": "5G",
+	  "storage_pool": "local-lvm",
+	  "storage_pool_type": "lvm"
+	}
+
+]
+```
 
 <!-- End of code generated from the comments of the diskConfig struct in builder/proxmox/common/config.go; -->
 
@@ -650,18 +659,20 @@ boot time.
 
 <!-- Code generated from the comments of the efiConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
-- `efi_config` - (object) - Set the efidisk storage options. This needs to be set if you use ovmf uefi boot
-    (supersedes the `efidisk` option).
+Set the efidisk storage options.
+This needs to be set if you use ovmf uefi boot (supersedes the `efidisk` option).
 
-    Usage example (JSON):
+Usage example (JSON):
 
-    ```json
-    {
-    "efi_storage_pool": "local",
-    "pre_enrolled_keys": true,
-    "efi_type": "4m"
-    }
-    ```
+```json
+
+	{
+	  "efi_storage_pool": "local",
+	  "pre_enrolled_keys": true,
+	  "efi_type": "4m"
+	}
+
+```
 
 <!-- End of code generated from the comments of the efiConfig struct in builder/proxmox/common/config.go; -->
 
