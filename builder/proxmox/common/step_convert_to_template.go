@@ -20,7 +20,7 @@ import (
 type stepConvertToTemplate struct{}
 
 type templateConverter interface {
-	ShutdownVm(*proxmox.VmRef) (string, error)
+	StopVm(*proxmox.VmRef) (string, error)
 	CreateTemplate(*proxmox.VmRef) error
 }
 
@@ -32,7 +32,6 @@ func (s *stepConvertToTemplate) Run(ctx context.Context, state multistep.StateBa
 	vmRef := state.Get("vmRef").(*proxmox.VmRef)
 
 	ui.Say("Stopping VM")
-	// Talos cannot stop in proxmox using ShutdownVM. You must use StopVm
 	_, err := client.StopVm(vmRef)
 	if err != nil {
 		err := fmt.Errorf("Error converting VM to template, could not stop: %s", err)
