@@ -14,7 +14,7 @@ import (
 )
 
 type converterMock struct {
-	stopVm     func(*proxmox.VmRef) (string, error)
+	stopVm         func(*proxmox.VmRef) (string, error)
 	createTemplate func(*proxmox.VmRef) error
 }
 
