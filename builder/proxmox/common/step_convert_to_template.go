@@ -32,7 +32,7 @@ func (s *stepConvertToTemplate) Run(ctx context.Context, state multistep.StateBa
 	vmRef := state.Get("vmRef").(*proxmox.VmRef)
 
 	ui.Say("Stopping VM")
-	_, err := client.ShutdownVm(vmRef)
+	_, err := client.StopVm(vmRef)
 	if err != nil {
 		err := fmt.Errorf("Error converting VM to template, could not stop: %s", err)
 		state.Put("error", err)
