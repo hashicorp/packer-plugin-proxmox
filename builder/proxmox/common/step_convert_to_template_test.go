@@ -19,7 +19,7 @@ type converterMock struct {
 }
 
 func (m converterMock) StopVm(r *proxmox.VmRef) (string, error) {
-	return m.stopVn(r)
+	return m.stopVm(r)
 }
 func (m converterMock) CreateTemplate(r *proxmox.VmRef) error {
 	return m.createTemplate(r)
