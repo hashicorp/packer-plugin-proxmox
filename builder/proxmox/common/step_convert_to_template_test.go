@@ -14,12 +14,12 @@ import (
 )
 
 type converterMock struct {
-	shutdownVm     func(*proxmox.VmRef) (string, error)
+	stopVm     func(*proxmox.VmRef) (string, error)
 	createTemplate func(*proxmox.VmRef) error
 }
 
-func (m converterMock) ShutdownVm(r *proxmox.VmRef) (string, error) {
-	return m.shutdownVm(r)
+func (m converterMock) StopVm(r *proxmox.VmRef) (string, error) {
+	return m.stopVn(r)
 }
 func (m converterMock) CreateTemplate(r *proxmox.VmRef) error {
 	return m.createTemplate(r)
@@ -63,7 +63,7 @@ func TestConvertToTemplate(t *testing.T) {
 	for _, c := range cs {
 		t.Run(c.name, func(t *testing.T) {
 			converter := converterMock{
-				shutdownVm: func(r *proxmox.VmRef) (string, error) {
+				stopVm: func(r *proxmox.VmRef) (string, error) {
 					if r.VmId() != vmid {
 						t.Errorf("ShutdownVm called with unexpected id, expected %d, got %d", vmid, r.VmId())
 					}
