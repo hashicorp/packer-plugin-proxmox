@@ -28,8 +28,6 @@ testacc: dev
 
 generate: install-packer-sdc
 	@go generate ./...
-	packer-sdc renderdocs -src ./docs -dst ./.docs -partials ./docs-partials
-	# checkout the .docs folder for a preview of the docs
 	@rm -rf .docs
 	@packer-sdc renderdocs -src "docs" -partials docs-partials/ -dst ".docs/"
 	@./.web-docs/scripts/compile-to-webdocs.sh "." ".docs" ".web-docs" "hashicorp"
