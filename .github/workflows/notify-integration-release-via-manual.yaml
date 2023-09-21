@@ -1,30 +1,24 @@
-name: Notify Integration Release (Manual)
+name: Notify Integration Release (Tag)
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: "The release version (semver)"
-        default: 0.0.1
-        required: false
-      branch:
-        description: "A branch or SHA"
-        default: 'main'
-        required: false
+  push:
+    tags:
+      - '*.*.*'   # Proper releases
+      - '*.*.*-*' # Pre releases
 jobs:
   notify-release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout this repo
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
-          ref: ${{ github.event.inputs.branch }}
+          ref: ${{ github.ref }}
       # Ensure that Docs are Compiled
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
       - shell: bash
         run: make build-docs
       - shell: bash
         run: |
-          if [[ -z "$(git status -s)" ]]; then
+          if [[ -z "$$(git status -s)" ]]; then
             echo "OK"
           else
             echo "Docs have been updated, but the compiled docs have not been committed."
@@ -33,7 +27,7 @@ jobs:
           fi
       # Perform the Release
       - name: Checkout integration-release-action
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           repository: hashicorp/integration-release-action
           path: ./integration-release-action
@@ -41,6 +35,6 @@ jobs:
         uses: ./integration-release-action
         with:
           integration_identifier: 'packer/hashicorp/proxmox'
-          release_version: ${{ github.event.inputs.version }}
-          release_sha: ${{ github.event.inputs.branch }}
+          release_version: ${{ github.ref_name }}
+          release_sha: ${{ github.ref }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
