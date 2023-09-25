@@ -18,7 +18,7 @@ jobs:
         run: make build-docs
       - shell: bash
         run: |
-          if [[ -z "$$(git status -s)" ]]; then
+          if [[ -z "$(git status -s)" ]]; then
             echo "OK"
           else
             echo "Docs have been updated, but the compiled docs have not been committed."
