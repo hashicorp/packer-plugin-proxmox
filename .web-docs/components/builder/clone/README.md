@@ -179,6 +179,9 @@ boot time.
   and are limited to the range 100-999999999.
   If not given, the next free ID on the cluster will be used.
 
+- `tags` (string) - The tags to set. This is a semicolon separated list. For example,
+  `debian-12;template`.
+
 - `boot` (string) - Override default boot order. Format example `order=virtio0;ide2;net0`.
   Prior to Proxmox 6.2-15 the format was `cdn` (c:CDROM -> d:Disk -> n:Network)
 
