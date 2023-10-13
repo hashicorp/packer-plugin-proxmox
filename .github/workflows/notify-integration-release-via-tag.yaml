@@ -3,9 +3,21 @@ on:
   push:
     tags:
       - '*.*.*'   # Proper releases
-      - '*.*.*-*' # Pre releases
 jobs:
+  strip-version:
+    runs-on: ubuntu-latest
+    outputs:
+      packer-version: ${{ steps.strip.outputs.packer-version }}
+    steps:
+      - name: Strip leading v from version tag
+        id: strip
+        env:
+          REF: ${{ github.ref_name }}
+        run: |
+          echo "packer-version=$(echo "$REF" | sed -E 's/v?([0-9]+\.[0-9]+\.[0-9]+)/\1/')" >> "$GITHUB_OUTPUT"
   notify-release:
+    needs:
+      - strip-version
     runs-on: ubuntu-latest
     steps:
       - name: Checkout this repo
@@ -34,7 +46,7 @@ jobs:
       - name: Notify Release
         uses: ./integration-release-action
         with:
-          integration_identifier: 'packer/hashicorp/proxmox'
-          release_version: ${{ github.ref_name }}
+          integration_identifier: "packer/hashicorp/proxmox"
+          release_version: ${{ needs.strip-version.outputs.packer-version }}
           release_sha: ${{ github.ref }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
