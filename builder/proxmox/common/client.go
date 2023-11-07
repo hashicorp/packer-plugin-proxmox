@@ -6,6 +6,7 @@ package proxmox
 import (
 	"crypto/tls"
 	"log"
+	"strings"
 
 	"github.com/Telmate/proxmox-api-go/proxmox"
 )
@@ -15,7 +16,7 @@ func newProxmoxClient(config Config) (*proxmox.Client, error) {
 		InsecureSkipVerify: config.SkipCertValidation,
 	}
 
-	client, err := proxmox.NewClient(config.proxmoxURL.String(), nil, "", tlsConfig, "", int(config.TaskTimeout.Seconds()))
+	client, err := proxmox.NewClient(strings.TrimSuffix(config.proxmoxURL.String(), "/"), nil, "", tlsConfig, "", int(config.TaskTimeout.Seconds()))
 	if err != nil {
 		return nil, err
 	}
