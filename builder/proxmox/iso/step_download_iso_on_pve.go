@@ -8,7 +8,6 @@ import (
 
 	proxmoxcommon "github.com/hashicorp/packer-plugin-proxmox/builder/proxmox/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
-	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
 // stepDownloadISOOnPVE downloads an ISO file directly to the specified PVE node.
@@ -20,8 +19,6 @@ type stepDownloadISOOnPVE struct {
 }
 
 func (s *stepDownloadISOOnPVE) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	ui := state.Get("ui").(packersdk.Ui)
-
 	builderConfig := state.Get("iso-config").(*Config)
 	if !builderConfig.shouldUploadISO {
 		state.Put("iso_file", builderConfig.ISOFile)
@@ -34,7 +31,6 @@ func (s *stepDownloadISOOnPVE) Run(ctx context.Context, state multistep.StateBag
 	// Abort if no ISO can be downloaded
 	if err != nil {
 		state.Put("error", err)
-		ui.Error("Download of iso file failed. Aborting!")
 		return multistep.ActionHalt
 	}
 	// If available, set the file path to the downloaded iso file on the node
