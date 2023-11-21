@@ -216,10 +216,9 @@ in the image's Cloud-Init settings for provisioning.
 - `iso_storage_pool` (string) - Proxmox storage pool onto which to upload
   the ISO file.
 
-- `iso_download_pve` (bool) - Download the specified `iso_url` directly from
-  the PVE node. Defaults to `false`.
-  By default Packer downloads the ISO and uploads it in a second step, this
-  option lets Proxmox handle downloading the ISO directly from the server.
+- `iso_download_pve` (bool) - Download the ISO directly from the PVE node rather than through Packer.
+  
+  Defaults to `false`
 
 - `unmount_iso` (bool) - If true, remove the mounted ISO from the template
   after finishing. Defaults to `false`.
@@ -416,7 +415,9 @@ In HCL2:
 - `iso_storage_pool` (string) - Proxmox storage pool onto which to upload
   the ISO file.
 
-- `iso_download_pve` (bool) - ISO Download PVE
+- `iso_download_pve` (bool) - Download the ISO directly from the PVE node rather than through Packer.
+  
+  Defaults to `false`
 
 - `unmount` (bool) - If true, remove the mounted ISO from the template after finishing. Defaults to `false`.
 
