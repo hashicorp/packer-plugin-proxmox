@@ -6,9 +6,10 @@ package proxmox
 import (
 	"context"
 	"encoding/hex"
-	"errors"
 	"fmt"
+	"log"
 	"path"
+	"strings"
 
 	"github.com/Telmate/proxmox-api-go/proxmox"
 	"github.com/hashicorp/go-getter/v2"
@@ -23,15 +24,12 @@ type stepDownloadISOOnPVE struct {
 }
 
 func (s *stepDownloadISOOnPVE) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	ui := state.Get("ui").(packersdk.Ui)
-
 	var isoStoragePath string
 	isoStoragePath, err := DownloadISOOnPVE(state, s.ISO.ISOUrls, s.ISO.ISOChecksum, s.ISO.ISOStoragePool)
 
 	// Abort if no ISO can be downloaded
 	if err != nil {
 		state.Put("error", err)
-		ui.Error("Download of iso file failed. Aborting!")
 		return multistep.ActionHalt
 	}
 	// If available, set the file path to the downloaded iso file on the node
@@ -81,20 +79,21 @@ func DownloadISOOnPVE(state multistep.StateBag, ISOUrls []string, ISOChecksum st
 			Checksum:          checksum,
 		}
 
-		ui.Say(fmt.Sprintf("Beginning download of %s to node %s", isoConfig.DownloadUrl, isoConfig.Node))
+		log.Printf("[INFO] - beginning download of %s to node %s", isoConfig.DownloadUrl, isoConfig.Node)
 		err := proxmox.DownloadIsoFromUrl(client, isoConfig)
 		// On error continues with the next URL and logs the error
 		if err != nil {
-			ui.Say(fmt.Sprintf("Download from %s failed!", isoConfig.DownloadUrl))
+			log.Printf("[ERROR] - failed to download iso from %s: %s", isoConfig.DownloadUrl, err)
 			continue
 		}
 		isoStoragePath := fmt.Sprintf("%s:iso/%s", isoConfig.Storage, isoConfig.Filename)
-		ui.Say(fmt.Sprintf("Finished downloading %s", isoStoragePath))
+		log.Printf("[INFO] - finished downloading %s", isoStoragePath)
 		// Returns the path to the iso on the node
 		return isoStoragePath, nil
 	}
+
 	// Returns an empty string, which means download was not successful.
-	return "", errors.New("Couldn't download iso file from mirrors!")
+	return "", fmt.Errorf("failed to download ISO with all the provided URLs, attempted: %s", strings.Join(ISOUrls, ", "))
 }
 
 func (s *stepDownloadISOOnPVE) Cleanup(state multistep.StateBag) {
