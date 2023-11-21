@@ -26,10 +26,9 @@ type Config struct {
 	// Proxmox storage pool onto which to upload
 	// the ISO file.
 	ISOStoragePool string `mapstructure:"iso_storage_pool"`
-	// Download the specified `iso_url` directly from
-	// the PVE node. Defaults to `false`.
-	// By default Packer downloads the ISO and uploads it in a second step, this
-	// option lets Proxmox handle downloading the ISO directly from the server.
+	// Download the ISO directly from the PVE node rather than through Packer.
+	//
+	// Defaults to `false`
 	ISODownloadPVE bool `mapstructure:"iso_download_pve"`
 	// If true, remove the mounted ISO from the template
 	// after finishing. Defaults to `false`.

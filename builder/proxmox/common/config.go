@@ -226,7 +226,10 @@ type additionalISOsConfig struct {
 	// Proxmox storage pool onto which to upload
 	// the ISO file.
 	ISOStoragePool string `mapstructure:"iso_storage_pool"`
-	ISODownloadPVE bool   `mapstructure:"iso_download_pve"`
+	// Download the ISO directly from the PVE node rather than through Packer.
+	//
+	// Defaults to `false`
+	ISODownloadPVE bool `mapstructure:"iso_download_pve"`
 	// If true, remove the mounted ISO from the template after finishing. Defaults to `false`.
 	Unmount              bool   `mapstructure:"unmount"`
 	ShouldUploadISO      bool   `mapstructure-to-hcl2:",skip"`

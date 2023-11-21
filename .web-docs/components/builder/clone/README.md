@@ -658,7 +658,9 @@ In HCL2:
 - `iso_storage_pool` (string) - Proxmox storage pool onto which to upload
   the ISO file.
 
-- `iso_download_pve` (bool) - ISO Download PVE
+- `iso_download_pve` (bool) - Download the ISO directly from the PVE node rather than through Packer.
+  
+  Defaults to `false`
 
 - `unmount` (bool) - If true, remove the mounted ISO from the template after finishing. Defaults to `false`.
 
