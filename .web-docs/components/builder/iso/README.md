@@ -154,7 +154,7 @@ in the image's Cloud-Init settings for provisioning.
 
 - `vga` (vgaConfig) - The graphics adapter to use. See [VGA Config](#vga-config).
 
-- `network_adapters` ([]NICConfig) - The graphics adapter to use. See [Network Adapters](#network-adapters)
+- `network_adapters` ([]NICConfig) - The network adapter to use. See [Network Adapters](#network-adapters)
 
 - `disks` ([]diskConfig) - Disks attached to the virtual machine. See [Disks](#disks)
 

@@ -138,7 +138,7 @@ type Config struct {
 	Rng0 rng0Config `mapstructure:"rng0"`
 	// The graphics adapter to use. See [VGA Config](#vga-config).
 	VGA vgaConfig `mapstructure:"vga"`
-	// The graphics adapter to use. See [Network Adapters](#network-adapters)
+	// The network adapter to use. See [Network Adapters](#network-adapters)
 	NICs []NICConfig `mapstructure:"network_adapters"`
 	// Disks attached to the virtual machine. See [Disks](#disks)
 	Disks []diskConfig `mapstructure:"disks"`
