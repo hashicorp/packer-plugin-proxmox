@@ -88,6 +88,7 @@ type FlatConfig struct {
 	VMName                    *string                    `mapstructure:"vm_name" cty:"vm_name" hcl:"vm_name"`
 	VMID                      *int                       `mapstructure:"vm_id" cty:"vm_id" hcl:"vm_id"`
 	Tags                      *string                    `mapstructure:"tags" cty:"tags" hcl:"tags"`
+	Args                      *string                    `mapstructure:"args" cty:"args" hcl:"args"`
 	Boot                      *string                    `mapstructure:"boot" cty:"boot" hcl:"boot"`
 	Memory                    *int                       `mapstructure:"memory" cty:"memory" hcl:"memory"`
 	BalloonMinimum            *int                       `mapstructure:"ballooning_minimum" cty:"ballooning_minimum" hcl:"ballooning_minimum"`

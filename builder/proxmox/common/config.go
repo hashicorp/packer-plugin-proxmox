@@ -97,6 +97,10 @@ type Config struct {
 	// `debian-12;template`.
 	Tags string `mapstructure:"tags"`
 
+	// Arbitrary arguments passed to KVM. For example
+	// ` -no-reboot -smbios type=0,vendor=FOO`.
+	// 	Note: this option is for experts only.
+	Args string `mapstructure:"args"`
 	// Override default boot order. Format example `order=virtio0;ide2;net0`.
 	// Prior to Proxmox 6.2-15 the format was `cdn` (c:CDROM -> d:Disk -> n:Network)
 	Boot string `mapstructure:"boot"`

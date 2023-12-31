@@ -32,7 +32,7 @@
 - `pool` (string) - Name of resource pool to create virtual machine in.
 
 - `task_timeout` (duration string | ex: "1h5m2s") - `task_timeout` (duration string | ex: "10m") - The timeout for
-   Promox API operations, e.g. clones. Defaults to 1 minute.
+  Promox API operations, e.g. clones. Defaults to 1 minute.
 
 - `vm_name` (string) - Name of the virtual machine during creation. If not
   given, a random uuid will be used.
@@ -96,13 +96,10 @@
   the virtual machine. It may pass through a host serial device `/dev/ttyS0`
   or create unix socket on the host `socket`. Each element can be `socket`
   or responding to pattern `/dev/.+`. Example:
-  
-    ```json
-    [
-      "socket",
-      "/dev/ttyS1"
-    ]
-    ```
+
+  ```json
+  ["socket", "/dev/ttyS1"]
+  ```
 
 - `qemu_agent` (boolean) - Enables QEMU Agent option for this VM. When enabled,
   then `qemu-guest-agent` must be installed on the guest. When disabled, then
