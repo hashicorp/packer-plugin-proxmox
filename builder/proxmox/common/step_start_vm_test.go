@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/Telmate/proxmox-api-go/proxmox"
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/packer-plugin-sdk/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
@@ -495,6 +496,102 @@ func TestStartVM_AssertInitialQuemuConfig(t *testing.T) {
 				t.Error("Expect a call of startVm")
 			}
 			tc.assertQemuConfig(t, qemuConfig)
+		})
+	}
+}
+
+func TestGenerateProxmoxDisks(t *testing.T) {
+	tests := []struct {
+		name         string
+		disks        []diskConfig
+		expectOutput proxmox.QemuDevices
+	}{
+		{
+			"plain config, no special option set",
+			[]diskConfig{
+				{
+					Type:        "scsi",
+					StoragePool: "local-lvm",
+					Size:        "10G",
+					CacheMode:   "none",
+					DiskFormat:  "qcow2",
+					IOThread:    false,
+					Discard:     false,
+					SSD:         false,
+				},
+			},
+			proxmox.QemuDevices{
+				0: proxmox.QemuDevice{
+					"type":    "scsi",
+					"discard": "ignore",
+					"size":    "10G",
+					"storage": "local-lvm",
+					"cache":   "none",
+					"format":  "qcow2",
+				},
+			},
+		},
+		{
+			"scsi + iothread, iothread should be true",
+			[]diskConfig{
+				{
+					Type:        "scsi",
+					StoragePool: "local-lvm",
+					Size:        "10G",
+					CacheMode:   "none",
+					DiskFormat:  "qcow2",
+					IOThread:    true,
+					Discard:     false,
+					SSD:         false,
+				},
+			},
+			proxmox.QemuDevices{
+				0: proxmox.QemuDevice{
+					"type":     "scsi",
+					"discard":  "ignore",
+					"size":     "10G",
+					"storage":  "local-lvm",
+					"cache":    "none",
+					"format":   "qcow2",
+					"iothread": "true",
+				},
+			},
+		},
+		{
+			"virtio + iothread, iothread should be true",
+			[]diskConfig{
+				{
+					Type:        "virtio",
+					StoragePool: "local-lvm",
+					Size:        "10G",
+					CacheMode:   "none",
+					DiskFormat:  "qcow2",
+					IOThread:    true,
+					Discard:     false,
+					SSD:         false,
+				},
+			},
+			proxmox.QemuDevices{
+				0: proxmox.QemuDevice{
+					"type":     "virtio",
+					"discard":  "ignore",
+					"size":     "10G",
+					"storage":  "local-lvm",
+					"cache":    "none",
+					"format":   "qcow2",
+					"iothread": "true",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			devs := generateProxmoxDisks(tt.disks)
+			diff := cmp.Diff(devs, tt.expectOutput)
+			if diff != "" {
+				t.Errorf("mismatch in produced qemu disks specs: %s", diff)
+			}
 		})
 	}
 }
