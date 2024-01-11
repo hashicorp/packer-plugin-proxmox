@@ -98,7 +98,7 @@ type Config struct {
 	Tags string `mapstructure:"tags"`
 
 	// Arbitrary arguments passed to KVM. For example
-	// ` -no-reboot -smbios type=0,vendor=FOO`.
+	// `-no-reboot -smbios type=0,vendor=FOO`.
 	// 	Note: this option is for experts only.
 	Args string `mapstructure:"args"`
 	// Override default boot order. Format example `order=virtio0;ide2;net0`.

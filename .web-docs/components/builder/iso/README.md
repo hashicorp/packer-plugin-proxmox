@@ -113,7 +113,7 @@ in the image's Cloud-Init settings for provisioning.
 - `tags` (string) - The tags to set. This is a semicolon separated list. For example,
   `debian-12;template`.
 
-- `args` (string) - Arbitrary arguments passed to KVM. For example ` -no-reboot -smbios type=0,vendor=FOO`.
+- `args` (string) - Arbitrary arguments passed to KVM. For example `-no-reboot -smbios type=0,vendor=FOO`.
   Note: this option is for experts only.
 
 - `boot` (string) - Override default boot order. Format example `order=virtio0;ide2;net0`.
