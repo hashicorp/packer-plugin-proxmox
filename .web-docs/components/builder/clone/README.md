@@ -274,7 +274,7 @@ boot time.
 
 - `qemu_additional_args` (string) - Arbitrary arguments passed to KVM.
   For example `-no-reboot -smbios type=0,vendor=FOO`.
-  Note: this option is for experts only.
+  	Note: this option is for experts only.
 
 <!-- End of code generated from the comments of the Config struct in builder/proxmox/common/config.go; -->
 
