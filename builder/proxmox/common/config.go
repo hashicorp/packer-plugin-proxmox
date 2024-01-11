@@ -97,10 +97,6 @@ type Config struct {
 	// `debian-12;template`.
 	Tags string `mapstructure:"tags"`
 
-	// Arbitrary arguments passed to KVM. For example
-	// `-no-reboot -smbios type=0,vendor=FOO`.
-	// 	Note: this option is for experts only.
-	Args string `mapstructure:"args"`
 	// Override default boot order. Format example `order=virtio0;ide2;net0`.
 	// Prior to Proxmox 6.2-15 the format was `cdn` (c:CDROM -> d:Disk -> n:Network)
 	Boot string `mapstructure:"boot"`
@@ -194,6 +190,11 @@ type Config struct {
 	// Name of the network interface that Packer gets
 	// the VMs IP from. Defaults to the first non loopback interface.
 	VMInterface string `mapstructure:"vm_interface"`
+
+	// Arbitrary arguments passed to KVM.
+	// For example `-no-reboot -smbios type=0,vendor=FOO`.
+	// 	Note: this option is for experts only.
+	AdditionalArgs string `mapstructure:"qemu_additional_args"`
 
 	Ctx interpolate.Context `mapstructure-to-hcl2:",skip"`
 }

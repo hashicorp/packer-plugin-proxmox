@@ -88,7 +88,6 @@ type FlatConfig struct {
 	VMName                    *string                    `mapstructure:"vm_name" cty:"vm_name" hcl:"vm_name"`
 	VMID                      *int                       `mapstructure:"vm_id" cty:"vm_id" hcl:"vm_id"`
 	Tags                      *string                    `mapstructure:"tags" cty:"tags" hcl:"tags"`
-	Args                      *string                    `mapstructure:"args" cty:"args" hcl:"args"`
 	Boot                      *string                    `mapstructure:"boot" cty:"boot" hcl:"boot"`
 	Memory                    *int                       `mapstructure:"memory" cty:"memory" hcl:"memory"`
 	BalloonMinimum            *int                       `mapstructure:"ballooning_minimum" cty:"ballooning_minimum" hcl:"ballooning_minimum"`
@@ -117,6 +116,7 @@ type FlatConfig struct {
 	CloudInitStoragePool      *string                    `mapstructure:"cloud_init_storage_pool" cty:"cloud_init_storage_pool" hcl:"cloud_init_storage_pool"`
 	AdditionalISOFiles        []FlatadditionalISOsConfig `mapstructure:"additional_iso_files" cty:"additional_iso_files" hcl:"additional_iso_files"`
 	VMInterface               *string                    `mapstructure:"vm_interface" cty:"vm_interface" hcl:"vm_interface"`
+	AdditionalArgs            *string                    `mapstructure:"qemu_additional_args" cty:"qemu_additional_args" hcl:"qemu_additional_args"`
 }
 
 // FlatMapstructure returns a new FlatConfig.

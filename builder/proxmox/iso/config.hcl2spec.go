@@ -89,7 +89,6 @@ type FlatConfig struct {
 	VMName                    *string                            `mapstructure:"vm_name" cty:"vm_name" hcl:"vm_name"`
 	VMID                      *int                               `mapstructure:"vm_id" cty:"vm_id" hcl:"vm_id"`
 	Tags                      *string                            `mapstructure:"tags" cty:"tags" hcl:"tags"`
-	Args                      *string                            `mapstructure:"args" cty:"args" hcl:"args"`
 	Boot                      *string                            `mapstructure:"boot" cty:"boot" hcl:"boot"`
 	Memory                    *int                               `mapstructure:"memory" cty:"memory" hcl:"memory"`
 	BalloonMinimum            *int                               `mapstructure:"ballooning_minimum" cty:"ballooning_minimum" hcl:"ballooning_minimum"`
@@ -127,6 +126,7 @@ type FlatConfig struct {
 	ISOStoragePool            *string                            `mapstructure:"iso_storage_pool" cty:"iso_storage_pool" hcl:"iso_storage_pool"`
 	ISODownloadPVE            *bool                              `mapstructure:"iso_download_pve" cty:"iso_download_pve" hcl:"iso_download_pve"`
 	UnmountISO                *bool                              `mapstructure:"unmount_iso" cty:"unmount_iso" hcl:"unmount_iso"`
+	AdditionalArgs            *string                            `mapstructure:"qemu_additional_args" cty:"qemu_additional_args" hcl:"qemu_additional_args"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -219,7 +219,6 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"vm_name":                      &hcldec.AttrSpec{Name: "vm_name", Type: cty.String, Required: false},
 		"vm_id":                        &hcldec.AttrSpec{Name: "vm_id", Type: cty.Number, Required: false},
 		"tags":                         &hcldec.AttrSpec{Name: "tags", Type: cty.String, Required: false},
-		"args":                         &hcldec.AttrSpec{Name: "args", Type: cty.String, Required: false},
 		"boot":                         &hcldec.AttrSpec{Name: "boot", Type: cty.String, Required: false},
 		"memory":                       &hcldec.AttrSpec{Name: "memory", Type: cty.Number, Required: false},
 		"ballooning_minimum":           &hcldec.AttrSpec{Name: "ballooning_minimum", Type: cty.Number, Required: false},
@@ -257,6 +256,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"iso_storage_pool":             &hcldec.AttrSpec{Name: "iso_storage_pool", Type: cty.String, Required: false},
 		"iso_download_pve":             &hcldec.AttrSpec{Name: "iso_download_pve", Type: cty.Bool, Required: false},
 		"unmount_iso":                  &hcldec.AttrSpec{Name: "unmount_iso", Type: cty.Bool, Required: false},
+		"qemu_additional_args":         &hcldec.AttrSpec{Name: "qemu_additional_args", Type: cty.String, Required: false},
 	}
 	return s
 }
