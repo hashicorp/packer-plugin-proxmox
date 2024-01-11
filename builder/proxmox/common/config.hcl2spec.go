@@ -237,6 +237,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"cloud_init_storage_pool":      &hcldec.AttrSpec{Name: "cloud_init_storage_pool", Type: cty.String, Required: false},
 		"additional_iso_files":         &hcldec.BlockListSpec{TypeName: "additional_iso_files", Nested: hcldec.ObjectSpec((*FlatadditionalISOsConfig)(nil).HCL2Spec())},
 		"vm_interface":                 &hcldec.AttrSpec{Name: "vm_interface", Type: cty.String, Required: false},
+		"qemu_additional_args":         &hcldec.AttrSpec{Name: "qemu_additional_args", Type: cty.String, Required: false},
 	}
 	return s
 }

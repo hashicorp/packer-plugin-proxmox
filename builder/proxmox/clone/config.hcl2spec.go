@@ -117,13 +117,13 @@ type FlatConfig struct {
 	CloudInitStoragePool      *string                            `mapstructure:"cloud_init_storage_pool" cty:"cloud_init_storage_pool" hcl:"cloud_init_storage_pool"`
 	AdditionalISOFiles        []proxmox.FlatadditionalISOsConfig `mapstructure:"additional_iso_files" cty:"additional_iso_files" hcl:"additional_iso_files"`
 	VMInterface               *string                            `mapstructure:"vm_interface" cty:"vm_interface" hcl:"vm_interface"`
+	AdditionalArgs            *string                            `mapstructure:"qemu_additional_args" cty:"qemu_additional_args" hcl:"qemu_additional_args"`
 	CloneVM                   *string                            `mapstructure:"clone_vm" required:"true" cty:"clone_vm" hcl:"clone_vm"`
 	CloneVMID                 *int                               `mapstructure:"clone_vm_id" required:"true" cty:"clone_vm_id" hcl:"clone_vm_id"`
 	FullClone                 *bool                              `mapstructure:"full_clone" required:"false" cty:"full_clone" hcl:"full_clone"`
 	Nameserver                *string                            `mapstructure:"nameserver" required:"false" cty:"nameserver" hcl:"nameserver"`
 	Searchdomain              *string                            `mapstructure:"searchdomain" required:"false" cty:"searchdomain" hcl:"searchdomain"`
 	Ipconfigs                 []FlatcloudInitIpconfig            `mapstructure:"ipconfig" required:"false" cty:"ipconfig" hcl:"ipconfig"`
-	AdditionalArgs            *string                            `mapstructure:"qemu_additional_args" cty:"qemu_additional_args" hcl:"qemu_additional_args"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -244,13 +244,13 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"cloud_init_storage_pool":      &hcldec.AttrSpec{Name: "cloud_init_storage_pool", Type: cty.String, Required: false},
 		"additional_iso_files":         &hcldec.BlockListSpec{TypeName: "additional_iso_files", Nested: hcldec.ObjectSpec((*proxmox.FlatadditionalISOsConfig)(nil).HCL2Spec())},
 		"vm_interface":                 &hcldec.AttrSpec{Name: "vm_interface", Type: cty.String, Required: false},
+		"qemu_additional_args":         &hcldec.AttrSpec{Name: "qemu_additional_args", Type: cty.String, Required: false},
 		"clone_vm":                     &hcldec.AttrSpec{Name: "clone_vm", Type: cty.String, Required: false},
 		"clone_vm_id":                  &hcldec.AttrSpec{Name: "clone_vm_id", Type: cty.Number, Required: false},
 		"full_clone":                   &hcldec.AttrSpec{Name: "full_clone", Type: cty.Bool, Required: false},
 		"nameserver":                   &hcldec.AttrSpec{Name: "nameserver", Type: cty.String, Required: false},
 		"searchdomain":                 &hcldec.AttrSpec{Name: "searchdomain", Type: cty.String, Required: false},
 		"ipconfig":                     &hcldec.BlockListSpec{TypeName: "ipconfig", Nested: hcldec.ObjectSpec((*FlatcloudInitIpconfig)(nil).HCL2Spec())},
-		"qemu_additional_args":         &hcldec.AttrSpec{Name: "qemu_additional_args", Type: cty.String, Required: false},
 	}
 	return s
 }
