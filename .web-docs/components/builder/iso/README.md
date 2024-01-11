@@ -113,9 +113,6 @@ in the image's Cloud-Init settings for provisioning.
 - `tags` (string) - The tags to set. This is a semicolon separated list. For example,
   `debian-12;template`.
 
-- `args` (string) - Arbitrary arguments passed to KVM. For example `-no-reboot -smbios type=0,vendor=FOO`.
-  Note: this option is for experts only.
-
 - `boot` (string) - Override default boot order. Format example `order=virtio0;ide2;net0`.
   Prior to Proxmox 6.2-15 the format was `cdn` (c:CDROM -> d:Disk -> n:Network)
 
@@ -205,6 +202,10 @@ in the image's Cloud-Init settings for provisioning.
 
 - `vm_interface` (string) - Name of the network interface that Packer gets
   the VMs IP from. Defaults to the first non loopback interface.
+
+- `qemu_additional_args` (string) - Arbitrary arguments passed to KVM. 
+  For example `-no-reboot -smbios type=0,vendor=FOO`.
+  Note: this option is for experts only.
 
 <!-- End of code generated from the comments of the Config struct in builder/proxmox/common/config.go; -->
 
