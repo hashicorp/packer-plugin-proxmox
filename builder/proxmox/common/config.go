@@ -713,9 +713,6 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 			}
 			c.AdditionalISOFiles[idx].ShouldUploadISO = true
 		}
-		if len(c.AdditionalISOFiles[idx].ISOUrls) != 0 && c.AdditionalISOFiles[idx].ISOStoragePool == "" {
-			errs = packersdk.MultiErrorAppend(errs, errors.New("when specifying iso_url in an additional_iso_files block, iso_storage_pool must also be specified"))
-		}
 		if c.AdditionalISOFiles[idx].Device == "" {
 			log.Printf("AdditionalISOFile %d Device not set, using default 'ide3'", idx)
 			c.AdditionalISOFiles[idx].Device = "ide3"
@@ -754,6 +751,9 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 			if c.AdditionalISOFiles[idx].ISOStoragePool == "" {
 				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("iso_storage_pool not set for storage of generated ISO from cd_files or cd_content"))
 			}
+		}
+		if len(c.AdditionalISOFiles[idx].ISOUrls) != 0 && c.AdditionalISOFiles[idx].ISOStoragePool == "" {
+			errs = packersdk.MultiErrorAppend(errs, errors.New("when specifying iso_url in an additional_iso_files block, iso_storage_pool must also be specified"))
 		}
 		// Check only one option is present
 		options := 0
