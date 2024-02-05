@@ -30,11 +30,14 @@ jobs:
         run: make generate
       - shell: bash
         run: |
-          if [[ -z "$(git status -s)" ]]; then
+          uncommitted="$(git status -s)"
+          if [[ -z "$uncommitted" ]]; then
             echo "OK"
           else
             echo "Docs have been updated, but the compiled docs have not been committed."
             echo "Run 'make generate', and commit the result to resolve this error."
+            echo "Generated but uncommitted files:"
+            echo "$uncommitted"
             exit 1
           fi
       # Perform the Release
