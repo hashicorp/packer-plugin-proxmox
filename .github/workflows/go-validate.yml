@@ -84,6 +84,13 @@ jobs:
       - run: |
           export PATH=$PATH:$(go env GOPATH)/bin
           make generate
-          git diff --exit-code || ( echo "Found diffs in generated code" \
-              && echo "You can use the command: \`make generate\` to reformat code." \
-              && false )
+          uncommitted="$(git status -s)"
+          if [[ -z "$uncommitted" ]]; then
+            echo "OK"
+          else
+            echo "Docs have been updated, but the compiled docs have not been committed."
+            echo "Run 'make generate', and commit the result to resolve this error."
+            echo "Generated but uncommitted files:"
+            echo "$uncommitted"
+            exit 1
+          fi
