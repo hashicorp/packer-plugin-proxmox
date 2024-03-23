@@ -268,6 +268,9 @@ boot time.
 - `cloud_init_storage_pool` (string) - Name of the Proxmox storage pool
   to store the Cloud-Init CDROM on. If not given, the storage pool of the boot device will be used.
 
+- `cloud_init_disk_type` (string) - The type of Cloud-Init disk.
+  Can be `scsi`, `sata`, or `ide`. If not given, defaults to `ide`.
+
 - `additional_iso_files` ([]additionalISOsConfig) - Additional ISO files attached to the virtual machine.
   See [Additional ISO Files](#additional-iso-files).
 
