@@ -80,7 +80,7 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 			}
 			cloudInitAttached := false
 			// find a free disk controller
-			for _, controller := range ideControllers {
+			for _, controller := range diskControllers {
 				if vmParams[controller] == nil {
 					ui.Say("Adding a cloud-init cdrom in storage pool " + cloudInitStoragePool)
 					changes[controller] = cloudInitStoragePool + ":cloudinit"
