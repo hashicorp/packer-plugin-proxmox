@@ -4,9 +4,12 @@
 package proxmox
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"os/exec"
 	"strconv"
 	"strings"
 
@@ -242,6 +245,69 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 	// Note that this is just the VMID, we do not keep the node, pool and other
 	// info available in the vmref type.
 	state.Put("instance_id", vmRef.VmId())
+
+	// Execute the before_start_hook.
+	if len(c.BeforeStartHook) > 0 {
+		ui.Say("Executing the before_start_hook")
+
+		cfg, err := client.GetVmConfig(vmRef)
+		if err != nil {
+			err := fmt.Errorf("failed to get the VM configuration: %w", err)
+			state.Put("error", err)
+			ui.Error(err.Error())
+			return multistep.ActionHalt
+		}
+
+		cfgDoc, err := json.Marshal(cfg)
+		if err != nil {
+			err := fmt.Errorf("failed to marshal the VM configuration: %w", err)
+			state.Put("error", err)
+			ui.Error(err.Error())
+			return multistep.ActionHalt
+		}
+
+		log.Printf("executing the before_start_hook in VM with ID %d and config %s", vmRef.VmId(), cfgDoc)
+
+		var stdout, stderr bytes.Buffer
+		var cmdArgs []string
+		if len(c.BeforeStartHook) > 1 {
+			cmdArgs = c.BeforeStartHook[1:]
+		}
+		cmd := exec.Command(c.BeforeStartHook[0], cmdArgs...)
+		cmd.Stdin = bytes.NewReader(cfgDoc)
+		cmd.Stdout = &stdout
+		cmd.Stderr = &stderr
+		err = cmd.Run()
+		if err != nil {
+			log.Printf("failed to execute the before_start_hook in VM with ID %d. stderr=%s stdout=%s", vmRef.VmId(), stderr.Bytes(), stdout.Bytes())
+			err := fmt.Errorf("failed to execute the before_start_hook: %w", err)
+			state.Put("error", err)
+			ui.Error(err.Error())
+			return multistep.ActionHalt
+		}
+		newCfgDoc := stdout.Bytes()
+
+		log.Printf("executed the before_start_hook in VM with ID %d and returned the config %s", vmRef.VmId(), newCfgDoc)
+
+		if bytes.HasPrefix(newCfgDoc, []byte{'{'}) {
+			var vmConfig map[string]interface{}
+			err = json.Unmarshal(newCfgDoc, &vmConfig)
+			if err != nil {
+				err := fmt.Errorf("failed to unmarshal the before_start_hook output: %w", err)
+				state.Put("error", err)
+				ui.Error(err.Error())
+				return multistep.ActionHalt
+			}
+
+			_, err = client.SetVmConfig(vmRef, vmConfig)
+			if err != nil {
+				err := fmt.Errorf("failed to set the VM configuration: %w", err)
+				state.Put("error", err)
+				ui.Error(err.Error())
+				return multistep.ActionHalt
+			}
+		}
+	}
 
 	ui.Say("Starting VM")
 	_, err := client.StartVm(vmRef)

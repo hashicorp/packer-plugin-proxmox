@@ -207,6 +207,8 @@ in the image's Cloud-Init settings for provisioning.
   For example `-no-reboot -smbios type=0,vendor=FOO`.
   	Note: this option is for experts only.
 
+- `before_start_hook` ([]string) - Before Start Hook
+
 <!-- End of code generated from the comments of the Config struct in builder/proxmox/common/config.go; -->
 
 
