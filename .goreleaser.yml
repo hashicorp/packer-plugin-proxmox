@@ -12,6 +12,8 @@ before:
     - go test ./...
     # Check plugin compatibility with required version of the Packer SDK
     - make plugin-check
+    # Copy LICENSE file for inclusion in zip archive
+    - cp LICENSE LICENSE.txt
 builds:
   # A separated build to run the packer-plugins-check only once for a linux_amd64 binary
   -
@@ -85,7 +87,8 @@ builds:
 archives:
 - format: zip
   files:
-    - none*
+    - "LICENSE.txt"
+
   name_template: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
 checksum:
   name_template: '{{ .ProjectName }}_v{{ .Version }}_SHA256SUMS'
