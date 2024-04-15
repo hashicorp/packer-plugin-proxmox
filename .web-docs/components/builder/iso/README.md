@@ -152,6 +152,8 @@ in the image's Cloud-Init settings for provisioning.
 
 - `rng0` (rng0Config) - Configure Random Number Generator via VirtIO. See [VirtIO RNG device](#virtio-rng-device)
 
+- `tpm_config` (tpmConfig) - Set the tpmstate storage options. See [TPM Config](#tpm-config).
+
 - `vga` (vgaConfig) - The graphics adapter to use. See [VGA Config](#vga-config).
 
 - `network_adapters` ([]NICConfig) - The network adapter to use. See [Network Adapters](#network-adapters)
