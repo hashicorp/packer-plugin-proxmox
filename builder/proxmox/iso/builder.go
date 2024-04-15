@@ -71,7 +71,6 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 type isoVMCreator struct{}
 
 func (*isoVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQemu, state multistep.StateBag) error {
-	// TODO: handle before this point, avoid constructing isoFile as string then splitting into &proxmoxapi.IsoFile below.
 	isoFile := strings.Split(state.Get("iso_file").(string), ":iso/")
 	config.Iso = &proxmoxapi.IsoFile{
 		File:    isoFile[1],
