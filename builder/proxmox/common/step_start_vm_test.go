@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/Telmate/proxmox-api-go/proxmox"
-	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/packer-plugin-sdk/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
@@ -504,7 +503,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 	tests := []struct {
 		name         string
 		disks        []diskConfig
-		expectOutput proxmox.QemuDevices
+		expectOutput *proxmox.QemuStorages
 	}{
 		{
 			"plain config, no special option set",
@@ -520,15 +519,23 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 					SSD:         false,
 				},
 			},
-			proxmox.QemuDevices{
-				0: proxmox.QemuDevice{
-					"type":    "scsi",
-					"discard": "ignore",
-					"size":    "10G",
-					"storage": "local-lvm",
-					"cache":   "none",
-					"format":  "qcow2",
+			&proxmox.QemuStorages{
+				Ide:  &proxmox.QemuIdeDisks{},
+				Sata: &proxmox.QemuSataDisks{},
+				Scsi: &proxmox.QemuScsiDisks{
+					Disk_0: &proxmox.QemuScsiStorage{
+						Disk: &proxmox.QemuScsiDisk{
+							SizeInKibibytes: 10485760,
+							Storage:         "local-lvm",
+							Cache:           proxmox.QemuDiskCache("none"),
+							Format:          proxmox.QemuDiskFormat("qcow2"),
+							Discard:         false,
+							EmulateSSD:      false,
+							IOThread:        false,
+						},
+					},
 				},
+				VirtIO: &proxmox.QemuVirtIODisks{},
 			},
 		},
 		{
@@ -545,16 +552,23 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 					SSD:         false,
 				},
 			},
-			proxmox.QemuDevices{
-				0: proxmox.QemuDevice{
-					"type":     "scsi",
-					"discard":  "ignore",
-					"size":     "10G",
-					"storage":  "local-lvm",
-					"cache":    "none",
-					"format":   "qcow2",
-					"iothread": "true",
+			&proxmox.QemuStorages{
+				Ide:  &proxmox.QemuIdeDisks{},
+				Sata: &proxmox.QemuSataDisks{},
+				Scsi: &proxmox.QemuScsiDisks{
+					Disk_0: &proxmox.QemuScsiStorage{
+						Disk: &proxmox.QemuScsiDisk{
+							SizeInKibibytes: 10485760,
+							Storage:         "local-lvm",
+							Cache:           proxmox.QemuDiskCache("none"),
+							Format:          proxmox.QemuDiskFormat("qcow2"),
+							Discard:         false,
+							EmulateSSD:      false,
+							IOThread:        true,
+						},
+					},
 				},
+				VirtIO: &proxmox.QemuVirtIODisks{},
 			},
 		},
 		{
@@ -571,15 +585,21 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 					SSD:         false,
 				},
 			},
-			proxmox.QemuDevices{
-				0: proxmox.QemuDevice{
-					"type":     "virtio",
-					"discard":  "ignore",
-					"size":     "10G",
-					"storage":  "local-lvm",
-					"cache":    "none",
-					"format":   "qcow2",
-					"iothread": "true",
+			&proxmox.QemuStorages{
+				Ide:  &proxmox.QemuIdeDisks{},
+				Sata: &proxmox.QemuSataDisks{},
+				Scsi: &proxmox.QemuScsiDisks{},
+				VirtIO: &proxmox.QemuVirtIODisks{
+					Disk_0: &proxmox.QemuVirtIOStorage{
+						Disk: &proxmox.QemuVirtIODisk{
+							SizeInKibibytes: 10485760,
+							Storage:         "local-lvm",
+							Cache:           proxmox.QemuDiskCache("none"),
+							Format:          proxmox.QemuDiskFormat("qcow2"),
+							Discard:         false,
+							IOThread:        true,
+						},
+					},
 				},
 			},
 		},
@@ -588,10 +608,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			devs := generateProxmoxDisks(tt.disks)
-			diff := cmp.Diff(devs, tt.expectOutput)
-			if diff != "" {
-				t.Errorf("mismatch in produced qemu disks specs: %s", diff)
-			}
+			assert.Equal(t, devs, tt.expectOutput)
 		})
 	}
 }

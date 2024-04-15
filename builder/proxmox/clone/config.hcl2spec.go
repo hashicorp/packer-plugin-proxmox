@@ -102,6 +102,7 @@ type FlatConfig struct {
 	EFIDisk                   *string                            `mapstructure:"efidisk" cty:"efidisk" hcl:"efidisk"`
 	Machine                   *string                            `mapstructure:"machine" cty:"machine" hcl:"machine"`
 	Rng0                      *proxmox.Flatrng0Config            `mapstructure:"rng0" cty:"rng0" hcl:"rng0"`
+	TPMConfig                 *proxmox.FlattpmConfig             `mapstructure:"tpm_config" cty:"tpm_config" hcl:"tpm_config"`
 	VGA                       *proxmox.FlatvgaConfig             `mapstructure:"vga" cty:"vga" hcl:"vga"`
 	NICs                      []proxmox.FlatNICConfig            `mapstructure:"network_adapters" cty:"network_adapters" hcl:"network_adapters"`
 	Disks                     []proxmox.FlatdiskConfig           `mapstructure:"disks" cty:"disks" hcl:"disks"`
@@ -229,6 +230,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"efidisk":                      &hcldec.AttrSpec{Name: "efidisk", Type: cty.String, Required: false},
 		"machine":                      &hcldec.AttrSpec{Name: "machine", Type: cty.String, Required: false},
 		"rng0":                         &hcldec.BlockSpec{TypeName: "rng0", Nested: hcldec.ObjectSpec((*proxmox.Flatrng0Config)(nil).HCL2Spec())},
+		"tpm_config":                   &hcldec.BlockSpec{TypeName: "tpm_config", Nested: hcldec.ObjectSpec((*proxmox.FlattpmConfig)(nil).HCL2Spec())},
 		"vga":                          &hcldec.BlockSpec{TypeName: "vga", Nested: hcldec.ObjectSpec((*proxmox.FlatvgaConfig)(nil).HCL2Spec())},
 		"network_adapters":             &hcldec.BlockListSpec{TypeName: "network_adapters", Nested: hcldec.ObjectSpec((*proxmox.FlatNICConfig)(nil).HCL2Spec())},
 		"disks":                        &hcldec.BlockListSpec{TypeName: "disks", Nested: hcldec.ObjectSpec((*proxmox.FlatdiskConfig)(nil).HCL2Spec())},
