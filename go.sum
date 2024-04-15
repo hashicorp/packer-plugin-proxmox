@@ -21,6 +21,10 @@ github.com/ChrisTrenkamp/goxpath v0.0.0-20210404020558-97928f7e12b6/go.mod h1:nu
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/Telmate/proxmox-api-go v0.0.0-20230524203107-41e6ffadedb1 h1:A1psGmAosA1Upwq03FN14SLRbJymKE0+QTTVSsFsEuo=
 github.com/Telmate/proxmox-api-go v0.0.0-20230524203107-41e6ffadedb1/go.mod h1:HKwnwBcgJxT+UjTUyRP7+aDxXSgu0kLWvlrRhd4i1YU=
+github.com/Telmate/proxmox-api-go v0.0.0-20240409105641-32c480fe008e h1:NdpVflh7VclkvfKkIzMngbEfDdwFcesJpyMkWldZoIs=
+github.com/Telmate/proxmox-api-go v0.0.0-20240409105641-32c480fe008e/go.mod h1:bscBzOUx0tJAdVGmQvcnoWPg5eI2eJ6anJKV1ueZ1oU=
+github.com/Telmate/proxmox-api-go v0.0.0-20240409105808-2f0ce9e71d65 h1:nfgs+oHm0f/cTjkE5wF9aRrlxBKRPFeNpokKnBPr49M=
+github.com/Telmate/proxmox-api-go v0.0.0-20240409105808-2f0ce9e71d65/go.mod h1:bscBzOUx0tJAdVGmQvcnoWPg5eI2eJ6anJKV1ueZ1oU=
 github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7lmo=
 github.com/agext/levenshtein v1.2.3/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
