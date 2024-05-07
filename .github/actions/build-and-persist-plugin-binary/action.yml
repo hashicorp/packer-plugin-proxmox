@@ -10,7 +10,7 @@ inputs:
 runs:
   using: composite
   steps:
-  - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+  - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
   - run: "GOOS=${{ inputs.GOOS }} GOARCH=${{ inputs.GOARCH }} go build -o ./pkg/packer_plugin_proxmox_${{ inputs.GOOS }}_${{ inputs.GOARCH }} ."
     shell: bash
   - run: zip ./pkg/packer_plugin_proxmox_${{ inputs.GOOS }}_${{ inputs.GOARCH }}.zip ./pkg/packer_plugin_proxmox_${{ inputs.GOOS }}_${{ inputs.GOARCH }}
