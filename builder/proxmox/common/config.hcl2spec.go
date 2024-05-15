@@ -117,6 +117,7 @@ type FlatConfig struct {
 	AdditionalISOFiles        []FlatadditionalISOsConfig `mapstructure:"additional_iso_files" cty:"additional_iso_files" hcl:"additional_iso_files"`
 	VMInterface               *string                    `mapstructure:"vm_interface" cty:"vm_interface" hcl:"vm_interface"`
 	AdditionalArgs            *string                    `mapstructure:"qemu_additional_args" cty:"qemu_additional_args" hcl:"qemu_additional_args"`
+	BeforeStartHook           []string                   `mapstructure:"before_start_hook" cty:"before_start_hook" hcl:"before_start_hook"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -238,6 +239,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"additional_iso_files":         &hcldec.BlockListSpec{TypeName: "additional_iso_files", Nested: hcldec.ObjectSpec((*FlatadditionalISOsConfig)(nil).HCL2Spec())},
 		"vm_interface":                 &hcldec.AttrSpec{Name: "vm_interface", Type: cty.String, Required: false},
 		"qemu_additional_args":         &hcldec.AttrSpec{Name: "qemu_additional_args", Type: cty.String, Required: false},
+		"before_start_hook":            &hcldec.AttrSpec{Name: "before_start_hook", Type: cty.List(cty.String), Required: false},
 	}
 	return s
 }
