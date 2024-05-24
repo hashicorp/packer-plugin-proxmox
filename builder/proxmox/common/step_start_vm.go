@@ -439,8 +439,8 @@ func generateProxmoxEfi(efi efiConfig) proxmox.QemuDevice {
 }
 
 func generateProxmoxTpm(tpm tpmConfig) *proxmox.TpmState {
-	// TpmState struct expects a value for Storage
-	if tpm.TPMStoragePool == "" {
+	// If no TPM config is presented, don't return a TpmState device
+	if tpm == (tpmConfig{}) {
 		return nil
 	}
 
