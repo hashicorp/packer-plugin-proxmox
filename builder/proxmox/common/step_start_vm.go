@@ -317,6 +317,7 @@ func generateProxmoxDisks(disks []diskConfig) *proxmox.QemuStorages {
 					EmulateSSD:      disks[idx].SSD,
 				},
 			}
+			// set value of &ideDisks.Disk_<ideCount value> to contents of &dev
 			reflect.ValueOf(&ideDisks).Elem().FieldByIndex([]int{ideCount}).Set(reflect.ValueOf(&dev))
 			ideCount++
 		case "scsi":
@@ -331,6 +332,7 @@ func generateProxmoxDisks(disks []diskConfig) *proxmox.QemuStorages {
 					IOThread:        disks[idx].IOThread,
 				},
 			}
+			// set value of &scsiDisks.Disk_<ideCount value> to contents of &dev
 			reflect.ValueOf(&scsiDisks).Elem().FieldByIndex([]int{scsiCount}).Set(reflect.ValueOf(&dev))
 			scsiCount++
 		case "sata":
@@ -344,6 +346,7 @@ func generateProxmoxDisks(disks []diskConfig) *proxmox.QemuStorages {
 					EmulateSSD:      disks[idx].SSD,
 				},
 			}
+			// set value of &sataDisks.Disk_<ideCount value> to contents of &dev
 			reflect.ValueOf(&sataDisks).Elem().FieldByIndex([]int{sataCount}).Set(reflect.ValueOf(&dev))
 			sataCount++
 		case "virtio":
@@ -357,6 +360,7 @@ func generateProxmoxDisks(disks []diskConfig) *proxmox.QemuStorages {
 					IOThread:        disks[idx].IOThread,
 				},
 			}
+			// set value of &virtIODisks.Disk_<ideCount value> to contents of &dev
 			reflect.ValueOf(&virtIODisks).Elem().FieldByIndex([]int{virtIOCount}).Set(reflect.ValueOf(&dev))
 			virtIOCount++
 		}
