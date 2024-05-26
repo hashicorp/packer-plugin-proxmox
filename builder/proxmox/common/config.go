@@ -184,7 +184,7 @@ type Config struct {
 	// to store the Cloud-Init CDROM on. If not given, the storage pool of the boot device will be used.
 	CloudInitStoragePool string `mapstructure:"cloud_init_storage_pool"`
 	// The type of Cloud-Init disk. Can be `scsi`, `sata`, or `ide`
-	// If not given, defaults to `ide`.
+	// Defaults to `ide`.
 	CloudInitDiskType string `mapstructure:"cloud_init_disk_type"`
 
 	// Additional ISO files attached to the virtual machine.
@@ -651,6 +651,16 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 	if c.SCSIController == "" {
 		log.Printf("SCSI controller not set, using default 'lsi'")
 		c.SCSIController = "lsi"
+	}
+	if c.CloudInit == true {
+		if c.CloudInitDiskType == "" {
+			log.Printf("Cloud-Init disk type not set, using default 'ide'")
+			c.CloudInitDiskType = "ide"
+		} else {
+			if !(c.CloudInitDiskType == "scsi" || c.CloudInitDiskType == "sata" || c.CloudInitDiskType == "ide") {
+				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("supported Cloud-Init disk types are 'ide', 'scsi', and 'sata'"))
+			}
+		}
 	}
 
 	errs = packersdk.MultiErrorAppend(errs, c.Comm.Prepare(&c.Ctx)...)
