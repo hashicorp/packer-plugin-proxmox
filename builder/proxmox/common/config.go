@@ -652,14 +652,14 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		log.Printf("SCSI controller not set, using default 'lsi'")
 		c.SCSIController = "lsi"
 	}
-	if c.CloudInit == true {
-		if c.CloudInitDiskType == "" {
-			log.Printf("Cloud-Init disk type not set, using default 'ide'")
-			c.CloudInitDiskType = "ide"
-		} else {
-			if !(c.CloudInitDiskType == "scsi" || c.CloudInitDiskType == "sata" || c.CloudInitDiskType == "ide") {
-				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("supported Cloud-Init disk types are 'ide', 'scsi', and 'sata'"))
-			}
+	if c.CloudInit {
+		switch c.CloudInitDiskType {
+			case "ide", "scsi", "sata":
+			case "":
+				log.Printf("Cloud-Init disk type not set, using default 'ide'")
+				c.CloudInitDiskType = "ide"
+			default:
+				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("invalid value for `cloud_init_disk_type` %q: only one of 'ide', 'scsi', 'sata' is valid", c.CloudInitDiskType))
 		}
 	}
 
