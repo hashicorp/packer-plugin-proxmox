@@ -74,9 +74,12 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 					scsiController := fmt.Sprintf("scsi%d", i)
 					diskControllers = append(diskControllers, scsiController)
 				}
-			default:
-				// Unspecified disk type defaults to "ide"
+			// Unspecified disk type defaults to "ide"
+			case "ide":
 				diskControllers = []string{"ide0", "ide1", "ide2", "ide3"}
+			default:
+				state.Put("error", fmt.Errorf("unsupported disk type %q", c.CloudInitDiskType))
+				return multistep.ActionHalt
 			}
 			cloudInitAttached := false
 			// find a free disk controller
