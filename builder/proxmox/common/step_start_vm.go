@@ -317,7 +317,35 @@ func generateProxmoxDisks(disks []diskConfig) *proxmox.QemuStorages {
 					EmulateSSD:      disks[idx].SSD,
 				},
 			}
-			// set value of &ideDisks.Disk_<ideCount value> to contents of &dev
+			// We need reflection here as the storage objects are not exposed
+			// as a slice, but as a series of named fields in the structure
+			// that the APIs use.
+			//
+			// This means that assigning the disks in the order they're defined
+			// in would result in a bunch of `switch` cases for the index, and
+			// named field assignation for each.
+			//
+			// Example:
+			// ```
+			// switch ideCount {
+			// case 0:
+			//	dev.Disk_0 = dev
+			// case 1:
+			//	dev.Disk_1 = dev
+			// [...]
+			// }
+			// ```
+			//
+			// Instead, we use reflection to address the fields algorithmically,
+			// so we don't need to write this verbose code.
+			reflect.
+				// We need to get the pointer to the structure so we can
+				// assign a value to the disk
+				ValueOf(&ideDisks).Elem().
+				// Get the field from its name, each disk's field has a
+				// similar format 'Disk_%d'
+				FieldByName(fmt.Sprintf("Disk_%d", ideCount)).
+				Set(reflect.ValueOf(&dev))
 			reflect.ValueOf(&ideDisks).Elem().FieldByIndex([]int{ideCount}).Set(reflect.ValueOf(&dev))
 			ideCount++
 		case "scsi":
@@ -332,7 +360,6 @@ func generateProxmoxDisks(disks []diskConfig) *proxmox.QemuStorages {
 					IOThread:        disks[idx].IOThread,
 				},
 			}
-			// set value of &scsiDisks.Disk_<ideCount value> to contents of &dev
 			reflect.ValueOf(&scsiDisks).Elem().FieldByIndex([]int{scsiCount}).Set(reflect.ValueOf(&dev))
 			scsiCount++
 		case "sata":
@@ -346,7 +373,6 @@ func generateProxmoxDisks(disks []diskConfig) *proxmox.QemuStorages {
 					EmulateSSD:      disks[idx].SSD,
 				},
 			}
-			// set value of &sataDisks.Disk_<ideCount value> to contents of &dev
 			reflect.ValueOf(&sataDisks).Elem().FieldByIndex([]int{sataCount}).Set(reflect.ValueOf(&dev))
 			sataCount++
 		case "virtio":
@@ -360,7 +386,6 @@ func generateProxmoxDisks(disks []diskConfig) *proxmox.QemuStorages {
 					IOThread:        disks[idx].IOThread,
 				},
 			}
-			// set value of &virtIODisks.Disk_<ideCount value> to contents of &dev
 			reflect.ValueOf(&virtIODisks).Elem().FieldByIndex([]int{virtIOCount}).Set(reflect.ValueOf(&dev))
 			virtIOCount++
 		}
