@@ -527,6 +527,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 						Disk: &proxmox.QemuScsiDisk{
 							SizeInKibibytes: 10485760,
 							Storage:         "local-lvm",
+							AsyncIO:         proxmox.QemuDiskAsyncIO(""),
 							Cache:           proxmox.QemuDiskCache("none"),
 							Format:          proxmox.QemuDiskFormat("qcow2"),
 							Discard:         false,
@@ -560,6 +561,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 						Disk: &proxmox.QemuScsiDisk{
 							SizeInKibibytes: 10485760,
 							Storage:         "local-lvm",
+							AsyncIO:         proxmox.QemuDiskAsyncIO(""),
 							Cache:           proxmox.QemuDiskCache("none"),
 							Format:          proxmox.QemuDiskFormat("qcow2"),
 							Discard:         false,
@@ -594,6 +596,41 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 						Disk: &proxmox.QemuVirtIODisk{
 							SizeInKibibytes: 10485760,
 							Storage:         "local-lvm",
+							AsyncIO:         proxmox.QemuDiskAsyncIO(""),
+							Cache:           proxmox.QemuDiskCache("none"),
+							Format:          proxmox.QemuDiskFormat("qcow2"),
+							Discard:         false,
+							IOThread:        true,
+						},
+					},
+				},
+			},
+		},
+		{
+			"asyncio is native",
+			[]diskConfig{
+				{
+					Type:        "virtio",
+					StoragePool: "local-lvm",
+					Size:        "10G",
+					CacheMode:   "none",
+					DiskFormat:  "qcow2",
+					AsyncIO:     "native",
+					IOThread:    true,
+					Discard:     false,
+					SSD:         false,
+				},
+			},
+			&proxmox.QemuStorages{
+				Ide:  &proxmox.QemuIdeDisks{},
+				Sata: &proxmox.QemuSataDisks{},
+				Scsi: &proxmox.QemuScsiDisks{},
+				VirtIO: &proxmox.QemuVirtIODisks{
+					Disk_0: &proxmox.QemuVirtIOStorage{
+						Disk: &proxmox.QemuVirtIODisk{
+							SizeInKibibytes: 10485760,
+							Storage:         "local-lvm",
+							AsyncIO:         proxmox.QemuDiskAsyncIO("native"),
 							Cache:           proxmox.QemuDiskCache("none"),
 							Format:          proxmox.QemuDiskFormat("qcow2"),
 							Discard:         false,
