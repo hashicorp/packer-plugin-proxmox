@@ -105,6 +105,7 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 		}
 	}
 
+	deleteItems := []string{}
 	if len(c.AdditionalISOFiles) > 0 {
 		for idx := range c.AdditionalISOFiles {
 			cdrom := c.AdditionalISOFiles[idx].Device
@@ -115,7 +116,11 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 					ui.Error(err.Error())
 					return multistep.ActionHalt
 				}
-				changes[cdrom] = "none,media=cdrom"
+				if c.AdditionalISOFiles[idx].UnmountKeepDevice {
+					changes[cdrom] = "none,media=cdrom"
+				} else {
+					deleteItems = append(deleteItems, cdrom)
+				}
 			} else {
 				changes[cdrom] = c.AdditionalISOFiles[idx].ISOFile + ",media=cdrom"
 			}
@@ -125,13 +130,13 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 	// Disks that get replaced by the builder end up as unused disks -
 	// find and remove them.
 	rxUnused := regexp.MustCompile(`^unused\d+`)
-	unusedDisks := []string{}
 	for key := range vmParams {
 		if unusedDisk := rxUnused.FindString(key); unusedDisk != "" {
-			unusedDisks = append(unusedDisks, unusedDisk)
+			deleteItems = append(deleteItems, unusedDisk)
 		}
 	}
-	changes["delete"] = strings.Join(unusedDisks, ",")
+
+	changes["delete"] = strings.Join(deleteItems, ",")
 
 	if len(changes) > 0 {
 		_, err := client.SetVmConfig(vmRef, changes)

@@ -60,6 +60,21 @@ func TestISOTemplateFinalize(t *testing.T) {
 			},
 			expectCallSetConfig: true,
 			expectedVMConfig: map[string]interface{}{
+				"ide2": nil,
+			},
+			expectedAction: multistep.ActionContinue,
+		},
+		{
+			name: "should keep iso device and unmount ISO when configured",
+			builderConfig: &Config{
+				UnmountISO:        true,
+				UnmountKeepDevice: true,
+			},
+			initialVMConfig: map[string]interface{}{
+				"ide2": "local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso,media=cdrom",
+			},
+			expectCallSetConfig: true,
+			expectedVMConfig: map[string]interface{}{
 				"ide2": "none,media=cdrom",
 			},
 			expectedAction: multistep.ActionContinue,

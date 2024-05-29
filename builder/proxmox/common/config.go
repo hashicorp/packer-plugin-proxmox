@@ -241,7 +241,10 @@ type additionalISOsConfig struct {
 	// Defaults to `false`
 	ISODownloadPVE bool `mapstructure:"iso_download_pve"`
 	// If true, remove the mounted ISO from the template after finishing. Defaults to `false`.
-	Unmount              bool   `mapstructure:"unmount"`
+	Unmount bool `mapstructure:"unmount"`
+	// Keep CDRom device attached to template if unmounting ISO. Defaults to `false`.
+	// Has no effect if unmount is `false`
+	UnmountKeepDevice    bool   `mapstructure:"unmount_keep_device"`
 	ShouldUploadISO      bool   `mapstructure-to-hcl2:",skip"`
 	DownloadPathKey      string `mapstructure-to-hcl2:",skip"`
 	commonsteps.CDConfig `mapstructure:",squash"`

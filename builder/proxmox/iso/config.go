@@ -32,8 +32,11 @@ type Config struct {
 	ISODownloadPVE bool `mapstructure:"iso_download_pve"`
 	// If true, remove the mounted ISO from the template
 	// after finishing. Defaults to `false`.
-	UnmountISO      bool `mapstructure:"unmount_iso"`
-	shouldUploadISO bool
+	UnmountISO bool `mapstructure:"unmount_iso"`
+	// Keep CDRom device attached to template if unmounting ISO. Defaults to `false`.
+	// Has no effect if unmount is `false`
+	UnmountKeepDevice bool `mapstructure:"unmount_keep_device"`
+	shouldUploadISO   bool
 }
 
 func (c *Config) Prepare(raws ...interface{}) ([]string, []string, error) {
