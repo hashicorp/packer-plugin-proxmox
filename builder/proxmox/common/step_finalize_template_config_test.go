@@ -109,6 +109,7 @@ func TestTemplateFinalize(t *testing.T) {
 				TemplateName:        "my-template",
 				TemplateDescription: "some-description",
 				CloudInit:           true,
+				CloudInitDiskType:   "ide",
 			},
 			initialVMConfig: map[string]interface{}{
 				"name":        "dummy",
@@ -130,6 +131,7 @@ func TestTemplateFinalize(t *testing.T) {
 				TemplateName:        "my-template",
 				TemplateDescription: "some-description",
 				CloudInit:           true,
+				CloudInitDiskType:   "ide",
 			},
 			initialVMConfig: map[string]interface{}{
 				"name":        "dummy",
@@ -150,6 +152,7 @@ func TestTemplateFinalize(t *testing.T) {
 				TemplateName:        "my-template",
 				TemplateDescription: "some-description",
 				CloudInit:           true,
+				CloudInitDiskType:   "ide",
 			},
 			getConfigErr:        fmt.Errorf("some error"),
 			expectCallSetConfig: false,
