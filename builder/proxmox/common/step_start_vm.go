@@ -311,6 +311,7 @@ func generateProxmoxDisks(disks []diskConfig) *proxmox.QemuStorages {
 				Disk: &proxmox.QemuIdeDisk{
 					SizeInKibibytes: size,
 					Storage:         disks[idx].StoragePool,
+					AsyncIO:         proxmox.QemuDiskAsyncIO(disks[idx].AsyncIO),
 					Cache:           proxmox.QemuDiskCache(disks[idx].CacheMode),
 					Format:          proxmox.QemuDiskFormat(disks[idx].DiskFormat),
 					Discard:         disks[idx].Discard,
@@ -352,6 +353,7 @@ func generateProxmoxDisks(disks []diskConfig) *proxmox.QemuStorages {
 				Disk: &proxmox.QemuScsiDisk{
 					SizeInKibibytes: size,
 					Storage:         disks[idx].StoragePool,
+					AsyncIO:         proxmox.QemuDiskAsyncIO(disks[idx].AsyncIO),
 					Cache:           proxmox.QemuDiskCache(disks[idx].CacheMode),
 					Format:          proxmox.QemuDiskFormat(disks[idx].DiskFormat),
 					Discard:         disks[idx].Discard,
@@ -368,6 +370,7 @@ func generateProxmoxDisks(disks []diskConfig) *proxmox.QemuStorages {
 				Disk: &proxmox.QemuSataDisk{
 					SizeInKibibytes: size,
 					Storage:         disks[idx].StoragePool,
+					AsyncIO:         proxmox.QemuDiskAsyncIO(disks[idx].AsyncIO),
 					Cache:           proxmox.QemuDiskCache(disks[idx].CacheMode),
 					Format:          proxmox.QemuDiskFormat(disks[idx].DiskFormat),
 					Discard:         disks[idx].Discard,
@@ -383,6 +386,7 @@ func generateProxmoxDisks(disks []diskConfig) *proxmox.QemuStorages {
 				Disk: &proxmox.QemuVirtIODisk{
 					SizeInKibibytes: size,
 					Storage:         disks[idx].StoragePool,
+					AsyncIO:         proxmox.QemuDiskAsyncIO(disks[idx].AsyncIO),
 					Cache:           proxmox.QemuDiskCache(disks[idx].CacheMode),
 					Format:          proxmox.QemuDiskFormat(disks[idx].DiskFormat),
 					Discard:         disks[idx].Discard,

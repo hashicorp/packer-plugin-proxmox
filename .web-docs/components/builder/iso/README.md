@@ -659,6 +659,9 @@ Example:
   multiple disks are used. Requires `virtio-scsi-single` controller and a
   `scsi` or `virtio` disk. Defaults to `false`.
 
+- `asyncio` (string) - Configure Asynchronous I/O. Can be `native`, `threads`, or `io_uring`.
+  Defaults to io_uring.
+
 - `discard` (bool) - Relay TRIM commands to the underlying storage. Defaults
   to false. See the
   [Proxmox documentation](https://pve.proxmox.com/pve-docs/pve-admin-guide.html#qm_hard_disk_discard)

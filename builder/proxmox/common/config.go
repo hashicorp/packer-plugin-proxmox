@@ -339,6 +339,9 @@ type diskConfig struct {
 	// multiple disks are used. Requires `virtio-scsi-single` controller and a
 	// `scsi` or `virtio` disk. Defaults to `false`.
 	IOThread bool `mapstructure:"io_thread"`
+	// Configure Asynchronous I/O. Can be `native`, `threads`, or `io_uring`.
+	// Defaults to io_uring.
+	AsyncIO string `mapstructure:"asyncio"`
 	// Relay TRIM commands to the underlying storage. Defaults
 	// to false. See the
 	// [Proxmox documentation](https://pve.proxmox.com/pve-docs/pve-admin-guide.html#qm_hard_disk_discard)
@@ -663,6 +666,9 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 					errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("io thread option requires scsi or a virtio disk"))
 				}
 			}
+		}
+		if disk.AsyncIO != "" && !(disk.AsyncIO == "native" || disk.AsyncIO == "threads" || disk.AsyncIO == "io_uring") {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("AsyncIO must be native, threads or io_uring"))
 		}
 		if disk.SSD && disk.Type == "virtio" {
 			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("SSD emulation is not supported on virtio disks"))

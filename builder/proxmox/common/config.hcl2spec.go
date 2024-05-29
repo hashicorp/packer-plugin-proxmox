@@ -338,6 +338,7 @@ type FlatdiskConfig struct {
 	CacheMode       *string `mapstructure:"cache_mode" cty:"cache_mode" hcl:"cache_mode"`
 	DiskFormat      *string `mapstructure:"format" cty:"format" hcl:"format"`
 	IOThread        *bool   `mapstructure:"io_thread" cty:"io_thread" hcl:"io_thread"`
+	AsyncIO         *string `mapstructure:"asyncio" cty:"asyncio" hcl:"asyncio"`
 	Discard         *bool   `mapstructure:"discard" cty:"discard" hcl:"discard"`
 	SSD             *bool   `mapstructure:"ssd" cty:"ssd" hcl:"ssd"`
 }
@@ -361,6 +362,7 @@ func (*FlatdiskConfig) HCL2Spec() map[string]hcldec.Spec {
 		"cache_mode":        &hcldec.AttrSpec{Name: "cache_mode", Type: cty.String, Required: false},
 		"format":            &hcldec.AttrSpec{Name: "format", Type: cty.String, Required: false},
 		"io_thread":         &hcldec.AttrSpec{Name: "io_thread", Type: cty.Bool, Required: false},
+		"asyncio":           &hcldec.AttrSpec{Name: "asyncio", Type: cty.String, Required: false},
 		"discard":           &hcldec.AttrSpec{Name: "discard", Type: cty.Bool, Required: false},
 		"ssd":               &hcldec.AttrSpec{Name: "ssd", Type: cty.Bool, Required: false},
 	}
