@@ -98,7 +98,7 @@ func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQ
 	if err != nil {
 		return err
 	}
-	err = config.UpdateConfig(vmRef, client)
+	_, err = config.Update(false, vmRef, client)
 	if err != nil {
 		return err
 	}

@@ -101,6 +101,7 @@ type FlatConfig struct {
 	EFIDisk                   *string                    `mapstructure:"efidisk" cty:"efidisk" hcl:"efidisk"`
 	Machine                   *string                    `mapstructure:"machine" cty:"machine" hcl:"machine"`
 	Rng0                      *Flatrng0Config            `mapstructure:"rng0" cty:"rng0" hcl:"rng0"`
+	TPMConfig                 *FlattpmConfig             `mapstructure:"tpm_config" cty:"tpm_config" hcl:"tpm_config"`
 	VGA                       *FlatvgaConfig             `mapstructure:"vga" cty:"vga" hcl:"vga"`
 	NICs                      []FlatNICConfig            `mapstructure:"network_adapters" cty:"network_adapters" hcl:"network_adapters"`
 	Disks                     []FlatdiskConfig           `mapstructure:"disks" cty:"disks" hcl:"disks"`
@@ -114,6 +115,7 @@ type FlatConfig struct {
 	TemplateDescription       *string                    `mapstructure:"template_description" cty:"template_description" hcl:"template_description"`
 	CloudInit                 *bool                      `mapstructure:"cloud_init" cty:"cloud_init" hcl:"cloud_init"`
 	CloudInitStoragePool      *string                    `mapstructure:"cloud_init_storage_pool" cty:"cloud_init_storage_pool" hcl:"cloud_init_storage_pool"`
+	CloudInitDiskType         *string                    `mapstructure:"cloud_init_disk_type" cty:"cloud_init_disk_type" hcl:"cloud_init_disk_type"`
 	AdditionalISOFiles        []FlatadditionalISOsConfig `mapstructure:"additional_iso_files" cty:"additional_iso_files" hcl:"additional_iso_files"`
 	VMInterface               *string                    `mapstructure:"vm_interface" cty:"vm_interface" hcl:"vm_interface"`
 	AdditionalArgs            *string                    `mapstructure:"qemu_additional_args" cty:"qemu_additional_args" hcl:"qemu_additional_args"`
@@ -222,6 +224,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"efidisk":                      &hcldec.AttrSpec{Name: "efidisk", Type: cty.String, Required: false},
 		"machine":                      &hcldec.AttrSpec{Name: "machine", Type: cty.String, Required: false},
 		"rng0":                         &hcldec.BlockSpec{TypeName: "rng0", Nested: hcldec.ObjectSpec((*Flatrng0Config)(nil).HCL2Spec())},
+		"tpm_config":                   &hcldec.BlockSpec{TypeName: "tpm_config", Nested: hcldec.ObjectSpec((*FlattpmConfig)(nil).HCL2Spec())},
 		"vga":                          &hcldec.BlockSpec{TypeName: "vga", Nested: hcldec.ObjectSpec((*FlatvgaConfig)(nil).HCL2Spec())},
 		"network_adapters":             &hcldec.BlockListSpec{TypeName: "network_adapters", Nested: hcldec.ObjectSpec((*FlatNICConfig)(nil).HCL2Spec())},
 		"disks":                        &hcldec.BlockListSpec{TypeName: "disks", Nested: hcldec.ObjectSpec((*FlatdiskConfig)(nil).HCL2Spec())},
@@ -235,6 +238,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"template_description":         &hcldec.AttrSpec{Name: "template_description", Type: cty.String, Required: false},
 		"cloud_init":                   &hcldec.AttrSpec{Name: "cloud_init", Type: cty.Bool, Required: false},
 		"cloud_init_storage_pool":      &hcldec.AttrSpec{Name: "cloud_init_storage_pool", Type: cty.String, Required: false},
+		"cloud_init_disk_type":         &hcldec.AttrSpec{Name: "cloud_init_disk_type", Type: cty.String, Required: false},
 		"additional_iso_files":         &hcldec.BlockListSpec{TypeName: "additional_iso_files", Nested: hcldec.ObjectSpec((*FlatadditionalISOsConfig)(nil).HCL2Spec())},
 		"vm_interface":                 &hcldec.AttrSpec{Name: "vm_interface", Type: cty.String, Required: false},
 		"qemu_additional_args":         &hcldec.AttrSpec{Name: "qemu_additional_args", Type: cty.String, Required: false},
@@ -458,6 +462,31 @@ func (*Flatrng0Config) HCL2Spec() map[string]hcldec.Spec {
 		"source":    &hcldec.AttrSpec{Name: "source", Type: cty.String, Required: false},
 		"max_bytes": &hcldec.AttrSpec{Name: "max_bytes", Type: cty.Number, Required: false},
 		"period":    &hcldec.AttrSpec{Name: "period", Type: cty.Number, Required: false},
+	}
+	return s
+}
+
+// FlattpmConfig is an auto-generated flat version of tpmConfig.
+// Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
+type FlattpmConfig struct {
+	TPMStoragePool *string `mapstructure:"tpm_storage_pool" cty:"tpm_storage_pool" hcl:"tpm_storage_pool"`
+	Version        *string `mapstructure:"tpm_version" cty:"tpm_version" hcl:"tpm_version"`
+}
+
+// FlatMapstructure returns a new FlattpmConfig.
+// FlattpmConfig is an auto-generated flat version of tpmConfig.
+// Where the contents a fields with a `mapstructure:,squash` tag are bubbled up.
+func (*tpmConfig) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Spec } {
+	return new(FlattpmConfig)
+}
+
+// HCL2Spec returns the hcl spec of a tpmConfig.
+// This spec is used by HCL to read the fields of tpmConfig.
+// The decoded values from this spec will then be applied to a FlattpmConfig.
+func (*FlattpmConfig) HCL2Spec() map[string]hcldec.Spec {
+	s := map[string]hcldec.Spec{
+		"tpm_storage_pool": &hcldec.AttrSpec{Name: "tpm_storage_pool", Type: cty.String, Required: false},
+		"tpm_version":      &hcldec.AttrSpec{Name: "tpm_version", Type: cty.String, Required: false},
 	}
 	return s
 }

@@ -10,14 +10,14 @@ inputs:
 runs:
   using: composite
   steps:
-  - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+  - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
   - run: "GOOS=${{ inputs.GOOS }} GOARCH=${{ inputs.GOARCH }} go build -o ./pkg/packer_plugin_proxmox_${{ inputs.GOOS }}_${{ inputs.GOARCH }} ."
     shell: bash
   - run: zip ./pkg/packer_plugin_proxmox_${{ inputs.GOOS }}_${{ inputs.GOARCH }}.zip ./pkg/packer_plugin_proxmox_${{ inputs.GOOS }}_${{ inputs.GOARCH }}
     shell: bash
   - run: rm ./pkg/packer_plugin_proxmox_${{ inputs.GOOS }}_${{ inputs.GOARCH }}
     shell: bash
-  - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+  - uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
     with:
       name: "packer_plugin_proxmox_${{ inputs.GOOS }}_${{ inputs.GOARCH }}.zip"
       path: "pkg/packer_plugin_proxmox_${{ inputs.GOOS }}_${{ inputs.GOARCH }}.zip"

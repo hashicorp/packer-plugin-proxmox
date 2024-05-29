@@ -330,6 +330,67 @@ func TestRng0(t *testing.T) {
 	}
 }
 
+func TestTpm(t *testing.T) {
+	TpmTest := []struct {
+		name          string
+		tpm_config    tpmConfig
+		expectFailure bool
+	}{
+		{
+			name:          "version 1.2, no error",
+			expectFailure: false,
+			tpm_config: tpmConfig{
+				TPMStoragePool: "local",
+				Version:        "v1.2",
+			},
+		},
+		{
+			name:          "version 2.0, no error",
+			expectFailure: false,
+			tpm_config: tpmConfig{
+				TPMStoragePool: "local",
+				Version:        "v2.0",
+			},
+		},
+		{
+			name:          "empty storage pool, error",
+			expectFailure: true,
+			tpm_config: tpmConfig{
+				TPMStoragePool: "",
+				Version:        "v1.2",
+			},
+		},
+		{
+			name:          "invalid Version, error",
+			expectFailure: true,
+			tpm_config: tpmConfig{
+				TPMStoragePool: "local",
+				Version:        "v6.2",
+			},
+		},
+	}
+
+	for _, tt := range TpmTest {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := mandatoryConfig(t)
+			cfg["tpm_config"] = &tt.tpm_config
+
+			var c Config
+			_, _, err := c.Prepare(&c, cfg)
+			if err != nil {
+				if !tt.expectFailure {
+					t.Fatalf("unexpected failure to prepare config: %s", err)
+				}
+				t.Logf("got expected failure: %s", err)
+			}
+
+			if err == nil && tt.expectFailure {
+				t.Errorf("expected failure, but prepare succeeded")
+			}
+		})
+	}
+}
+
 func TestSerials(t *testing.T) {
 	serialsTest := []struct {
 		name          string

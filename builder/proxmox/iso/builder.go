@@ -5,6 +5,7 @@ package proxmoxiso
 
 import (
 	"context"
+	"strings"
 
 	proxmoxapi "github.com/Telmate/proxmox-api-go/proxmox"
 	"github.com/hashicorp/hcl/v2/hcldec"
@@ -70,9 +71,12 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 type isoVMCreator struct{}
 
 func (*isoVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQemu, state multistep.StateBag) error {
-	isoFile := state.Get("iso_file").(string)
-	config.QemuIso = isoFile
+	isoFile := strings.Split(state.Get("iso_file").(string), ":iso/")
+	config.Iso = &proxmoxapi.IsoFile{
+		File:    isoFile[1],
+		Storage: isoFile[0],
+	}
 
 	client := state.Get("proxmoxClient").(*proxmoxapi.Client)
-	return config.CreateVm(vmRef, client)
+	return config.Create(vmRef, client)
 }

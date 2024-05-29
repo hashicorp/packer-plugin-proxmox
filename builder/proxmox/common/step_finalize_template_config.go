@@ -60,10 +60,30 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 			}
 		}
 		if cloudInitStoragePool != "" {
-			ideControllers := []string{"ide0", "ide1", "ide2", "ide3"}
+			var diskControllers []string
+			switch c.CloudInitDiskType {
+			// Proxmox supports up to 6 SATA controllers (0 - 5)
+			case "sata":
+				for i := 0; i < 6; i++ {
+					sataController := fmt.Sprintf("sata%d", i)
+					diskControllers = append(diskControllers, sataController)
+				}
+			// and up to 31 SCSI controllers (0 - 30)
+			case "scsi":
+				for i := 0; i < 31; i++ {
+					scsiController := fmt.Sprintf("scsi%d", i)
+					diskControllers = append(diskControllers, scsiController)
+				}
+			// Unspecified disk type defaults to "ide"
+			case "ide":
+				diskControllers = []string{"ide0", "ide1", "ide2", "ide3"}
+			default:
+				state.Put("error", fmt.Errorf("unsupported disk type %q", c.CloudInitDiskType))
+				return multistep.ActionHalt
+			}
 			cloudInitAttached := false
-			// find a free ide controller
-			for _, controller := range ideControllers {
+			// find a free disk controller
+			for _, controller := range diskControllers {
 				if vmParams[controller] == nil {
 					ui.Say("Adding a cloud-init cdrom in storage pool " + cloudInitStoragePool)
 					changes[controller] = cloudInitStoragePool + ":cloudinit"
@@ -72,7 +92,7 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 				}
 			}
 			if cloudInitAttached == false {
-				err := fmt.Errorf("Found no free ide controller for a cloud-init cdrom")
+				err := fmt.Errorf("Found no free controller of type %s for a cloud-init cdrom", c.CloudInitDiskType)
 				state.Put("error", err)
 				ui.Error(err.Error())
 				return multistep.ActionHalt

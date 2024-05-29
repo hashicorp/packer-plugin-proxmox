@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //go:generate packer-sdc struct-markdown
-//go:generate packer-sdc mapstructure-to-hcl2 -type Config,NICConfig,diskConfig,rng0Config,pciDeviceConfig,vgaConfig,additionalISOsConfig,efiConfig
+//go:generate packer-sdc mapstructure-to-hcl2 -type Config,NICConfig,diskConfig,rng0Config,pciDeviceConfig,vgaConfig,additionalISOsConfig,efiConfig,tpmConfig
 
 package proxmox
 
@@ -136,6 +136,8 @@ type Config struct {
 	Machine string `mapstructure:"machine"`
 	// Configure Random Number Generator via VirtIO. See [VirtIO RNG device](#virtio-rng-device)
 	Rng0 rng0Config `mapstructure:"rng0"`
+	// Set the tpmstate storage options. See [TPM Config](#tpm-config).
+	TPMConfig tpmConfig `mapstructure:"tpm_config"`
 	// The graphics adapter to use. See [VGA Config](#vga-config).
 	VGA vgaConfig `mapstructure:"vga"`
 	// The network adapter to use. See [Network Adapters](#network-adapters)
@@ -183,6 +185,9 @@ type Config struct {
 	// Name of the Proxmox storage pool
 	// to store the Cloud-Init CDROM on. If not given, the storage pool of the boot device will be used.
 	CloudInitStoragePool string `mapstructure:"cloud_init_storage_pool"`
+	// The type of Cloud-Init disk. Can be `scsi`, `sata`, or `ide`
+	// Defaults to `ide`.
+	CloudInitDiskType string `mapstructure:"cloud_init_disk_type"`
 
 	// Additional ISO files attached to the virtual machine.
 	// See [Additional ISO Files](#additional-iso-files).
@@ -369,6 +374,35 @@ type efiConfig struct {
 	// Specifies the version of the OVMF firmware to be used. Can be `2m` or `4m`.
 	// Defaults to `4m`.
 	EFIType string `mapstructure:"efi_type"`
+}
+
+// Set the tpmstate storage options.
+//
+// HCL2 example:
+//
+// ```hcl
+//
+//	tpm_config {
+//	  tpm_storage_pool = "local"
+//	  tpm_version      = "v1.2"
+//	}
+//
+// ```
+// Usage example (JSON):
+//
+// ```json
+//
+//	"tpm_config": {
+//	  "tpm_storage_pool": "local",
+//	  "tpm_version": "v1.2"
+//	}
+//
+// ```
+type tpmConfig struct {
+	// Name of the Proxmox storage pool to store the EFI disk on.
+	TPMStoragePool string `mapstructure:"tpm_storage_pool"`
+	// Version of TPM spec. Can be `v1.2` or `v2.0` Defaults to `v2.0`.
+	Version string `mapstructure:"tpm_version"`
 }
 
 // - `rng0` (object): Configure Random Number Generator via VirtIO.
@@ -602,6 +636,10 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		log.Printf("OS not set, using default 'other'")
 		c.OS = "other"
 	}
+	ideCount := 0
+	sataCount := 0
+	scsiCount := 0
+	virtIOCount := 0
 	for idx, disk := range c.Disks {
 		if disk.Type == "" {
 			log.Printf("Disk %d type not set, using default 'scsi'", idx)
@@ -635,6 +673,28 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		if disk.StoragePoolType != "" {
 			warnings = append(warnings, "storage_pool_type is deprecated and should be omitted, it will be removed in a later version of the proxmox plugin")
 		}
+		switch disk.Type {
+		case "ide":
+			ideCount++
+		case "sata":
+			sataCount++
+		case "scsi":
+			scsiCount++
+		case "virtio":
+			virtIOCount++
+		}
+	}
+	if ideCount > 2 {
+		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("maximum 2 IDE disks supported (ide2,3 reserved for ISOs)"))
+	}
+	if sataCount > 6 {
+		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("maximum 6 SATA disks supported"))
+	}
+	if scsiCount > 31 {
+		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("maximum 31 SCSI disks supported"))
+	}
+	if virtIOCount > 16 {
+		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("maximum 16 VirtIO disks supported"))
 	}
 	if len(c.Serials) > 4 {
 		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("too many serials: %d serials defined, but proxmox accepts 4 elements maximum", len(c.Serials)))
@@ -648,6 +708,16 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 	if c.SCSIController == "" {
 		log.Printf("SCSI controller not set, using default 'lsi'")
 		c.SCSIController = "lsi"
+	}
+	if c.CloudInit {
+		switch c.CloudInitDiskType {
+		case "ide", "scsi", "sata":
+		case "":
+			log.Printf("Cloud-Init disk type not set, using default 'ide'")
+			c.CloudInitDiskType = "ide"
+		default:
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("invalid value for `cloud_init_disk_type` %q: only one of 'ide', 'scsi', 'sata' is valid", c.CloudInitDiskType))
+		}
 	}
 
 	errs = packersdk.MultiErrorAppend(errs, c.Comm.Prepare(&c.Ctx)...)
@@ -789,6 +859,18 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 	} else {
 		if c.EFIConfig.EFIType != "" || c.EFIConfig.PreEnrolledKeys {
 			errs = packersdk.MultiErrorAppend(errs, errors.New("efi_storage_pool not set for efi_config"))
+		}
+	}
+	if c.TPMConfig != (tpmConfig{}) {
+		if c.TPMConfig.TPMStoragePool == "" {
+			errs = packersdk.MultiErrorAppend(errs, errors.New("tpm_storage_pool not set for tpm_config"))
+		}
+		if c.TPMConfig.Version == "" {
+			log.Printf("TPM state device defined, but no tpm_version given, using v2.0")
+			c.TPMConfig.Version = "v2.0"
+		}
+		if !(c.TPMConfig.Version == "v1.2" || c.TPMConfig.Version == "v2.0") {
+			errs = packersdk.MultiErrorAppend(errs, errors.New("TPM Version must be one of \"v1.2\", \"v2.0\""))
 		}
 	}
 	if c.Rng0 != (rng0Config{}) {

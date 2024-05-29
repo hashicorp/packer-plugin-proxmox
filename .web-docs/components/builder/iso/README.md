@@ -152,6 +152,8 @@ in the image's Cloud-Init settings for provisioning.
 
 - `rng0` (rng0Config) - Configure Random Number Generator via VirtIO. See [VirtIO RNG device](#virtio-rng-device)
 
+- `tpm_config` (tpmConfig) - Set the tpmstate storage options. See [TPM Config](#tpm-config).
+
 - `vga` (vgaConfig) - The graphics adapter to use. See [VGA Config](#vga-config).
 
 - `network_adapters` ([]NICConfig) - The network adapter to use. See [Network Adapters](#network-adapters)
@@ -196,6 +198,9 @@ in the image's Cloud-Init settings for provisioning.
 
 - `cloud_init_storage_pool` (string) - Name of the Proxmox storage pool
   to store the Cloud-Init CDROM on. If not given, the storage pool of the boot device will be used.
+
+- `cloud_init_disk_type` (string) - The type of Cloud-Init disk. Can be `scsi`, `sata`, or `ide`
+  Defaults to `ide`.
 
 - `additional_iso_files` ([]additionalISOsConfig) - Additional ISO files attached to the virtual machine.
   See [Additional ISO Files](#additional-iso-files).

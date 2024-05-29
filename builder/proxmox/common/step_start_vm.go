@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -126,9 +127,10 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		EFIDisk:        generateProxmoxEfi(c.EFIConfig),
 		Machine:        c.Machine,
 		RNGDrive:       generateProxmoxRng0(c.Rng0),
+		TPM:            generateProxmoxTpm(c.TPMConfig),
 		QemuVga:        generateProxmoxVga(c.VGA),
 		QemuNetworks:   generateProxmoxNetworkAdapters(c.NICs),
-		QemuDisks:      generateProxmoxDisks(c.Disks),
+		Disks:          generateProxmoxDisks(c.Disks),
 		QemuPCIDevices: generateProxmoxPCIDeviceMap(c.PCIDevices),
 		QemuSerials:    generateProxmoxSerials(c.Serials),
 		Scsihw:         c.SCSIController,
@@ -277,33 +279,128 @@ func generateProxmoxNetworkAdapters(nics []NICConfig) proxmox.QemuDevices {
 	}
 	return devs
 }
-func generateProxmoxDisks(disks []diskConfig) proxmox.QemuDevices {
-	devs := make(proxmox.QemuDevices)
+
+func generateProxmoxDisks(disks []diskConfig) *proxmox.QemuStorages {
+	ideDisks := proxmox.QemuIdeDisks{}
+	sataDisks := proxmox.QemuSataDisks{}
+	scsiDisks := proxmox.QemuScsiDisks{}
+	virtIODisks := proxmox.QemuVirtIODisks{}
+
+	ideCount := 0
+	sataCount := 0
+	scsiCount := 0
+	virtIOCount := 0
+
 	for idx := range disks {
-		devs[idx] = make(proxmox.QemuDevice)
-		setDeviceParamIfDefined(devs[idx], "type", disks[idx].Type)
-		setDeviceParamIfDefined(devs[idx], "size", disks[idx].Size)
-		setDeviceParamIfDefined(devs[idx], "storage", disks[idx].StoragePool)
-		setDeviceParamIfDefined(devs[idx], "cache", disks[idx].CacheMode)
-		setDeviceParamIfDefined(devs[idx], "format", disks[idx].DiskFormat)
-
-		if (devs[idx]["type"] == "scsi" || devs[idx]["type"] == "virtio") &&
-			disks[idx].IOThread {
-			devs[idx]["iothread"] = "true"
+		tmpSize, _ := strconv.ParseInt(disks[idx].Size[:len(disks[idx].Size)-1], 10, 0)
+		size := proxmox.QemuDiskSize(0)
+		switch disks[idx].Size[len(disks[idx].Size)-1:] {
+		case "T":
+			size = proxmox.QemuDiskSize(tmpSize) * 1073741824
+		case "G":
+			size = proxmox.QemuDiskSize(tmpSize) * 1048576
+		case "M":
+			size = proxmox.QemuDiskSize(tmpSize) * 1024
+		case "K":
+			size = proxmox.QemuDiskSize(tmpSize)
 		}
 
-		if disks[idx].Discard {
-			devs[idx]["discard"] = "on"
-		} else {
-			devs[idx]["discard"] = "ignore"
-		}
-
-		// Add SSD flag only if true
-		if disks[idx].SSD {
-			devs[idx]["ssd"] = "1"
+		switch disks[idx].Type {
+		case "ide":
+			dev := proxmox.QemuIdeStorage{
+				Disk: &proxmox.QemuIdeDisk{
+					SizeInKibibytes: size,
+					Storage:         disks[idx].StoragePool,
+					Cache:           proxmox.QemuDiskCache(disks[idx].CacheMode),
+					Format:          proxmox.QemuDiskFormat(disks[idx].DiskFormat),
+					Discard:         disks[idx].Discard,
+					EmulateSSD:      disks[idx].SSD,
+				},
+			}
+			// We need reflection here as the storage objects are not exposed
+			// as a slice, but as a series of named fields in the structure
+			// that the APIs use.
+			//
+			// This means that assigning the disks in the order they're defined
+			// in would result in a bunch of `switch` cases for the index, and
+			// named field assignation for each.
+			//
+			// Example:
+			// ```
+			// switch ideCount {
+			// case 0:
+			//	dev.Disk_0 = dev
+			// case 1:
+			//	dev.Disk_1 = dev
+			// [...]
+			// }
+			// ```
+			//
+			// Instead, we use reflection to address the fields algorithmically,
+			// so we don't need to write this verbose code.
+			reflect.
+				// We need to get the pointer to the structure so we can
+				// assign a value to the disk
+				ValueOf(&ideDisks).Elem().
+				// Get the field from its name, each disk's field has a
+				// similar format 'Disk_%d'
+				FieldByName(fmt.Sprintf("Disk_%d", ideCount)).
+				Set(reflect.ValueOf(&dev))
+			ideCount++
+		case "scsi":
+			dev := proxmox.QemuScsiStorage{
+				Disk: &proxmox.QemuScsiDisk{
+					SizeInKibibytes: size,
+					Storage:         disks[idx].StoragePool,
+					Cache:           proxmox.QemuDiskCache(disks[idx].CacheMode),
+					Format:          proxmox.QemuDiskFormat(disks[idx].DiskFormat),
+					Discard:         disks[idx].Discard,
+					EmulateSSD:      disks[idx].SSD,
+					IOThread:        disks[idx].IOThread,
+				},
+			}
+			reflect.ValueOf(&scsiDisks).Elem().
+				FieldByName(fmt.Sprintf("Disk_%d", scsiCount)).
+				Set(reflect.ValueOf(&dev))
+			scsiCount++
+		case "sata":
+			dev := proxmox.QemuSataStorage{
+				Disk: &proxmox.QemuSataDisk{
+					SizeInKibibytes: size,
+					Storage:         disks[idx].StoragePool,
+					Cache:           proxmox.QemuDiskCache(disks[idx].CacheMode),
+					Format:          proxmox.QemuDiskFormat(disks[idx].DiskFormat),
+					Discard:         disks[idx].Discard,
+					EmulateSSD:      disks[idx].SSD,
+				},
+			}
+			reflect.ValueOf(&sataDisks).Elem().
+				FieldByName(fmt.Sprintf("Disk_%d", sataCount)).
+				Set(reflect.ValueOf(&dev))
+			sataCount++
+		case "virtio":
+			dev := proxmox.QemuVirtIOStorage{
+				Disk: &proxmox.QemuVirtIODisk{
+					SizeInKibibytes: size,
+					Storage:         disks[idx].StoragePool,
+					Cache:           proxmox.QemuDiskCache(disks[idx].CacheMode),
+					Format:          proxmox.QemuDiskFormat(disks[idx].DiskFormat),
+					Discard:         disks[idx].Discard,
+					IOThread:        disks[idx].IOThread,
+				},
+			}
+			reflect.ValueOf(&virtIODisks).Elem().
+				FieldByName(fmt.Sprintf("Disk_%d", virtIOCount)).
+				Set(reflect.ValueOf(&dev))
+			virtIOCount++
 		}
 	}
-	return devs
+	return &proxmox.QemuStorages{
+		Ide:    &ideDisks,
+		Sata:   &sataDisks,
+		Scsi:   &scsiDisks,
+		VirtIO: &virtIODisks,
+	}
 }
 
 func generateProxmoxPCIDeviceMap(devices []pciDeviceConfig) proxmox.QemuDevices {
@@ -373,6 +470,19 @@ func generateProxmoxEfi(efi efiConfig) proxmox.QemuDevice {
 		}
 	}
 	return dev
+}
+
+func generateProxmoxTpm(tpm tpmConfig) *proxmox.TpmState {
+	// If no TPM config is presented, don't return a TpmState device
+	if tpm == (tpmConfig{}) {
+		return nil
+	}
+
+	dev := proxmox.TpmState{
+		Storage: tpm.TPMStoragePool,
+		Version: (*proxmox.TpmVersion)(&tpm.Version),
+	}
+	return &dev
 }
 
 func setDeviceParamIfDefined(dev proxmox.QemuDevice, key, value string) {
