@@ -676,6 +676,9 @@ In HCL2:
 
 - `unmount` (bool) - If true, remove the mounted ISO from the template after finishing. Defaults to `false`.
 
+- `unmount_keep_device` (bool) - Keep CDRom device attached to template if unmounting ISO. Defaults to `false`.
+  Has no effect if unmount is `false`
+
 <!-- End of code generated from the comments of the additionalISOsConfig struct in builder/proxmox/common/config.go; -->
 
 
