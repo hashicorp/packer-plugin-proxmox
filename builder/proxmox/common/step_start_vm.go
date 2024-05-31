@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -130,7 +131,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		TPM:            generateProxmoxTpm(c.TPMConfig),
 		QemuVga:        generateProxmoxVga(c.VGA),
 		QemuNetworks:   generateProxmoxNetworkAdapters(c.NICs),
-		Disks:          generateProxmoxDisks(c.Disks),
+		Disks:          generateProxmoxDisks(c.Disks, c.AdditionalISOFiles, c.ISOBuilderCDROMDevice),
 		QemuPCIDevices: generateProxmoxPCIDeviceMap(c.PCIDevices),
 		QemuSerials:    generateProxmoxSerials(c.Serials),
 		Scsihw:         c.SCSIController,
@@ -207,22 +208,6 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		return multistep.ActionHalt
 	}
 
-	// proxmox-api-go assumes all QemuDisks are actually hard disks, not cd
-	// drives, so we need to add them via a config update
-	if len(c.AdditionalISOFiles) > 0 {
-		addISOConfig := make(map[string]interface{})
-		for _, iso := range c.AdditionalISOFiles {
-			addISOConfig[iso.Device] = fmt.Sprintf("%s,media=cdrom", iso.ISOFile)
-		}
-		_, err := client.SetVmConfig(vmRef, addISOConfig)
-		if err != nil {
-			err := fmt.Errorf("Error updating template: %s", err)
-			state.Put("error", err)
-			ui.Error(err.Error())
-			return multistep.ActionHalt
-		}
-	}
-
 	// The EFI disk doesn't get created reliably when using the clone builder,
 	// so let's make sure it's there.
 	if c.EFIConfig != (efiConfig{}) && c.Ctx.BuildType == "proxmox-clone" {
@@ -280,17 +265,73 @@ func generateProxmoxNetworkAdapters(nics []NICConfig) proxmox.QemuDevices {
 	return devs
 }
 
-func generateProxmoxDisks(disks []diskConfig) *proxmox.QemuStorages {
+func generateProxmoxDisks(disks []diskConfig, additionalISOFiles []additionalISOsConfig, bootiso string) *proxmox.QemuStorages {
 	ideDisks := proxmox.QemuIdeDisks{}
 	sataDisks := proxmox.QemuSataDisks{}
 	scsiDisks := proxmox.QemuScsiDisks{}
 	virtIODisks := proxmox.QemuVirtIODisks{}
+
+	// additionalISOsConfig accepts a static device type and index value in Device.
+	// Disks accept a device type but no index value.
+	//
+	// If this is a proxmox-iso build, the boot iso device is mapped after this function (builder/proxmox/iso/builder.go func Create)
+	// Map Additional ISO files first to ensure they get their assigned device index then proceed with disks in remaining available fields.
+	if len(additionalISOFiles) > 0 {
+		for _, iso := range additionalISOFiles {
+			// IsoFile struct parses the ISO File and Storage Pool as separate fields.
+			isoFile := strings.Split(iso.ISOFile, ":iso/")
+
+			// define QemuCdRom containing isoFile properties
+			bootIso := &proxmox.QemuCdRom{
+				Iso: &proxmox.IsoFile{
+					File:    isoFile[1],
+					Storage: isoFile[0],
+				},
+			}
+
+			// extract device type from ISODevice config value eg. ide from ide2
+			// validation of the iso.Device value occurs in builder/proxmox/common/config.go func Prepare
+			rd := regexp.MustCompile(`\D+`)
+			device := rd.FindString(iso.Device)
+			// extract device index from ISODevice config value eg. 2 from ide2
+			rb := regexp.MustCompile(`\d+`)
+			index, _ := strconv.Atoi(rb.FindString(iso.Device))
+
+			log.Printf("Mapping Additional ISO to %s%d", device, index)
+			switch device {
+			case "ide":
+				dev := proxmox.QemuIdeStorage{
+					CdRom: bootIso,
+				}
+				reflect.
+					ValueOf(&ideDisks).Elem().
+					FieldByName(fmt.Sprintf("Disk_%d", index)).
+					Set(reflect.ValueOf(&dev))
+			case "sata":
+				dev := proxmox.QemuSataStorage{
+					CdRom: bootIso,
+				}
+				reflect.
+					ValueOf(&sataDisks).Elem().
+					FieldByName(fmt.Sprintf("Disk_%d", index)).
+					Set(reflect.ValueOf(&dev))
+			case "scsi":
+				dev := proxmox.QemuScsiStorage{
+					CdRom: bootIso,
+				}
+				reflect.ValueOf(&scsiDisks).Elem().
+					FieldByName(fmt.Sprintf("Disk_%d", index)).
+					Set(reflect.ValueOf(&dev))
+			}
+		}
+	}
 
 	ideCount := 0
 	sataCount := 0
 	scsiCount := 0
 	virtIOCount := 0
 
+	// Map Disks
 	for idx := range disks {
 		tmpSize, _ := strconv.ParseInt(disks[idx].Size[:len(disks[idx].Size)-1], 10, 0)
 		size := proxmox.QemuDiskSize(0)
@@ -318,36 +359,51 @@ func generateProxmoxDisks(disks []diskConfig) *proxmox.QemuStorages {
 					EmulateSSD:      disks[idx].SSD,
 				},
 			}
-			// We need reflection here as the storage objects are not exposed
-			// as a slice, but as a series of named fields in the structure
-			// that the APIs use.
-			//
-			// This means that assigning the disks in the order they're defined
-			// in would result in a bunch of `switch` cases for the index, and
-			// named field assignation for each.
-			//
-			// Example:
-			// ```
-			// switch ideCount {
-			// case 0:
-			//	dev.Disk_0 = dev
-			// case 1:
-			//	dev.Disk_1 = dev
-			// [...]
-			// }
-			// ```
-			//
-			// Instead, we use reflection to address the fields algorithmically,
-			// so we don't need to write this verbose code.
-			reflect.
-				// We need to get the pointer to the structure so we can
-				// assign a value to the disk
-				ValueOf(&ideDisks).Elem().
-				// Get the field from its name, each disk's field has a
-				// similar format 'Disk_%d'
-				FieldByName(fmt.Sprintf("Disk_%d", ideCount)).
-				Set(reflect.ValueOf(&dev))
-			ideCount++
+			for {
+				log.Printf("Mapping Disk to ide%d", ideCount)
+				// We need reflection here as the storage objects are not exposed
+				// as a slice, but as a series of named fields in the structure
+				// that the APIs use.
+				//
+				// This means that assigning the disks in the order they're defined
+				// in would result in a bunch of `switch` cases for the index, and
+				// named field assignation for each.
+				//
+				// Example:
+				// ```
+				// switch ideCount {
+				// case 0:
+				//	dev.Disk_0 = dev
+				// case 1:
+				//	dev.Disk_1 = dev
+				// [...]
+				// }
+				// ```
+				//
+				// Instead, we use reflection to address the fields algorithmically,
+				// so we don't need to write this verbose code.
+				if reflect.
+					// We need to get the pointer to the structure so we can
+					// assign a value to the disk
+					ValueOf(&ideDisks).Elem().
+					// Get the field from its name, each disk's field has a
+					// similar format 'Disk_%d'
+					FieldByName(fmt.Sprintf("Disk_%d", ideCount)).
+					// Return if the field has no device already attached to it
+					// and not proxmox-iso's configured boot iso device index
+					IsNil() && bootiso != fmt.Sprintf("ide%d", ideCount) {
+					reflect.
+						ValueOf(&ideDisks).Elem().
+						FieldByName(fmt.Sprintf("Disk_%d", ideCount)).
+						// Assign dev to the Disk_%d field
+						Set(reflect.ValueOf(&dev))
+					ideCount++
+					break
+				}
+				// if the disk field is not empty (occupied by an ISO), try the next index
+				log.Printf("ide%d occupied, trying next device index", ideCount)
+				ideCount++
+			}
 		case "scsi":
 			dev := proxmox.QemuScsiStorage{
 				Disk: &proxmox.QemuScsiDisk{
@@ -361,10 +417,22 @@ func generateProxmoxDisks(disks []diskConfig) *proxmox.QemuStorages {
 					IOThread:        disks[idx].IOThread,
 				},
 			}
-			reflect.ValueOf(&scsiDisks).Elem().
-				FieldByName(fmt.Sprintf("Disk_%d", scsiCount)).
-				Set(reflect.ValueOf(&dev))
-			scsiCount++
+			for {
+				log.Printf("Mapping Disk to scsi%d", scsiCount)
+				if reflect.
+					ValueOf(&scsiDisks).Elem().
+					FieldByName(fmt.Sprintf("Disk_%d", scsiCount)).
+					IsNil() && bootiso != fmt.Sprintf("scsi%d", scsiCount) {
+					reflect.
+						ValueOf(&scsiDisks).Elem().
+						FieldByName(fmt.Sprintf("Disk_%d", scsiCount)).
+						Set(reflect.ValueOf(&dev))
+					scsiCount++
+					break
+				}
+				log.Printf("scsi%d occupied, trying next device index", scsiCount)
+				scsiCount++
+			}
 		case "sata":
 			dev := proxmox.QemuSataStorage{
 				Disk: &proxmox.QemuSataDisk{
@@ -377,10 +445,22 @@ func generateProxmoxDisks(disks []diskConfig) *proxmox.QemuStorages {
 					EmulateSSD:      disks[idx].SSD,
 				},
 			}
-			reflect.ValueOf(&sataDisks).Elem().
-				FieldByName(fmt.Sprintf("Disk_%d", sataCount)).
-				Set(reflect.ValueOf(&dev))
-			sataCount++
+			for {
+				log.Printf("Mapping Disk to sata%d", sataCount)
+				if reflect.
+					ValueOf(&sataDisks).Elem().
+					FieldByName(fmt.Sprintf("Disk_%d", sataCount)).
+					IsNil() && bootiso != fmt.Sprintf("sata%d", sataCount) {
+					reflect.
+						ValueOf(&sataDisks).Elem().
+						FieldByName(fmt.Sprintf("Disk_%d", sataCount)).
+						Set(reflect.ValueOf(&dev))
+					sataCount++
+					break
+				}
+				log.Printf("sata%d occupied, trying next device index", sataCount)
+				sataCount++
+			}
 		case "virtio":
 			dev := proxmox.QemuVirtIOStorage{
 				Disk: &proxmox.QemuVirtIODisk{
@@ -393,10 +473,22 @@ func generateProxmoxDisks(disks []diskConfig) *proxmox.QemuStorages {
 					IOThread:        disks[idx].IOThread,
 				},
 			}
-			reflect.ValueOf(&virtIODisks).Elem().
-				FieldByName(fmt.Sprintf("Disk_%d", virtIOCount)).
-				Set(reflect.ValueOf(&dev))
-			virtIOCount++
+			for {
+				log.Printf("Mapping Disk to virtio%d", virtIOCount)
+				if reflect.
+					ValueOf(&virtIODisks).Elem().
+					FieldByName(fmt.Sprintf("Disk_%d", virtIOCount)).
+					IsNil() {
+					reflect.
+						ValueOf(&virtIODisks).Elem().
+						FieldByName(fmt.Sprintf("Disk_%d", virtIOCount)).
+						Set(reflect.ValueOf(&dev))
+					virtIOCount++
+					break
+				}
+				log.Printf("virtio%d occupied, trying next device index", virtIOCount)
+				virtIOCount++
+			}
 		}
 	}
 	return &proxmox.QemuStorages{
