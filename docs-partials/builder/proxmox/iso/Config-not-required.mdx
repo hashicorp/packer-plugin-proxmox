@@ -5,6 +5,12 @@
   `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
   Either `iso_file` OR `iso_url` must be specifed.
 
+- `iso_device` (string) - Bus type and bus index that the ISO will be mounted on. Can be `ideX`,
+  `sataX` or `scsiX`.
+  For `ide` the bus index ranges from 0 to 3, for `sata` from 0 to 5 and for
+  `scsi` from 0 to 30.
+  Defaults to `ide2`
+
 - `iso_storage_pool` (string) - Proxmox storage pool onto which to upload
   the ISO file.
 

@@ -503,6 +503,8 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 	tests := []struct {
 		name         string
 		disks        []diskConfig
+		isos         []additionalISOsConfig
+		bootiso      string
 		expectOutput *proxmox.QemuStorages
 	}{
 		{
@@ -519,6 +521,8 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 					SSD:         false,
 				},
 			},
+			[]additionalISOsConfig{},
+			"",
 			&proxmox.QemuStorages{
 				Ide:  &proxmox.QemuIdeDisks{},
 				Sata: &proxmox.QemuSataDisks{},
@@ -553,6 +557,8 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 					SSD:         false,
 				},
 			},
+			[]additionalISOsConfig{},
+			"",
 			&proxmox.QemuStorages{
 				Ide:  &proxmox.QemuIdeDisks{},
 				Sata: &proxmox.QemuSataDisks{},
@@ -587,6 +593,8 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 					SSD:         false,
 				},
 			},
+			[]additionalISOsConfig{},
+			"",
 			&proxmox.QemuStorages{
 				Ide:  &proxmox.QemuIdeDisks{},
 				Sata: &proxmox.QemuSataDisks{},
@@ -621,6 +629,8 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 					SSD:         false,
 				},
 			},
+			[]additionalISOsConfig{},
+			"",
 			&proxmox.QemuStorages{
 				Ide:  &proxmox.QemuIdeDisks{},
 				Sata: &proxmox.QemuSataDisks{},
@@ -708,6 +718,8 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 					IOThread:    true,
 				},
 			},
+			[]additionalISOsConfig{},
+			"",
 			&proxmox.QemuStorages{
 				Ide: &proxmox.QemuIdeDisks{
 					Disk_0: &proxmox.QemuIdeStorage{
@@ -795,11 +807,145 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 				},
 			},
 		},
+		{
+			"bunch of disks, Additional ISOs and boot iso",
+			[]diskConfig{
+				{
+					Type:        "ide",
+					StoragePool: "local-lvm",
+					Size:        "10G",
+					CacheMode:   "none",
+					DiskFormat:  "qcow2",
+					IOThread:    true,
+				},
+				{
+					Type:        "sata",
+					StoragePool: "local-lvm",
+					Size:        "11G",
+					CacheMode:   "none",
+					DiskFormat:  "qcow2",
+					IOThread:    true,
+				},
+				{
+					Type:        "ide",
+					StoragePool: "local-lvm",
+					Size:        "12G",
+					CacheMode:   "none",
+					DiskFormat:  "qcow2",
+					IOThread:    true,
+				},
+				{
+					Type:        "ide",
+					StoragePool: "local-lvm",
+					Size:        "10G",
+					CacheMode:   "none",
+					DiskFormat:  "qcow2",
+					IOThread:    true,
+				},
+				{
+					Type:        "sata",
+					StoragePool: "local-lvm",
+					Size:        "13G",
+					CacheMode:   "none",
+					DiskFormat:  "qcow2",
+					IOThread:    true,
+				},
+				{
+					Type:        "scsi",
+					StoragePool: "local-lvm",
+					Size:        "14G",
+					CacheMode:   "none",
+					DiskFormat:  "qcow2",
+					IOThread:    true,
+				},
+			},
+			[]additionalISOsConfig{
+				{
+					Device:  "sata0",
+					ISOFile: "local:iso/test.iso",
+				},
+			},
+			"ide2",
+			&proxmox.QemuStorages{
+				Ide: &proxmox.QemuIdeDisks{
+					Disk_0: &proxmox.QemuIdeStorage{
+						Disk: &proxmox.QemuIdeDisk{
+							SizeInKibibytes: 10485760,
+							Storage:         "local-lvm",
+							Cache:           proxmox.QemuDiskCache("none"),
+							Format:          proxmox.QemuDiskFormat("qcow2"),
+							Discard:         false,
+						},
+					},
+					Disk_1: &proxmox.QemuIdeStorage{
+						Disk: &proxmox.QemuIdeDisk{
+							SizeInKibibytes: 12582912,
+							Storage:         "local-lvm",
+							Cache:           proxmox.QemuDiskCache("none"),
+							Format:          proxmox.QemuDiskFormat("qcow2"),
+							Discard:         false,
+						},
+					},
+					// while ide2 is specified for bootiso, the actual mount of the ISO for proxmox-iso occurs in the its builder func.
+					// logic in generateProxmoxDisks should only make sure no disks are allocated to ide2 to prevent conflict when allocating disks
+					Disk_3: &proxmox.QemuIdeStorage{
+						Disk: &proxmox.QemuIdeDisk{
+							SizeInKibibytes: 10485760,
+							Storage:         "local-lvm",
+							Cache:           proxmox.QemuDiskCache("none"),
+							Format:          proxmox.QemuDiskFormat("qcow2"),
+							Discard:         false,
+						},
+					},
+				},
+				Sata: &proxmox.QemuSataDisks{
+					Disk_0: &proxmox.QemuSataStorage{
+						CdRom: &proxmox.QemuCdRom{
+							Iso: &proxmox.IsoFile{
+								File:    "test.iso",
+								Storage: "local",
+							},
+						},
+					},
+					Disk_1: &proxmox.QemuSataStorage{
+						Disk: &proxmox.QemuSataDisk{
+							SizeInKibibytes: 11534336,
+							Storage:         "local-lvm",
+							Cache:           proxmox.QemuDiskCache("none"),
+							Format:          proxmox.QemuDiskFormat("qcow2"),
+							Discard:         false,
+						},
+					},
+					Disk_2: &proxmox.QemuSataStorage{
+						Disk: &proxmox.QemuSataDisk{
+							SizeInKibibytes: 13631488,
+							Storage:         "local-lvm",
+							Cache:           proxmox.QemuDiskCache("none"),
+							Format:          proxmox.QemuDiskFormat("qcow2"),
+							Discard:         false,
+						},
+					},
+				},
+				Scsi: &proxmox.QemuScsiDisks{
+					Disk_0: &proxmox.QemuScsiStorage{
+						Disk: &proxmox.QemuScsiDisk{
+							SizeInKibibytes: 14680064,
+							Storage:         "local-lvm",
+							Cache:           proxmox.QemuDiskCache("none"),
+							Format:          proxmox.QemuDiskFormat("qcow2"),
+							Discard:         false,
+							IOThread:        true,
+						},
+					},
+				},
+				VirtIO: &proxmox.QemuVirtIODisks{},
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			devs := generateProxmoxDisks(tt.disks)
+			devs := generateProxmoxDisks(tt.disks, tt.isos, tt.bootiso)
 			assert.Equal(t, devs, tt.expectOutput)
 		})
 	}

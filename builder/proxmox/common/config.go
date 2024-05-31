@@ -201,6 +201,11 @@ type Config struct {
 	// 	Note: this option is for experts only.
 	AdditionalArgs string `mapstructure:"qemu_additional_args"`
 
+	// internal use when running a proxmox-iso build.
+	// proxmox-iso Prepare will set to the device type and index value
+	// for processing in step_start_vm.go func generateProxmoxDisks
+	ISOBuilderCDROMDevice string `mapstructure-to-hcl2:",skip"`
+
 	Ctx interpolate.Context `mapstructure-to-hcl2:",skip"`
 }
 
@@ -647,10 +652,6 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		log.Printf("OS not set, using default 'other'")
 		c.OS = "other"
 	}
-	ideCount := 0
-	sataCount := 0
-	scsiCount := 0
-	virtIOCount := 0
 	for idx, disk := range c.Disks {
 		if disk.Type == "" {
 			log.Printf("Disk %d type not set, using default 'scsi'", idx)
@@ -687,28 +688,6 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		if disk.StoragePoolType != "" {
 			warnings = append(warnings, "storage_pool_type is deprecated and should be omitted, it will be removed in a later version of the proxmox plugin")
 		}
-		switch disk.Type {
-		case "ide":
-			ideCount++
-		case "sata":
-			sataCount++
-		case "scsi":
-			scsiCount++
-		case "virtio":
-			virtIOCount++
-		}
-	}
-	if ideCount > 2 {
-		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("maximum 2 IDE disks supported (ide2,3 reserved for ISOs)"))
-	}
-	if sataCount > 6 {
-		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("maximum 6 SATA disks supported"))
-	}
-	if scsiCount > 31 {
-		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("maximum 31 SCSI disks supported"))
-	}
-	if virtIOCount > 16 {
-		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("maximum 16 VirtIO disks supported"))
 	}
 	if len(c.Serials) > 4 {
 		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("too many serials: %d serials defined, but proxmox accepts 4 elements maximum", len(c.Serials)))
@@ -830,6 +809,9 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 			if busnumber > 30 {
 				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("SCSI bus index can't be higher than 30"))
 			}
+		}
+		if strings.HasPrefix(c.AdditionalISOFiles[idx].Device, "virtio") {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("VirtIO is not a supported device type for ISOs"))
 		}
 		if len(c.AdditionalISOFiles[idx].CDFiles) > 0 || len(c.AdditionalISOFiles[idx].CDContent) > 0 {
 			if c.AdditionalISOFiles[idx].ISOStoragePool == "" {

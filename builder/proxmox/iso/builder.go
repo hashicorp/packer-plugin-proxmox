@@ -5,6 +5,11 @@ package proxmoxiso
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"reflect"
+	"regexp"
+	"strconv"
 	"strings"
 
 	proxmoxapi "github.com/Telmate/proxmox-api-go/proxmox"
@@ -71,10 +76,57 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 type isoVMCreator struct{}
 
 func (*isoVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQemu, state multistep.StateBag) error {
+	// get iso config from state
+	c := state.Get("iso-config").(*Config)
+	// IsoFile struct parses the ISO File and Storage Pool as separate fields.
 	isoFile := strings.Split(state.Get("iso_file").(string), ":iso/")
-	config.Iso = &proxmoxapi.IsoFile{
-		File:    isoFile[1],
-		Storage: isoFile[0],
+
+	// define QemuCdRom struct containing isoFile properties
+	bootIso := &proxmoxapi.QemuCdRom{
+		Iso: &proxmoxapi.IsoFile{
+			File:    isoFile[1],
+			Storage: isoFile[0],
+		},
+	}
+
+	// extract device type from ISODevice config value eg. ide from ide2
+	rd := regexp.MustCompile(`\D+`)
+	device := rd.FindString(c.ISODevice)
+	// extract device index from ISODevice config value eg. 2 from ide2
+	rb := regexp.MustCompile(`\d+`)
+	index, _ := strconv.Atoi(rb.FindString(c.ISODevice))
+
+	// Assign bootIso QemuCdRom struct to configured ISODevice device type and index
+	//
+	// The boot ISO is mapped to a device type and index after Disks and Additional ISO Files
+	// (builder/proxmox/common/step_start_vm.go func generateProxmoxDisks)
+	// generateProxmoxDisks contains logic to avoid mapping conflicts
+	log.Printf("Mapping Boot ISO to %s%d", device, index)
+	switch device {
+	case "ide":
+		dev := proxmoxapi.QemuIdeStorage{
+			CdRom: bootIso,
+		}
+		reflect.
+			ValueOf(config.Disks.Ide).Elem().
+			FieldByName(fmt.Sprintf("Disk_%d", index)).
+			Set(reflect.ValueOf(&dev))
+	case "scsi":
+		dev := proxmoxapi.QemuScsiStorage{
+			CdRom: bootIso,
+		}
+		reflect.
+			ValueOf(config.Disks.Scsi).Elem().
+			FieldByName(fmt.Sprintf("Disk_%d", index)).
+			Set(reflect.ValueOf(&dev))
+	case "sata":
+		dev := proxmoxapi.QemuSataStorage{
+			CdRom: bootIso,
+		}
+		reflect.
+			ValueOf(config.Disks.Sata).Elem().
+			FieldByName(fmt.Sprintf("Disk_%d", index)).
+			Set(reflect.ValueOf(&dev))
 	}
 
 	client := state.Get("proxmoxClient").(*proxmoxapi.Client)
