@@ -41,16 +41,16 @@ func (s *stepFinalizeISOTemplate) Run(ctx context.Context, state multistep.State
 			ui.Error(err.Error())
 			return multistep.ActionHalt
 		}
-		if vmParams["ide2"] == nil || !strings.Contains(vmParams["ide2"].(string), "media=cdrom") {
-			err := fmt.Errorf("Cannot eject ISO from cdrom drive, ide2 is not present, or not a cdrom media")
+		if vmParams[c.ISODevice] == nil || !strings.Contains(vmParams[c.ISODevice].(string), "media=cdrom") {
+			err := fmt.Errorf("Cannot eject ISO from cdrom drive, %s is not present, or not a cdrom media", c.ISODevice)
 			state.Put("error", err)
 			ui.Error(err.Error())
 			return multistep.ActionHalt
 		}
 		if c.UnmountKeepDevice {
-			changes["ide2"] = "none,media=cdrom"
+			changes[c.ISODevice] = "none,media=cdrom"
 		} else {
-			changes["delete"] = "ide2"
+			changes["delete"] = c.ISODevice
 		}
 	}
 
