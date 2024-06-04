@@ -116,7 +116,7 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 					ui.Error(err.Error())
 					return multistep.ActionHalt
 				}
-				if c.AdditionalISOFiles[idx].UnmountKeepDevice {
+				if c.AdditionalISOFiles[idx].KeepCDRomDevice {
 					changes[cdrom] = "none,media=cdrom"
 				} else {
 					deleteItems = append(deleteItems, cdrom)

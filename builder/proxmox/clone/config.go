@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"net"
 	"net/netip"
+	"regexp"
 	"strings"
 
 	proxmoxcommon "github.com/hashicorp/packer-plugin-proxmox/builder/proxmox/common"
@@ -127,6 +128,53 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, []string, error) {
 	}
 	if len(c.NICs) < len(c.Ipconfigs) {
 		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("%d ipconfig blocks given, but only %d network interfaces defined", len(c.Ipconfigs), len(c.NICs)))
+	}
+
+	// each device type has a maximum number of devices that can be attached.
+	// count disks, additional isos configured for each device type, error if too many.
+	ideCount := 0
+	sataCount := 0
+	scsiCount := 0
+	virtIOCount := 0
+	// count disks
+	for _, disks := range c.Disks {
+		switch disks.Type {
+		case "ide":
+			ideCount++
+		case "sata":
+			sataCount++
+		case "scsi":
+			scsiCount++
+		case "virtio":
+			virtIOCount++
+		}
+	}
+	// count additional_iso_files devices
+	for _, iso := range c.AdditionalISOFiles {
+		// get device type from iso.Device
+		rd := regexp.MustCompile(`\D+`)
+		device := rd.FindString(iso.Device)
+		switch device {
+		case "ide":
+			ideCount++
+		case "sata":
+			sataCount++
+		case "scsi":
+			scsiCount++
+		}
+	}
+	// validate device type allocations
+	if ideCount > 4 {
+		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("maximum 4 IDE disks and ISOs supported"))
+	}
+	if sataCount > 6 {
+		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("maximum 6 SATA disks and ISOs supported"))
+	}
+	if scsiCount > 31 {
+		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("maximum 31 SCSI disks and ISOs supported"))
+	}
+	if virtIOCount > 16 {
+		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("maximum 16 VirtIO disks supported"))
 	}
 
 	if errs != nil && len(errs.Errors) > 0 {

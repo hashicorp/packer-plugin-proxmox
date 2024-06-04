@@ -68,9 +68,9 @@ func TestISOTemplateFinalize(t *testing.T) {
 		{
 			name: "should keep iso device and unmount ISO when configured",
 			builderConfig: &Config{
-				UnmountISO:        true,
-				ISODevice:         "ide2",
-				UnmountKeepDevice: true,
+				UnmountISO:      true,
+				ISODevice:       "ide2",
+				KeepCDRomDevice: true,
 			},
 			initialVMConfig: map[string]interface{}{
 				"ide2": "local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso,media=cdrom",

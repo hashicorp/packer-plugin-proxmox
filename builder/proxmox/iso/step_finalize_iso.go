@@ -47,7 +47,7 @@ func (s *stepFinalizeISOTemplate) Run(ctx context.Context, state multistep.State
 			ui.Error(err.Error())
 			return multistep.ActionHalt
 		}
-		if c.UnmountKeepDevice {
+		if c.KeepCDRomDevice {
 			changes[c.ISODevice] = "none,media=cdrom"
 		} else {
 			changes["delete"] = c.ISODevice
