@@ -249,7 +249,7 @@ type additionalISOsConfig struct {
 	Unmount bool `mapstructure:"unmount"`
 	// Keep CDRom device attached to template if unmounting ISO. Defaults to `false`.
 	// Has no effect if unmount is `false`
-	UnmountKeepDevice    bool   `mapstructure:"unmount_keep_device"`
+	KeepCDRomDevice      bool   `mapstructure:"keep_cdrom_device"`
 	ShouldUploadISO      bool   `mapstructure-to-hcl2:",skip"`
 	DownloadPathKey      string `mapstructure-to-hcl2:",skip"`
 	commonsteps.CDConfig `mapstructure:",squash"`
@@ -676,7 +676,12 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 				}
 			}
 		}
-		if disk.AsyncIO != "" && !(disk.AsyncIO == "native" || disk.AsyncIO == "threads" || disk.AsyncIO == "io_uring") {
+		if disk.AsyncIO == "" {
+			disk.AsyncIO = "io_uring"
+		}
+		switch disk.AsyncIO {
+		case "native", "threads", "io_uring":
+		default:
 			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("AsyncIO must be native, threads or io_uring"))
 		}
 		if disk.SSD && disk.Type == "virtio" {

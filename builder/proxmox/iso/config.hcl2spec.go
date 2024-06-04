@@ -130,7 +130,7 @@ type FlatConfig struct {
 	ISOStoragePool            *string                            `mapstructure:"iso_storage_pool" cty:"iso_storage_pool" hcl:"iso_storage_pool"`
 	ISODownloadPVE            *bool                              `mapstructure:"iso_download_pve" cty:"iso_download_pve" hcl:"iso_download_pve"`
 	UnmountISO                *bool                              `mapstructure:"unmount_iso" cty:"unmount_iso" hcl:"unmount_iso"`
-	UnmountKeepDevice         *bool                              `mapstructure:"unmount_keep_device" cty:"unmount_keep_device" hcl:"unmount_keep_device"`
+	KeepCDRomDevice           *bool                              `mapstructure:"keep_cdrom_device" cty:"keep_cdrom_device" hcl:"keep_cdrom_device"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -264,7 +264,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"iso_storage_pool":             &hcldec.AttrSpec{Name: "iso_storage_pool", Type: cty.String, Required: false},
 		"iso_download_pve":             &hcldec.AttrSpec{Name: "iso_download_pve", Type: cty.Bool, Required: false},
 		"unmount_iso":                  &hcldec.AttrSpec{Name: "unmount_iso", Type: cty.Bool, Required: false},
-		"unmount_keep_device":          &hcldec.AttrSpec{Name: "unmount_keep_device", Type: cty.Bool, Required: false},
+		"keep_cdrom_device":            &hcldec.AttrSpec{Name: "keep_cdrom_device", Type: cty.Bool, Required: false},
 	}
 	return s
 }

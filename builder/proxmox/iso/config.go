@@ -45,8 +45,8 @@ type Config struct {
 	UnmountISO bool `mapstructure:"unmount_iso"`
 	// Keep CDRom device attached to template if unmounting ISO. Defaults to `false`.
 	// Has no effect if unmount is `false`
-	UnmountKeepDevice bool `mapstructure:"unmount_keep_device"`
-	shouldUploadISO   bool
+	KeepCDRomDevice bool `mapstructure:"keep_cdrom_device"`
+	shouldUploadISO bool
 }
 
 func (c *Config) Prepare(raws ...interface{}) ([]string, []string, error) {
@@ -89,22 +89,45 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, []string, error) {
 		// set default ISO boot device ide2 if no value specified
 		log.Printf("iso_device not set, using default 'ide2'")
 		c.ISODevice = "ide2"
-		ideCount++
-		// Pass c.ISODevice value over to common config to ensure device index not used by disks
+		// Pass c.ISODevice value over to common config to reserve device index
 		c.ISOBuilderCDROMDevice = "ide2"
-	} else {
-		// Pass c.ISODevice value over to common config to ensure device index not used by disks
-		c.ISOBuilderCDROMDevice = c.ISODevice
-		// get device from ISODevice config
-		rd := regexp.MustCompile(`\D+`)
-		device := rd.FindString(c.ISODevice)
-		// get index from ISODevice config
-		rb := regexp.MustCompile(`\d+`)
-		_, err := strconv.Atoi(rb.FindString(c.ISODevice))
-		if err != nil {
-			errs = packersdk.MultiErrorAppend(errs, errors.New("iso_device value doesn't contain a valid index number. Expected format is <device type><index number>, eg. scsi0. received value: "+c.ISODevice))
+		ideCount++
+	}
+
+	// get device from ISODevice config
+	rd := regexp.MustCompile(`\D+`)
+	device := rd.FindString(c.ISODevice)
+	// get index from ISODevice config
+	rb := regexp.MustCompile(`\d+`)
+	_, err := strconv.Atoi(rb.FindString(c.ISODevice))
+	if err != nil {
+		errs = packersdk.MultiErrorAppend(errs, errors.New("iso_device value doesn't contain a valid index number. Expected format is <device type><index number>, eg. scsi0. received value: "+c.ISODevice))
+	}
+	// count iso
+	switch device {
+	case "ide":
+		ideCount++
+	case "sata":
+		sataCount++
+	case "scsi":
+		scsiCount++
+	default:
+		errs = packersdk.MultiErrorAppend(errs, errors.New("iso_device must be of type ide, sata or scsi. VirtIO not supported for ISO devices"))
+	}
+	// Pass c.ISODevice value over to common config to reserve device index
+	c.ISOBuilderCDROMDevice = c.ISODevice
+
+	// count additional_iso_files devices
+	for idx, iso := range c.AdditionalISOFiles {
+		// Prevent a device assignment conflict by ensuring ISOs defined in c.AdditionalISOFiles
+		// aren't assigned to the same device and index as the boot ISO device.
+		if iso.Device == c.ISODevice {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("conflicting device assignment between iso_device (%s) and additional_iso_files block %d device", c.ISODevice, idx+1))
 		}
-		// count iso
+		// count additional isos
+		// get device from iso.Device
+		rd := regexp.MustCompile(`\D+`)
+		device := rd.FindString(iso.Device)
 		switch device {
 		case "ide":
 			ideCount++
@@ -112,26 +135,6 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, []string, error) {
 			sataCount++
 		case "scsi":
 			scsiCount++
-		}
-		for idx, iso := range c.AdditionalISOFiles {
-			if iso.Device == c.ISODevice {
-				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("conflicting device assignment between iso_device (%s) and additional_iso_files block %d device", c.ISODevice, idx+1))
-			}
-			// count additional isos
-			// get device from iso.Device
-			rd := regexp.MustCompile(`\D+`)
-			device := rd.FindString(iso.Device)
-			switch device {
-			case "ide":
-				ideCount++
-			case "sata":
-				sataCount++
-			case "scsi":
-				scsiCount++
-			}
-		}
-		if !(device == "ide" || device == "sata" || device == "scsi") {
-			errs = packersdk.MultiErrorAppend(errs, errors.New("iso_device must be of type ide, sata or scsi. VirtIO not supported for ISO devices"))
 		}
 	}
 

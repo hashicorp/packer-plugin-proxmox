@@ -361,6 +361,11 @@ func generateProxmoxDisks(disks []diskConfig, additionalISOFiles []additionalISO
 			}
 			for {
 				log.Printf("Mapping Disk to ide%d", ideCount)
+				// to avoid a panic if IDE has too many devices attached, exit the loop when all indexes are occupied
+				if ideCount > 3 {
+					log.Print("No further IDE device indexes available (Max 4 devices).")
+					break
+				}
 				// We need reflection here as the storage objects are not exposed
 				// as a slice, but as a series of named fields in the structure
 				// that the APIs use.
@@ -419,6 +424,10 @@ func generateProxmoxDisks(disks []diskConfig, additionalISOFiles []additionalISO
 			}
 			for {
 				log.Printf("Mapping Disk to scsi%d", scsiCount)
+				if scsiCount > 30 {
+					log.Print("No further SCSI device indexes available (Max 31 devices).")
+					break
+				}
 				if reflect.
 					ValueOf(&scsiDisks).Elem().
 					FieldByName(fmt.Sprintf("Disk_%d", scsiCount)).
@@ -446,6 +455,10 @@ func generateProxmoxDisks(disks []diskConfig, additionalISOFiles []additionalISO
 				},
 			}
 			for {
+				if sataCount > 5 {
+					log.Print("No further SATA device indexes available (Max 6 devices).")
+					break
+				}
 				log.Printf("Mapping Disk to sata%d", sataCount)
 				if reflect.
 					ValueOf(&sataDisks).Elem().
@@ -475,6 +488,10 @@ func generateProxmoxDisks(disks []diskConfig, additionalISOFiles []additionalISO
 			}
 			for {
 				log.Printf("Mapping Disk to virtio%d", virtIOCount)
+				if virtIOCount > 15 {
+					log.Print("No further VirtIO device indexes available (Max 16 devices).")
+					break
+				}
 				if reflect.
 					ValueOf(&virtIODisks).Elem().
 					FieldByName(fmt.Sprintf("Disk_%d", virtIOCount)).
