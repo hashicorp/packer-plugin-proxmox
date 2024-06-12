@@ -271,8 +271,8 @@ boot time.
 - `cloud_init_disk_type` (string) - The type of Cloud-Init disk. Can be `scsi`, `sata`, or `ide`
   Defaults to `ide`.
 
-- `additional_iso_files` ([]additionalISOsConfig) - Additional ISO files attached to the virtual machine.
-  See [Additional ISO Files](#additional-iso-files).
+- `isos` ([]ISOsConfig) - ISO files attached to the virtual machine.
+  See [ISO Files](#iso-files).
 
 - `vm_interface` (string) - Name of the network interface that Packer gets
   the VMs IP from. Defaults to the first non loopback interface.
@@ -498,28 +498,40 @@ Usage example (JSON):
 <!-- End of code generated from the comments of the cloudInitIpconfig struct in builder/proxmox/clone/config.go; -->
 
 
-### Additional ISO Files
+### ISO Files
 
-<!-- Code generated from the comments of the additionalISOsConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the ISOsConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
-Additional ISO files attached to the virtual machine.
+One or more ISO files attached to the virtual machine.
 
-Example:
+JSON Example:
 
 ```json
-[
 
-	{
-	  "device": "scsi5",
-	  "iso_file": "local:iso/virtio-win-0.1.185.iso",
-	  "unmount": true,
-	  "iso_checksum": "af2b3cc9fa7905dea5e58d31508d75bba717c2b0d5553962658a47aebc9cc386"
+	"isos": [
+		{
+			  "type": "scsi",
+			  "iso_file": "local:iso/virtio-win-0.1.185.iso",
+			  "unmount": true,
+			  "iso_checksum": "af2b3cc9fa7905dea5e58d31508d75bba717c2b0d5553962658a47aebc9cc386"
+		}
+	 ]
+
+```
+HCL2 example:
+
+```hcl
+
+	isos {
+	  type = "scsi"
+	  iso_file = "local:iso/virtio-win-0.1.185.iso"
+	  unmount = true
+	  iso_checksum = "af2b3cc9fa7905dea5e58d31508d75bba717c2b0d5553962658a47aebc9cc386"
 	}
 
-]
 ```
 
-<!-- End of code generated from the comments of the additionalISOsConfig struct in builder/proxmox/common/config.go; -->
+<!-- End of code generated from the comments of the ISOsConfig struct in builder/proxmox/common/config.go; -->
 
 
 <!-- Code generated from the comments of the ISOConfig struct in multistep/commonsteps/iso_config.go; DO NOT EDIT MANUALLY -->
@@ -654,20 +666,18 @@ In HCL2:
 <!-- End of code generated from the comments of the ISOConfig struct in multistep/commonsteps/iso_config.go; -->
 
 
-<!-- Code generated from the comments of the additionalISOsConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the ISOsConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
-- `device` (string) - Bus type and bus index that the ISO will be mounted on. Can be `ideX`,
-  `sataX` or `scsiX`.
-  For `ide` the bus index ranges from 0 to 3, for `sata` from 0 to 5 and for
-  `scsi` from 0 to 30.
-  Defaults to `ide3` since `ide2` is generally the boot drive.
+- `type` (string) - Bus type and bus index that the ISO will be mounted on. Can be `ide`,
+  `sata` or `scsi`.
+  Defaults to `ide`.
 
 - `iso_file` (string) - Path to the ISO file to boot from, expressed as a
   proxmox datastore path, for example
   `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
   Either `iso_file` OR `iso_url` must be specifed.
 
-- `iso_storage_pool` (string) - Proxmox storage pool onto which to upload
+- `storage_pool` (string) - Proxmox storage pool onto which to upload
   the ISO file.
 
 - `iso_download_pve` (bool) - Download the ISO directly from the PVE node rather than through Packer.
@@ -679,7 +689,7 @@ In HCL2:
 - `keep_cdrom_device` (bool) - Keep CDRom device attached to template if unmounting ISO. Defaults to `false`.
   Has no effect if unmount is `false`
 
-<!-- End of code generated from the comments of the additionalISOsConfig struct in builder/proxmox/common/config.go; -->
+<!-- End of code generated from the comments of the ISOsConfig struct in builder/proxmox/common/config.go; -->
 
 
 <!-- Code generated from the comments of the CDConfig struct in multistep/commonsteps/extra_iso_config.go; DO NOT EDIT MANUALLY -->

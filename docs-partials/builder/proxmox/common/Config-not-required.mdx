@@ -134,8 +134,8 @@
 - `cloud_init_disk_type` (string) - The type of Cloud-Init disk. Can be `scsi`, `sata`, or `ide`
   Defaults to `ide`.
 
-- `additional_iso_files` ([]additionalISOsConfig) - Additional ISO files attached to the virtual machine.
-  See [Additional ISO Files](#additional-iso-files).
+- `isos` ([]ISOsConfig) - ISO files attached to the virtual machine.
+  See [ISO Files](#iso-files).
 
 - `vm_interface` (string) - Name of the network interface that Packer gets
   the VMs IP from. Defaults to the first non loopback interface.

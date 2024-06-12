@@ -1,17 +1,15 @@
-<!-- Code generated from the comments of the additionalISOsConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the ISOsConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
-- `device` (string) - Bus type and bus index that the ISO will be mounted on. Can be `ideX`,
-  `sataX` or `scsiX`.
-  For `ide` the bus index ranges from 0 to 3, for `sata` from 0 to 5 and for
-  `scsi` from 0 to 30.
-  Defaults to `ide3` since `ide2` is generally the boot drive.
+- `type` (string) - Bus type and bus index that the ISO will be mounted on. Can be `ide`,
+  `sata` or `scsi`.
+  Defaults to `ide`.
 
 - `iso_file` (string) - Path to the ISO file to boot from, expressed as a
   proxmox datastore path, for example
   `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
   Either `iso_file` OR `iso_url` must be specifed.
 
-- `iso_storage_pool` (string) - Proxmox storage pool onto which to upload
+- `storage_pool` (string) - Proxmox storage pool onto which to upload
   the ISO file.
 
 - `iso_download_pve` (bool) - Download the ISO directly from the PVE node rather than through Packer.
@@ -23,4 +21,4 @@
 - `keep_cdrom_device` (bool) - Keep CDRom device attached to template if unmounting ISO. Defaults to `false`.
   Has no effect if unmount is `false`
 
-<!-- End of code generated from the comments of the additionalISOsConfig struct in builder/proxmox/common/config.go; -->
+<!-- End of code generated from the comments of the ISOsConfig struct in builder/proxmox/common/config.go; -->

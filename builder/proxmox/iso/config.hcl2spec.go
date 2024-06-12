@@ -11,126 +11,115 @@ import (
 // FlatConfig is an auto-generated flat version of Config.
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatConfig struct {
-	PackerBuildName           *string                            `mapstructure:"packer_build_name" cty:"packer_build_name" hcl:"packer_build_name"`
-	PackerBuilderType         *string                            `mapstructure:"packer_builder_type" cty:"packer_builder_type" hcl:"packer_builder_type"`
-	PackerCoreVersion         *string                            `mapstructure:"packer_core_version" cty:"packer_core_version" hcl:"packer_core_version"`
-	PackerDebug               *bool                              `mapstructure:"packer_debug" cty:"packer_debug" hcl:"packer_debug"`
-	PackerForce               *bool                              `mapstructure:"packer_force" cty:"packer_force" hcl:"packer_force"`
-	PackerOnError             *string                            `mapstructure:"packer_on_error" cty:"packer_on_error" hcl:"packer_on_error"`
-	PackerUserVars            map[string]string                  `mapstructure:"packer_user_variables" cty:"packer_user_variables" hcl:"packer_user_variables"`
-	PackerSensitiveVars       []string                           `mapstructure:"packer_sensitive_variables" cty:"packer_sensitive_variables" hcl:"packer_sensitive_variables"`
-	HTTPDir                   *string                            `mapstructure:"http_directory" cty:"http_directory" hcl:"http_directory"`
-	HTTPContent               map[string]string                  `mapstructure:"http_content" cty:"http_content" hcl:"http_content"`
-	HTTPPortMin               *int                               `mapstructure:"http_port_min" cty:"http_port_min" hcl:"http_port_min"`
-	HTTPPortMax               *int                               `mapstructure:"http_port_max" cty:"http_port_max" hcl:"http_port_max"`
-	HTTPAddress               *string                            `mapstructure:"http_bind_address" cty:"http_bind_address" hcl:"http_bind_address"`
-	HTTPInterface             *string                            `mapstructure:"http_interface" undocumented:"true" cty:"http_interface" hcl:"http_interface"`
-	BootGroupInterval         *string                            `mapstructure:"boot_keygroup_interval" cty:"boot_keygroup_interval" hcl:"boot_keygroup_interval"`
-	BootWait                  *string                            `mapstructure:"boot_wait" cty:"boot_wait" hcl:"boot_wait"`
-	BootCommand               []string                           `mapstructure:"boot_command" cty:"boot_command" hcl:"boot_command"`
-	BootKeyInterval           *string                            `mapstructure:"boot_key_interval" cty:"boot_key_interval" hcl:"boot_key_interval"`
-	Type                      *string                            `mapstructure:"communicator" cty:"communicator" hcl:"communicator"`
-	PauseBeforeConnect        *string                            `mapstructure:"pause_before_connecting" cty:"pause_before_connecting" hcl:"pause_before_connecting"`
-	SSHHost                   *string                            `mapstructure:"ssh_host" cty:"ssh_host" hcl:"ssh_host"`
-	SSHPort                   *int                               `mapstructure:"ssh_port" cty:"ssh_port" hcl:"ssh_port"`
-	SSHUsername               *string                            `mapstructure:"ssh_username" cty:"ssh_username" hcl:"ssh_username"`
-	SSHPassword               *string                            `mapstructure:"ssh_password" cty:"ssh_password" hcl:"ssh_password"`
-	SSHKeyPairName            *string                            `mapstructure:"ssh_keypair_name" undocumented:"true" cty:"ssh_keypair_name" hcl:"ssh_keypair_name"`
-	SSHTemporaryKeyPairName   *string                            `mapstructure:"temporary_key_pair_name" undocumented:"true" cty:"temporary_key_pair_name" hcl:"temporary_key_pair_name"`
-	SSHTemporaryKeyPairType   *string                            `mapstructure:"temporary_key_pair_type" cty:"temporary_key_pair_type" hcl:"temporary_key_pair_type"`
-	SSHTemporaryKeyPairBits   *int                               `mapstructure:"temporary_key_pair_bits" cty:"temporary_key_pair_bits" hcl:"temporary_key_pair_bits"`
-	SSHCiphers                []string                           `mapstructure:"ssh_ciphers" cty:"ssh_ciphers" hcl:"ssh_ciphers"`
-	SSHClearAuthorizedKeys    *bool                              `mapstructure:"ssh_clear_authorized_keys" cty:"ssh_clear_authorized_keys" hcl:"ssh_clear_authorized_keys"`
-	SSHKEXAlgos               []string                           `mapstructure:"ssh_key_exchange_algorithms" cty:"ssh_key_exchange_algorithms" hcl:"ssh_key_exchange_algorithms"`
-	SSHPrivateKeyFile         *string                            `mapstructure:"ssh_private_key_file" undocumented:"true" cty:"ssh_private_key_file" hcl:"ssh_private_key_file"`
-	SSHCertificateFile        *string                            `mapstructure:"ssh_certificate_file" cty:"ssh_certificate_file" hcl:"ssh_certificate_file"`
-	SSHPty                    *bool                              `mapstructure:"ssh_pty" cty:"ssh_pty" hcl:"ssh_pty"`
-	SSHTimeout                *string                            `mapstructure:"ssh_timeout" cty:"ssh_timeout" hcl:"ssh_timeout"`
-	SSHWaitTimeout            *string                            `mapstructure:"ssh_wait_timeout" undocumented:"true" cty:"ssh_wait_timeout" hcl:"ssh_wait_timeout"`
-	SSHAgentAuth              *bool                              `mapstructure:"ssh_agent_auth" undocumented:"true" cty:"ssh_agent_auth" hcl:"ssh_agent_auth"`
-	SSHDisableAgentForwarding *bool                              `mapstructure:"ssh_disable_agent_forwarding" cty:"ssh_disable_agent_forwarding" hcl:"ssh_disable_agent_forwarding"`
-	SSHHandshakeAttempts      *int                               `mapstructure:"ssh_handshake_attempts" cty:"ssh_handshake_attempts" hcl:"ssh_handshake_attempts"`
-	SSHBastionHost            *string                            `mapstructure:"ssh_bastion_host" cty:"ssh_bastion_host" hcl:"ssh_bastion_host"`
-	SSHBastionPort            *int                               `mapstructure:"ssh_bastion_port" cty:"ssh_bastion_port" hcl:"ssh_bastion_port"`
-	SSHBastionAgentAuth       *bool                              `mapstructure:"ssh_bastion_agent_auth" cty:"ssh_bastion_agent_auth" hcl:"ssh_bastion_agent_auth"`
-	SSHBastionUsername        *string                            `mapstructure:"ssh_bastion_username" cty:"ssh_bastion_username" hcl:"ssh_bastion_username"`
-	SSHBastionPassword        *string                            `mapstructure:"ssh_bastion_password" cty:"ssh_bastion_password" hcl:"ssh_bastion_password"`
-	SSHBastionInteractive     *bool                              `mapstructure:"ssh_bastion_interactive" cty:"ssh_bastion_interactive" hcl:"ssh_bastion_interactive"`
-	SSHBastionPrivateKeyFile  *string                            `mapstructure:"ssh_bastion_private_key_file" cty:"ssh_bastion_private_key_file" hcl:"ssh_bastion_private_key_file"`
-	SSHBastionCertificateFile *string                            `mapstructure:"ssh_bastion_certificate_file" cty:"ssh_bastion_certificate_file" hcl:"ssh_bastion_certificate_file"`
-	SSHFileTransferMethod     *string                            `mapstructure:"ssh_file_transfer_method" cty:"ssh_file_transfer_method" hcl:"ssh_file_transfer_method"`
-	SSHProxyHost              *string                            `mapstructure:"ssh_proxy_host" cty:"ssh_proxy_host" hcl:"ssh_proxy_host"`
-	SSHProxyPort              *int                               `mapstructure:"ssh_proxy_port" cty:"ssh_proxy_port" hcl:"ssh_proxy_port"`
-	SSHProxyUsername          *string                            `mapstructure:"ssh_proxy_username" cty:"ssh_proxy_username" hcl:"ssh_proxy_username"`
-	SSHProxyPassword          *string                            `mapstructure:"ssh_proxy_password" cty:"ssh_proxy_password" hcl:"ssh_proxy_password"`
-	SSHKeepAliveInterval      *string                            `mapstructure:"ssh_keep_alive_interval" cty:"ssh_keep_alive_interval" hcl:"ssh_keep_alive_interval"`
-	SSHReadWriteTimeout       *string                            `mapstructure:"ssh_read_write_timeout" cty:"ssh_read_write_timeout" hcl:"ssh_read_write_timeout"`
-	SSHRemoteTunnels          []string                           `mapstructure:"ssh_remote_tunnels" cty:"ssh_remote_tunnels" hcl:"ssh_remote_tunnels"`
-	SSHLocalTunnels           []string                           `mapstructure:"ssh_local_tunnels" cty:"ssh_local_tunnels" hcl:"ssh_local_tunnels"`
-	SSHPublicKey              []byte                             `mapstructure:"ssh_public_key" undocumented:"true" cty:"ssh_public_key" hcl:"ssh_public_key"`
-	SSHPrivateKey             []byte                             `mapstructure:"ssh_private_key" undocumented:"true" cty:"ssh_private_key" hcl:"ssh_private_key"`
-	WinRMUser                 *string                            `mapstructure:"winrm_username" cty:"winrm_username" hcl:"winrm_username"`
-	WinRMPassword             *string                            `mapstructure:"winrm_password" cty:"winrm_password" hcl:"winrm_password"`
-	WinRMHost                 *string                            `mapstructure:"winrm_host" cty:"winrm_host" hcl:"winrm_host"`
-	WinRMNoProxy              *bool                              `mapstructure:"winrm_no_proxy" cty:"winrm_no_proxy" hcl:"winrm_no_proxy"`
-	WinRMPort                 *int                               `mapstructure:"winrm_port" cty:"winrm_port" hcl:"winrm_port"`
-	WinRMTimeout              *string                            `mapstructure:"winrm_timeout" cty:"winrm_timeout" hcl:"winrm_timeout"`
-	WinRMUseSSL               *bool                              `mapstructure:"winrm_use_ssl" cty:"winrm_use_ssl" hcl:"winrm_use_ssl"`
-	WinRMInsecure             *bool                              `mapstructure:"winrm_insecure" cty:"winrm_insecure" hcl:"winrm_insecure"`
-	WinRMUseNTLM              *bool                              `mapstructure:"winrm_use_ntlm" cty:"winrm_use_ntlm" hcl:"winrm_use_ntlm"`
-	ProxmoxURLRaw             *string                            `mapstructure:"proxmox_url" cty:"proxmox_url" hcl:"proxmox_url"`
-	SkipCertValidation        *bool                              `mapstructure:"insecure_skip_tls_verify" cty:"insecure_skip_tls_verify" hcl:"insecure_skip_tls_verify"`
-	Username                  *string                            `mapstructure:"username" cty:"username" hcl:"username"`
-	Password                  *string                            `mapstructure:"password" cty:"password" hcl:"password"`
-	Token                     *string                            `mapstructure:"token" cty:"token" hcl:"token"`
-	Node                      *string                            `mapstructure:"node" cty:"node" hcl:"node"`
-	Pool                      *string                            `mapstructure:"pool" cty:"pool" hcl:"pool"`
-	TaskTimeout               *string                            `mapstructure:"task_timeout" cty:"task_timeout" hcl:"task_timeout"`
-	VMName                    *string                            `mapstructure:"vm_name" cty:"vm_name" hcl:"vm_name"`
-	VMID                      *int                               `mapstructure:"vm_id" cty:"vm_id" hcl:"vm_id"`
-	Tags                      *string                            `mapstructure:"tags" cty:"tags" hcl:"tags"`
-	Boot                      *string                            `mapstructure:"boot" cty:"boot" hcl:"boot"`
-	Memory                    *int                               `mapstructure:"memory" cty:"memory" hcl:"memory"`
-	BalloonMinimum            *int                               `mapstructure:"ballooning_minimum" cty:"ballooning_minimum" hcl:"ballooning_minimum"`
-	Cores                     *int                               `mapstructure:"cores" cty:"cores" hcl:"cores"`
-	CPUType                   *string                            `mapstructure:"cpu_type" cty:"cpu_type" hcl:"cpu_type"`
-	Sockets                   *int                               `mapstructure:"sockets" cty:"sockets" hcl:"sockets"`
-	Numa                      *bool                              `mapstructure:"numa" cty:"numa" hcl:"numa"`
-	OS                        *string                            `mapstructure:"os" cty:"os" hcl:"os"`
-	BIOS                      *string                            `mapstructure:"bios" cty:"bios" hcl:"bios"`
-	EFIConfig                 *proxmox.FlatefiConfig             `mapstructure:"efi_config" cty:"efi_config" hcl:"efi_config"`
-	EFIDisk                   *string                            `mapstructure:"efidisk" cty:"efidisk" hcl:"efidisk"`
-	Machine                   *string                            `mapstructure:"machine" cty:"machine" hcl:"machine"`
-	Rng0                      *proxmox.Flatrng0Config            `mapstructure:"rng0" cty:"rng0" hcl:"rng0"`
-	TPMConfig                 *proxmox.FlattpmConfig             `mapstructure:"tpm_config" cty:"tpm_config" hcl:"tpm_config"`
-	VGA                       *proxmox.FlatvgaConfig             `mapstructure:"vga" cty:"vga" hcl:"vga"`
-	NICs                      []proxmox.FlatNICConfig            `mapstructure:"network_adapters" cty:"network_adapters" hcl:"network_adapters"`
-	Disks                     []proxmox.FlatdiskConfig           `mapstructure:"disks" cty:"disks" hcl:"disks"`
-	PCIDevices                []proxmox.FlatpciDeviceConfig      `mapstructure:"pci_devices" cty:"pci_devices" hcl:"pci_devices"`
-	Serials                   []string                           `mapstructure:"serials" cty:"serials" hcl:"serials"`
-	Agent                     *bool                              `mapstructure:"qemu_agent" cty:"qemu_agent" hcl:"qemu_agent"`
-	SCSIController            *string                            `mapstructure:"scsi_controller" cty:"scsi_controller" hcl:"scsi_controller"`
-	Onboot                    *bool                              `mapstructure:"onboot" cty:"onboot" hcl:"onboot"`
-	DisableKVM                *bool                              `mapstructure:"disable_kvm" cty:"disable_kvm" hcl:"disable_kvm"`
-	TemplateName              *string                            `mapstructure:"template_name" cty:"template_name" hcl:"template_name"`
-	TemplateDescription       *string                            `mapstructure:"template_description" cty:"template_description" hcl:"template_description"`
-	CloudInit                 *bool                              `mapstructure:"cloud_init" cty:"cloud_init" hcl:"cloud_init"`
-	CloudInitStoragePool      *string                            `mapstructure:"cloud_init_storage_pool" cty:"cloud_init_storage_pool" hcl:"cloud_init_storage_pool"`
-	CloudInitDiskType         *string                            `mapstructure:"cloud_init_disk_type" cty:"cloud_init_disk_type" hcl:"cloud_init_disk_type"`
-	AdditionalISOFiles        []proxmox.FlatadditionalISOsConfig `mapstructure:"additional_iso_files" cty:"additional_iso_files" hcl:"additional_iso_files"`
-	VMInterface               *string                            `mapstructure:"vm_interface" cty:"vm_interface" hcl:"vm_interface"`
-	AdditionalArgs            *string                            `mapstructure:"qemu_additional_args" cty:"qemu_additional_args" hcl:"qemu_additional_args"`
-	ISOChecksum               *string                            `mapstructure:"iso_checksum" required:"true" cty:"iso_checksum" hcl:"iso_checksum"`
-	RawSingleISOUrl           *string                            `mapstructure:"iso_url" required:"true" cty:"iso_url" hcl:"iso_url"`
-	ISOUrls                   []string                           `mapstructure:"iso_urls" cty:"iso_urls" hcl:"iso_urls"`
-	TargetPath                *string                            `mapstructure:"iso_target_path" cty:"iso_target_path" hcl:"iso_target_path"`
-	TargetExtension           *string                            `mapstructure:"iso_target_extension" cty:"iso_target_extension" hcl:"iso_target_extension"`
-	ISOFile                   *string                            `mapstructure:"iso_file" cty:"iso_file" hcl:"iso_file"`
-	ISODevice                 *string                            `mapstructure:"iso_device" cty:"iso_device" hcl:"iso_device"`
-	ISOStoragePool            *string                            `mapstructure:"iso_storage_pool" cty:"iso_storage_pool" hcl:"iso_storage_pool"`
-	ISODownloadPVE            *bool                              `mapstructure:"iso_download_pve" cty:"iso_download_pve" hcl:"iso_download_pve"`
-	UnmountISO                *bool                              `mapstructure:"unmount_iso" cty:"unmount_iso" hcl:"unmount_iso"`
-	KeepCDRomDevice           *bool                              `mapstructure:"keep_cdrom_device" cty:"keep_cdrom_device" hcl:"keep_cdrom_device"`
+	PackerBuildName           *string                       `mapstructure:"packer_build_name" cty:"packer_build_name" hcl:"packer_build_name"`
+	PackerBuilderType         *string                       `mapstructure:"packer_builder_type" cty:"packer_builder_type" hcl:"packer_builder_type"`
+	PackerCoreVersion         *string                       `mapstructure:"packer_core_version" cty:"packer_core_version" hcl:"packer_core_version"`
+	PackerDebug               *bool                         `mapstructure:"packer_debug" cty:"packer_debug" hcl:"packer_debug"`
+	PackerForce               *bool                         `mapstructure:"packer_force" cty:"packer_force" hcl:"packer_force"`
+	PackerOnError             *string                       `mapstructure:"packer_on_error" cty:"packer_on_error" hcl:"packer_on_error"`
+	PackerUserVars            map[string]string             `mapstructure:"packer_user_variables" cty:"packer_user_variables" hcl:"packer_user_variables"`
+	PackerSensitiveVars       []string                      `mapstructure:"packer_sensitive_variables" cty:"packer_sensitive_variables" hcl:"packer_sensitive_variables"`
+	HTTPDir                   *string                       `mapstructure:"http_directory" cty:"http_directory" hcl:"http_directory"`
+	HTTPContent               map[string]string             `mapstructure:"http_content" cty:"http_content" hcl:"http_content"`
+	HTTPPortMin               *int                          `mapstructure:"http_port_min" cty:"http_port_min" hcl:"http_port_min"`
+	HTTPPortMax               *int                          `mapstructure:"http_port_max" cty:"http_port_max" hcl:"http_port_max"`
+	HTTPAddress               *string                       `mapstructure:"http_bind_address" cty:"http_bind_address" hcl:"http_bind_address"`
+	HTTPInterface             *string                       `mapstructure:"http_interface" undocumented:"true" cty:"http_interface" hcl:"http_interface"`
+	BootGroupInterval         *string                       `mapstructure:"boot_keygroup_interval" cty:"boot_keygroup_interval" hcl:"boot_keygroup_interval"`
+	BootWait                  *string                       `mapstructure:"boot_wait" cty:"boot_wait" hcl:"boot_wait"`
+	BootCommand               []string                      `mapstructure:"boot_command" cty:"boot_command" hcl:"boot_command"`
+	BootKeyInterval           *string                       `mapstructure:"boot_key_interval" cty:"boot_key_interval" hcl:"boot_key_interval"`
+	Type                      *string                       `mapstructure:"communicator" cty:"communicator" hcl:"communicator"`
+	PauseBeforeConnect        *string                       `mapstructure:"pause_before_connecting" cty:"pause_before_connecting" hcl:"pause_before_connecting"`
+	SSHHost                   *string                       `mapstructure:"ssh_host" cty:"ssh_host" hcl:"ssh_host"`
+	SSHPort                   *int                          `mapstructure:"ssh_port" cty:"ssh_port" hcl:"ssh_port"`
+	SSHUsername               *string                       `mapstructure:"ssh_username" cty:"ssh_username" hcl:"ssh_username"`
+	SSHPassword               *string                       `mapstructure:"ssh_password" cty:"ssh_password" hcl:"ssh_password"`
+	SSHKeyPairName            *string                       `mapstructure:"ssh_keypair_name" undocumented:"true" cty:"ssh_keypair_name" hcl:"ssh_keypair_name"`
+	SSHTemporaryKeyPairName   *string                       `mapstructure:"temporary_key_pair_name" undocumented:"true" cty:"temporary_key_pair_name" hcl:"temporary_key_pair_name"`
+	SSHTemporaryKeyPairType   *string                       `mapstructure:"temporary_key_pair_type" cty:"temporary_key_pair_type" hcl:"temporary_key_pair_type"`
+	SSHTemporaryKeyPairBits   *int                          `mapstructure:"temporary_key_pair_bits" cty:"temporary_key_pair_bits" hcl:"temporary_key_pair_bits"`
+	SSHCiphers                []string                      `mapstructure:"ssh_ciphers" cty:"ssh_ciphers" hcl:"ssh_ciphers"`
+	SSHClearAuthorizedKeys    *bool                         `mapstructure:"ssh_clear_authorized_keys" cty:"ssh_clear_authorized_keys" hcl:"ssh_clear_authorized_keys"`
+	SSHKEXAlgos               []string                      `mapstructure:"ssh_key_exchange_algorithms" cty:"ssh_key_exchange_algorithms" hcl:"ssh_key_exchange_algorithms"`
+	SSHPrivateKeyFile         *string                       `mapstructure:"ssh_private_key_file" undocumented:"true" cty:"ssh_private_key_file" hcl:"ssh_private_key_file"`
+	SSHCertificateFile        *string                       `mapstructure:"ssh_certificate_file" cty:"ssh_certificate_file" hcl:"ssh_certificate_file"`
+	SSHPty                    *bool                         `mapstructure:"ssh_pty" cty:"ssh_pty" hcl:"ssh_pty"`
+	SSHTimeout                *string                       `mapstructure:"ssh_timeout" cty:"ssh_timeout" hcl:"ssh_timeout"`
+	SSHWaitTimeout            *string                       `mapstructure:"ssh_wait_timeout" undocumented:"true" cty:"ssh_wait_timeout" hcl:"ssh_wait_timeout"`
+	SSHAgentAuth              *bool                         `mapstructure:"ssh_agent_auth" undocumented:"true" cty:"ssh_agent_auth" hcl:"ssh_agent_auth"`
+	SSHDisableAgentForwarding *bool                         `mapstructure:"ssh_disable_agent_forwarding" cty:"ssh_disable_agent_forwarding" hcl:"ssh_disable_agent_forwarding"`
+	SSHHandshakeAttempts      *int                          `mapstructure:"ssh_handshake_attempts" cty:"ssh_handshake_attempts" hcl:"ssh_handshake_attempts"`
+	SSHBastionHost            *string                       `mapstructure:"ssh_bastion_host" cty:"ssh_bastion_host" hcl:"ssh_bastion_host"`
+	SSHBastionPort            *int                          `mapstructure:"ssh_bastion_port" cty:"ssh_bastion_port" hcl:"ssh_bastion_port"`
+	SSHBastionAgentAuth       *bool                         `mapstructure:"ssh_bastion_agent_auth" cty:"ssh_bastion_agent_auth" hcl:"ssh_bastion_agent_auth"`
+	SSHBastionUsername        *string                       `mapstructure:"ssh_bastion_username" cty:"ssh_bastion_username" hcl:"ssh_bastion_username"`
+	SSHBastionPassword        *string                       `mapstructure:"ssh_bastion_password" cty:"ssh_bastion_password" hcl:"ssh_bastion_password"`
+	SSHBastionInteractive     *bool                         `mapstructure:"ssh_bastion_interactive" cty:"ssh_bastion_interactive" hcl:"ssh_bastion_interactive"`
+	SSHBastionPrivateKeyFile  *string                       `mapstructure:"ssh_bastion_private_key_file" cty:"ssh_bastion_private_key_file" hcl:"ssh_bastion_private_key_file"`
+	SSHBastionCertificateFile *string                       `mapstructure:"ssh_bastion_certificate_file" cty:"ssh_bastion_certificate_file" hcl:"ssh_bastion_certificate_file"`
+	SSHFileTransferMethod     *string                       `mapstructure:"ssh_file_transfer_method" cty:"ssh_file_transfer_method" hcl:"ssh_file_transfer_method"`
+	SSHProxyHost              *string                       `mapstructure:"ssh_proxy_host" cty:"ssh_proxy_host" hcl:"ssh_proxy_host"`
+	SSHProxyPort              *int                          `mapstructure:"ssh_proxy_port" cty:"ssh_proxy_port" hcl:"ssh_proxy_port"`
+	SSHProxyUsername          *string                       `mapstructure:"ssh_proxy_username" cty:"ssh_proxy_username" hcl:"ssh_proxy_username"`
+	SSHProxyPassword          *string                       `mapstructure:"ssh_proxy_password" cty:"ssh_proxy_password" hcl:"ssh_proxy_password"`
+	SSHKeepAliveInterval      *string                       `mapstructure:"ssh_keep_alive_interval" cty:"ssh_keep_alive_interval" hcl:"ssh_keep_alive_interval"`
+	SSHReadWriteTimeout       *string                       `mapstructure:"ssh_read_write_timeout" cty:"ssh_read_write_timeout" hcl:"ssh_read_write_timeout"`
+	SSHRemoteTunnels          []string                      `mapstructure:"ssh_remote_tunnels" cty:"ssh_remote_tunnels" hcl:"ssh_remote_tunnels"`
+	SSHLocalTunnels           []string                      `mapstructure:"ssh_local_tunnels" cty:"ssh_local_tunnels" hcl:"ssh_local_tunnels"`
+	SSHPublicKey              []byte                        `mapstructure:"ssh_public_key" undocumented:"true" cty:"ssh_public_key" hcl:"ssh_public_key"`
+	SSHPrivateKey             []byte                        `mapstructure:"ssh_private_key" undocumented:"true" cty:"ssh_private_key" hcl:"ssh_private_key"`
+	WinRMUser                 *string                       `mapstructure:"winrm_username" cty:"winrm_username" hcl:"winrm_username"`
+	WinRMPassword             *string                       `mapstructure:"winrm_password" cty:"winrm_password" hcl:"winrm_password"`
+	WinRMHost                 *string                       `mapstructure:"winrm_host" cty:"winrm_host" hcl:"winrm_host"`
+	WinRMNoProxy              *bool                         `mapstructure:"winrm_no_proxy" cty:"winrm_no_proxy" hcl:"winrm_no_proxy"`
+	WinRMPort                 *int                          `mapstructure:"winrm_port" cty:"winrm_port" hcl:"winrm_port"`
+	WinRMTimeout              *string                       `mapstructure:"winrm_timeout" cty:"winrm_timeout" hcl:"winrm_timeout"`
+	WinRMUseSSL               *bool                         `mapstructure:"winrm_use_ssl" cty:"winrm_use_ssl" hcl:"winrm_use_ssl"`
+	WinRMInsecure             *bool                         `mapstructure:"winrm_insecure" cty:"winrm_insecure" hcl:"winrm_insecure"`
+	WinRMUseNTLM              *bool                         `mapstructure:"winrm_use_ntlm" cty:"winrm_use_ntlm" hcl:"winrm_use_ntlm"`
+	ProxmoxURLRaw             *string                       `mapstructure:"proxmox_url" cty:"proxmox_url" hcl:"proxmox_url"`
+	SkipCertValidation        *bool                         `mapstructure:"insecure_skip_tls_verify" cty:"insecure_skip_tls_verify" hcl:"insecure_skip_tls_verify"`
+	Username                  *string                       `mapstructure:"username" cty:"username" hcl:"username"`
+	Password                  *string                       `mapstructure:"password" cty:"password" hcl:"password"`
+	Token                     *string                       `mapstructure:"token" cty:"token" hcl:"token"`
+	Node                      *string                       `mapstructure:"node" cty:"node" hcl:"node"`
+	Pool                      *string                       `mapstructure:"pool" cty:"pool" hcl:"pool"`
+	TaskTimeout               *string                       `mapstructure:"task_timeout" cty:"task_timeout" hcl:"task_timeout"`
+	VMName                    *string                       `mapstructure:"vm_name" cty:"vm_name" hcl:"vm_name"`
+	VMID                      *int                          `mapstructure:"vm_id" cty:"vm_id" hcl:"vm_id"`
+	Tags                      *string                       `mapstructure:"tags" cty:"tags" hcl:"tags"`
+	Boot                      *string                       `mapstructure:"boot" cty:"boot" hcl:"boot"`
+	Memory                    *int                          `mapstructure:"memory" cty:"memory" hcl:"memory"`
+	BalloonMinimum            *int                          `mapstructure:"ballooning_minimum" cty:"ballooning_minimum" hcl:"ballooning_minimum"`
+	Cores                     *int                          `mapstructure:"cores" cty:"cores" hcl:"cores"`
+	CPUType                   *string                       `mapstructure:"cpu_type" cty:"cpu_type" hcl:"cpu_type"`
+	Sockets                   *int                          `mapstructure:"sockets" cty:"sockets" hcl:"sockets"`
+	Numa                      *bool                         `mapstructure:"numa" cty:"numa" hcl:"numa"`
+	OS                        *string                       `mapstructure:"os" cty:"os" hcl:"os"`
+	BIOS                      *string                       `mapstructure:"bios" cty:"bios" hcl:"bios"`
+	EFIConfig                 *proxmox.FlatefiConfig        `mapstructure:"efi_config" cty:"efi_config" hcl:"efi_config"`
+	EFIDisk                   *string                       `mapstructure:"efidisk" cty:"efidisk" hcl:"efidisk"`
+	Machine                   *string                       `mapstructure:"machine" cty:"machine" hcl:"machine"`
+	Rng0                      *proxmox.Flatrng0Config       `mapstructure:"rng0" cty:"rng0" hcl:"rng0"`
+	TPMConfig                 *proxmox.FlattpmConfig        `mapstructure:"tpm_config" cty:"tpm_config" hcl:"tpm_config"`
+	VGA                       *proxmox.FlatvgaConfig        `mapstructure:"vga" cty:"vga" hcl:"vga"`
+	NICs                      []proxmox.FlatNICConfig       `mapstructure:"network_adapters" cty:"network_adapters" hcl:"network_adapters"`
+	Disks                     []proxmox.FlatdiskConfig      `mapstructure:"disks" cty:"disks" hcl:"disks"`
+	PCIDevices                []proxmox.FlatpciDeviceConfig `mapstructure:"pci_devices" cty:"pci_devices" hcl:"pci_devices"`
+	Serials                   []string                      `mapstructure:"serials" cty:"serials" hcl:"serials"`
+	Agent                     *bool                         `mapstructure:"qemu_agent" cty:"qemu_agent" hcl:"qemu_agent"`
+	SCSIController            *string                       `mapstructure:"scsi_controller" cty:"scsi_controller" hcl:"scsi_controller"`
+	Onboot                    *bool                         `mapstructure:"onboot" cty:"onboot" hcl:"onboot"`
+	DisableKVM                *bool                         `mapstructure:"disable_kvm" cty:"disable_kvm" hcl:"disable_kvm"`
+	TemplateName              *string                       `mapstructure:"template_name" cty:"template_name" hcl:"template_name"`
+	TemplateDescription       *string                       `mapstructure:"template_description" cty:"template_description" hcl:"template_description"`
+	CloudInit                 *bool                         `mapstructure:"cloud_init" cty:"cloud_init" hcl:"cloud_init"`
+	CloudInitStoragePool      *string                       `mapstructure:"cloud_init_storage_pool" cty:"cloud_init_storage_pool" hcl:"cloud_init_storage_pool"`
+	CloudInitDiskType         *string                       `mapstructure:"cloud_init_disk_type" cty:"cloud_init_disk_type" hcl:"cloud_init_disk_type"`
+	ISOs                      []proxmox.FlatISOsConfig      `mapstructure:"isos" cty:"isos" hcl:"isos"`
+	VMInterface               *string                       `mapstructure:"vm_interface" cty:"vm_interface" hcl:"vm_interface"`
+	AdditionalArgs            *string                       `mapstructure:"qemu_additional_args" cty:"qemu_additional_args" hcl:"qemu_additional_args"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -251,20 +240,9 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"cloud_init":                   &hcldec.AttrSpec{Name: "cloud_init", Type: cty.Bool, Required: false},
 		"cloud_init_storage_pool":      &hcldec.AttrSpec{Name: "cloud_init_storage_pool", Type: cty.String, Required: false},
 		"cloud_init_disk_type":         &hcldec.AttrSpec{Name: "cloud_init_disk_type", Type: cty.String, Required: false},
-		"additional_iso_files":         &hcldec.BlockListSpec{TypeName: "additional_iso_files", Nested: hcldec.ObjectSpec((*proxmox.FlatadditionalISOsConfig)(nil).HCL2Spec())},
+		"isos":                         &hcldec.BlockListSpec{TypeName: "isos", Nested: hcldec.ObjectSpec((*proxmox.FlatISOsConfig)(nil).HCL2Spec())},
 		"vm_interface":                 &hcldec.AttrSpec{Name: "vm_interface", Type: cty.String, Required: false},
 		"qemu_additional_args":         &hcldec.AttrSpec{Name: "qemu_additional_args", Type: cty.String, Required: false},
-		"iso_checksum":                 &hcldec.AttrSpec{Name: "iso_checksum", Type: cty.String, Required: false},
-		"iso_url":                      &hcldec.AttrSpec{Name: "iso_url", Type: cty.String, Required: false},
-		"iso_urls":                     &hcldec.AttrSpec{Name: "iso_urls", Type: cty.List(cty.String), Required: false},
-		"iso_target_path":              &hcldec.AttrSpec{Name: "iso_target_path", Type: cty.String, Required: false},
-		"iso_target_extension":         &hcldec.AttrSpec{Name: "iso_target_extension", Type: cty.String, Required: false},
-		"iso_file":                     &hcldec.AttrSpec{Name: "iso_file", Type: cty.String, Required: false},
-		"iso_device":                   &hcldec.AttrSpec{Name: "iso_device", Type: cty.String, Required: false},
-		"iso_storage_pool":             &hcldec.AttrSpec{Name: "iso_storage_pool", Type: cty.String, Required: false},
-		"iso_download_pve":             &hcldec.AttrSpec{Name: "iso_download_pve", Type: cty.Bool, Required: false},
-		"unmount_iso":                  &hcldec.AttrSpec{Name: "unmount_iso", Type: cty.Bool, Required: false},
-		"keep_cdrom_device":            &hcldec.AttrSpec{Name: "keep_cdrom_device", Type: cty.Bool, Required: false},
 	}
 	return s
 }

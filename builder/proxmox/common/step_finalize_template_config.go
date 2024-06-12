@@ -106,23 +106,23 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 	}
 
 	deleteItems := []string{}
-	if len(c.AdditionalISOFiles) > 0 {
-		for idx := range c.AdditionalISOFiles {
-			cdrom := c.AdditionalISOFiles[idx].Device
-			if c.AdditionalISOFiles[idx].Unmount {
+	if len(c.ISOs) > 0 {
+		for idx := range c.ISOs {
+			cdrom := c.ISOs[idx].AssignedDeviceIndex
+			if c.ISOs[idx].Unmount {
 				if vmParams[cdrom] == nil || !strings.Contains(vmParams[cdrom].(string), "media=cdrom") {
 					err := fmt.Errorf("Cannot eject ISO from cdrom drive, %s is not present or not a cdrom media", cdrom)
 					state.Put("error", err)
 					ui.Error(err.Error())
 					return multistep.ActionHalt
 				}
-				if c.AdditionalISOFiles[idx].KeepCDRomDevice {
+				if c.ISOs[idx].KeepCDRomDevice {
 					changes[cdrom] = "none,media=cdrom"
 				} else {
 					deleteItems = append(deleteItems, cdrom)
 				}
 			} else {
-				changes[cdrom] = c.AdditionalISOFiles[idx].ISOFile + ",media=cdrom"
+				changes[cdrom] = c.ISOs[idx].ISOFile + ",media=cdrom"
 			}
 		}
 	}

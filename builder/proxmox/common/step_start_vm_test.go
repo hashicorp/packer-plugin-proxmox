@@ -503,8 +503,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 	tests := []struct {
 		name         string
 		disks        []diskConfig
-		isos         []additionalISOsConfig
-		bootiso      string
+		isos         []ISOsConfig
 		expectOutput *proxmox.QemuStorages
 	}{
 		{
@@ -521,8 +520,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 					SSD:         false,
 				},
 			},
-			[]additionalISOsConfig{},
-			"",
+			[]ISOsConfig{},
 			&proxmox.QemuStorages{
 				Ide:  &proxmox.QemuIdeDisks{},
 				Sata: &proxmox.QemuSataDisks{},
@@ -557,8 +555,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 					SSD:         false,
 				},
 			},
-			[]additionalISOsConfig{},
-			"",
+			[]ISOsConfig{},
 			&proxmox.QemuStorages{
 				Ide:  &proxmox.QemuIdeDisks{},
 				Sata: &proxmox.QemuSataDisks{},
@@ -593,8 +590,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 					SSD:         false,
 				},
 			},
-			[]additionalISOsConfig{},
-			"",
+			[]ISOsConfig{},
 			&proxmox.QemuStorages{
 				Ide:  &proxmox.QemuIdeDisks{},
 				Sata: &proxmox.QemuSataDisks{},
@@ -629,8 +625,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 					SSD:         false,
 				},
 			},
-			[]additionalISOsConfig{},
-			"",
+			[]ISOsConfig{},
 			&proxmox.QemuStorages{
 				Ide:  &proxmox.QemuIdeDisks{},
 				Sata: &proxmox.QemuSataDisks{},
@@ -718,8 +713,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 					IOThread:    true,
 				},
 			},
-			[]additionalISOsConfig{},
-			"",
+			[]ISOsConfig{},
 			&proxmox.QemuStorages{
 				Ide: &proxmox.QemuIdeDisks{
 					Disk_0: &proxmox.QemuIdeStorage{
@@ -808,7 +802,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 			},
 		},
 		{
-			"bunch of disks, Additional ISOs and boot iso",
+			"bunch of disks, Additional ISOs",
 			[]diskConfig{
 				{
 					Type:        "ide",
@@ -859,13 +853,12 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 					IOThread:    true,
 				},
 			},
-			[]additionalISOsConfig{
+			[]ISOsConfig{
 				{
-					Device:  "sata0",
+					Type:    "sata",
 					ISOFile: "local:iso/test.iso",
 				},
 			},
-			"ide2",
 			&proxmox.QemuStorages{
 				Ide: &proxmox.QemuIdeDisks{
 					Disk_0: &proxmox.QemuIdeStorage{
@@ -886,9 +879,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 							Discard:         false,
 						},
 					},
-					// while ide2 is specified for bootiso, the actual mount of the ISO for proxmox-iso occurs in the its builder func.
-					// logic in generateProxmoxDisks should only make sure no disks are allocated to ide2 to prevent conflict when allocating disks
-					Disk_3: &proxmox.QemuIdeStorage{
+					Disk_2: &proxmox.QemuIdeStorage{
 						Disk: &proxmox.QemuIdeDisk{
 							SizeInKibibytes: 10485760,
 							Storage:         "local-lvm",
@@ -900,14 +891,6 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 				},
 				Sata: &proxmox.QemuSataDisks{
 					Disk_0: &proxmox.QemuSataStorage{
-						CdRom: &proxmox.QemuCdRom{
-							Iso: &proxmox.IsoFile{
-								File:    "test.iso",
-								Storage: "local",
-							},
-						},
-					},
-					Disk_1: &proxmox.QemuSataStorage{
 						Disk: &proxmox.QemuSataDisk{
 							SizeInKibibytes: 11534336,
 							Storage:         "local-lvm",
@@ -916,13 +899,21 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 							Discard:         false,
 						},
 					},
-					Disk_2: &proxmox.QemuSataStorage{
+					Disk_1: &proxmox.QemuSataStorage{
 						Disk: &proxmox.QemuSataDisk{
 							SizeInKibibytes: 13631488,
 							Storage:         "local-lvm",
 							Cache:           proxmox.QemuDiskCache("none"),
 							Format:          proxmox.QemuDiskFormat("qcow2"),
 							Discard:         false,
+						},
+					},
+					Disk_2: &proxmox.QemuSataStorage{
+						CdRom: &proxmox.QemuCdRom{
+							Iso: &proxmox.IsoFile{
+								File:    "test.iso",
+								Storage: "local",
+							},
 						},
 					},
 				},
@@ -945,7 +936,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			devs := generateProxmoxDisks(tt.disks, tt.isos, tt.bootiso)
+			_, devs := generateProxmoxDisks(tt.disks, tt.isos, nil)
 			assert.Equal(t, devs, tt.expectOutput)
 		})
 	}
