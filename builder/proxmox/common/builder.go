@@ -75,30 +75,30 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook,
 		&stepSuccess{},
 	}
 	preSteps := b.preSteps
-	for idx := range b.config.AdditionalISOFiles {
-		if b.config.AdditionalISOFiles[idx].ISODownloadPVE {
+	for idx := range b.config.ISOs {
+		if b.config.ISOs[idx].ISODownloadPVE {
 			preSteps = append(preSteps,
 				&stepDownloadISOOnPVE{
-					ISO: &b.config.AdditionalISOFiles[idx],
+					ISO: &b.config.ISOs[idx],
 				},
 			)
 		} else {
 			preSteps = append(preSteps,
 				&commonsteps.StepCreateCD{
-					Files:   b.config.AdditionalISOFiles[idx].CDConfig.CDFiles,
-					Content: b.config.AdditionalISOFiles[idx].CDConfig.CDContent,
-					Label:   b.config.AdditionalISOFiles[idx].CDConfig.CDLabel,
+					Files:   b.config.ISOs[idx].CDConfig.CDFiles,
+					Content: b.config.ISOs[idx].CDConfig.CDContent,
+					Label:   b.config.ISOs[idx].CDConfig.CDLabel,
 				},
 				&commonsteps.StepDownload{
-					Checksum:    b.config.AdditionalISOFiles[idx].ISOChecksum,
-					Description: "additional ISO",
-					Extension:   b.config.AdditionalISOFiles[idx].TargetExtension,
-					ResultKey:   b.config.AdditionalISOFiles[idx].DownloadPathKey,
-					TargetPath:  b.config.AdditionalISOFiles[idx].DownloadPathKey,
-					Url:         b.config.AdditionalISOFiles[idx].ISOUrls,
+					Checksum:    b.config.ISOs[idx].ISOChecksum,
+					Description: "ISO",
+					Extension:   b.config.ISOs[idx].TargetExtension,
+					ResultKey:   b.config.ISOs[idx].DownloadPathKey,
+					TargetPath:  b.config.ISOs[idx].DownloadPathKey,
+					Url:         b.config.ISOs[idx].ISOUrls,
 				},
-				&stepUploadAdditionalISO{
-					ISO: &b.config.AdditionalISOFiles[idx],
+				&stepUploadISO{
+					ISO: &b.config.ISOs[idx],
 				},
 			)
 		}

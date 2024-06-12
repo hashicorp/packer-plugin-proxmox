@@ -5,18 +5,11 @@ package proxmoxiso
 
 import (
 	"context"
-	"fmt"
-	"log"
-	"reflect"
-	"regexp"
-	"strconv"
-	"strings"
 
 	proxmoxapi "github.com/Telmate/proxmox-api-go/proxmox"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	proxmox "github.com/hashicorp/packer-plugin-proxmox/builder/proxmox/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
-	"github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
@@ -43,31 +36,7 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 	state.Put("iso-config", &b.config)
 
 	preSteps := []multistep.Step{}
-	if b.config.ISODownloadPVE {
-		preSteps = append(preSteps,
-			&stepDownloadISOOnPVE{
-				ISOStoragePool: b.config.ISOStoragePool,
-				ISOUrls:        b.config.ISOUrls,
-				ISOChecksum:    b.config.ISOChecksum,
-			},
-		)
-	} else {
-		preSteps = append(preSteps,
-			&commonsteps.StepDownload{
-				Checksum:    b.config.ISOChecksum,
-				Description: "ISO",
-				Extension:   b.config.TargetExtension,
-				ResultKey:   downloadPathKey,
-				TargetPath:  b.config.TargetPath,
-				Url:         b.config.ISOUrls,
-			},
-			&stepUploadISO{},
-		)
-	}
-
-	postSteps := []multistep.Step{
-		&stepFinalizeISOTemplate{},
-	}
+	postSteps := []multistep.Step{}
 
 	sb := proxmox.NewSharedBuilder(BuilderID, b.config.Config, preSteps, postSteps, &isoVMCreator{})
 	return sb.Run(ctx, ui, hook, state)
@@ -76,59 +45,6 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 type isoVMCreator struct{}
 
 func (*isoVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQemu, state multistep.StateBag) error {
-	// get iso config from state
-	c := state.Get("iso-config").(*Config)
-	// IsoFile struct parses the ISO File and Storage Pool as separate fields.
-	isoFile := strings.Split(state.Get("iso_file").(string), ":iso/")
-
-	// define QemuCdRom struct containing isoFile properties
-	bootIso := &proxmoxapi.QemuCdRom{
-		Iso: &proxmoxapi.IsoFile{
-			File:    isoFile[1],
-			Storage: isoFile[0],
-		},
-	}
-
-	// extract device type from ISODevice config value eg. ide from ide2
-	rd := regexp.MustCompile(`\D+`)
-	device := rd.FindString(c.ISODevice)
-	// extract device index from ISODevice config value eg. 2 from ide2
-	rb := regexp.MustCompile(`\d+`)
-	index, _ := strconv.Atoi(rb.FindString(c.ISODevice))
-
-	// Assign bootIso QemuCdRom struct to configured ISODevice device type and index
-	//
-	// The boot ISO is mapped to a device type and index after Disks and Additional ISO Files
-	// (builder/proxmox/common/step_start_vm.go func generateProxmoxDisks)
-	// generateProxmoxDisks contains logic to avoid mapping conflicts
-	log.Printf("Mapping Boot ISO to %s%d", device, index)
-	switch device {
-	case "ide":
-		dev := proxmoxapi.QemuIdeStorage{
-			CdRom: bootIso,
-		}
-		reflect.
-			ValueOf(config.Disks.Ide).Elem().
-			FieldByName(fmt.Sprintf("Disk_%d", index)).
-			Set(reflect.ValueOf(&dev))
-	case "scsi":
-		dev := proxmoxapi.QemuScsiStorage{
-			CdRom: bootIso,
-		}
-		reflect.
-			ValueOf(config.Disks.Scsi).Elem().
-			FieldByName(fmt.Sprintf("Disk_%d", index)).
-			Set(reflect.ValueOf(&dev))
-	case "sata":
-		dev := proxmoxapi.QemuSataStorage{
-			CdRom: bootIso,
-		}
-		reflect.
-			ValueOf(config.Disks.Sata).Elem().
-			FieldByName(fmt.Sprintf("Disk_%d", index)).
-			Set(reflect.ValueOf(&dev))
-	}
-
 	client := state.Get("proxmoxClient").(*proxmoxapi.Client)
 	return config.Create(vmRef, client)
 }

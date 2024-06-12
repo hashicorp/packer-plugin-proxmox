@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //go:generate packer-sdc struct-markdown
-//go:generate packer-sdc mapstructure-to-hcl2 -type Config,NICConfig,diskConfig,rng0Config,pciDeviceConfig,vgaConfig,additionalISOsConfig,efiConfig,tpmConfig
+//go:generate packer-sdc mapstructure-to-hcl2 -type Config,NICConfig,diskConfig,rng0Config,pciDeviceConfig,vgaConfig,ISOsConfig,efiConfig,tpmConfig
 
 package proxmox
 
@@ -189,9 +189,9 @@ type Config struct {
 	// Defaults to `ide`.
 	CloudInitDiskType string `mapstructure:"cloud_init_disk_type"`
 
-	// Additional ISO files attached to the virtual machine.
-	// See [Additional ISO Files](#additional-iso-files).
-	AdditionalISOFiles []additionalISOsConfig `mapstructure:"additional_iso_files"`
+	// ISO files attached to the virtual machine.
+	// See [ISO Files](#iso-files).
+	ISOs []ISOsConfig `mapstructure:"isos"`
 	// Name of the network interface that Packer gets
 	// the VMs IP from. Defaults to the first non loopback interface.
 	VMInterface string `mapstructure:"vm_interface"`
@@ -201,38 +201,46 @@ type Config struct {
 	// 	Note: this option is for experts only.
 	AdditionalArgs string `mapstructure:"qemu_additional_args"`
 
-	// internal use when running a proxmox-iso build.
-	// proxmox-iso Prepare will set to the device type and index value
-	// for processing in step_start_vm.go func generateProxmoxDisks
-	ISOBuilderCDROMDevice string `mapstructure-to-hcl2:",skip"`
+	// Used by clone builder StepMapSourceDisks to store existing disk assignments
+	CloneSourceDisks []string `mapstructure-to-hcl2:",skip"`
 
 	Ctx interpolate.Context `mapstructure-to-hcl2:",skip"`
 }
 
-// Additional ISO files attached to the virtual machine.
+// One or more ISO files attached to the virtual machine.
 //
-// Example:
+// JSON Example:
 //
 // ```json
-// [
 //
-//	{
-//	  "device": "scsi5",
-//	  "iso_file": "local:iso/virtio-win-0.1.185.iso",
-//	  "unmount": true,
-//	  "iso_checksum": "af2b3cc9fa7905dea5e58d31508d75bba717c2b0d5553962658a47aebc9cc386"
+//	"isos": [
+//		{
+//			  "type": "scsi",
+//			  "iso_file": "local:iso/virtio-win-0.1.185.iso",
+//			  "unmount": true,
+//			  "iso_checksum": "af2b3cc9fa7905dea5e58d31508d75bba717c2b0d5553962658a47aebc9cc386"
+//		}
+//	 ]
+//
+// ```
+// HCL2 example:
+//
+// ```hcl
+//
+//	isos {
+//	  type = "scsi"
+//	  iso_file = "local:iso/virtio-win-0.1.185.iso"
+//	  unmount = true
+//	  iso_checksum = "af2b3cc9fa7905dea5e58d31508d75bba717c2b0d5553962658a47aebc9cc386"
 //	}
 //
-// ]
 // ```
-type additionalISOsConfig struct {
+type ISOsConfig struct {
 	commonsteps.ISOConfig `mapstructure:",squash"`
-	// Bus type and bus index that the ISO will be mounted on. Can be `ideX`,
-	// `sataX` or `scsiX`.
-	// For `ide` the bus index ranges from 0 to 3, for `sata` from 0 to 5 and for
-	// `scsi` from 0 to 30.
-	// Defaults to `ide3` since `ide2` is generally the boot drive.
-	Device string `mapstructure:"device"`
+	// Bus type and bus index that the ISO will be mounted on. Can be `ide`,
+	// `sata` or `scsi`.
+	// Defaults to `ide`.
+	Type string `mapstructure:"type"`
 	// Path to the ISO file to boot from, expressed as a
 	// proxmox datastore path, for example
 	// `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
@@ -240,7 +248,7 @@ type additionalISOsConfig struct {
 	ISOFile string `mapstructure:"iso_file"`
 	// Proxmox storage pool onto which to upload
 	// the ISO file.
-	ISOStoragePool string `mapstructure:"iso_storage_pool"`
+	ISOStoragePool string `mapstructure:"storage_pool"`
 	// Download the ISO directly from the PVE node rather than through Packer.
 	//
 	// Defaults to `false`
@@ -252,6 +260,7 @@ type additionalISOsConfig struct {
 	KeepCDRomDevice      bool   `mapstructure:"keep_cdrom_device"`
 	ShouldUploadISO      bool   `mapstructure-to-hcl2:",skip"`
 	DownloadPathKey      string `mapstructure-to-hcl2:",skip"`
+	AssignedDeviceIndex  string `mapstructure-to-hcl2:",skip"`
 	commonsteps.CDConfig `mapstructure:",squash"`
 }
 
@@ -647,8 +656,67 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		log.Printf("OS not set, using default 'other'")
 		c.OS = "other"
 	}
+	// validate iso devices
+	for idx := range c.ISOs {
+		// Check ISO config
+		// Either a pre-uploaded ISO should be referenced in iso_file, OR a URL
+		// (possibly to a local file) to an ISO file that will be downloaded and
+		// then uploaded to Proxmox.
+		if c.ISOs[idx].ISOFile != "" {
+			c.ISOs[idx].ShouldUploadISO = false
+		} else {
+			c.ISOs[idx].DownloadPathKey = "downloaded_iso_path_" + strconv.Itoa(idx)
+			if len(c.ISOs[idx].CDFiles) > 0 || len(c.ISOs[idx].CDContent) > 0 {
+				cdErrors := c.ISOs[idx].CDConfig.Prepare(&c.Ctx)
+				errs = packersdk.MultiErrorAppend(errs, cdErrors...)
+			} else {
+				isoWarnings, isoErrors := c.ISOs[idx].ISOConfig.Prepare(&c.Ctx)
+				errs = packersdk.MultiErrorAppend(errs, isoErrors...)
+				warnings = append(warnings, isoWarnings...)
+			}
+			c.ISOs[idx].ShouldUploadISO = true
+		}
+		// count isos
+		switch c.ISOs[idx].Type {
+		case "ide", "sata", "scsi":
+		case "":
+			log.Printf("ISO %d Device not set, using default type 'ide'", idx)
+			c.ISOs[idx].Type = "ide"
+		default:
+			errs = packersdk.MultiErrorAppend(errs, errors.New("isos must be of type ide, sata or scsi. VirtIO not supported for ISO devices"))
+		}
+		if len(c.ISOs[idx].CDFiles) > 0 || len(c.ISOs[idx].CDContent) > 0 {
+			if c.ISOs[idx].ISOStoragePool == "" {
+				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("storage_pool not set for storage of generated ISO from cd_files or cd_content"))
+			}
+		}
+		if len(c.ISOs[idx].ISOUrls) != 0 && c.ISOs[idx].ISOStoragePool == "" {
+			errs = packersdk.MultiErrorAppend(errs, errors.New("when specifying iso_url in an isos block, iso_storage_pool must also be specified"))
+		}
+		// Check only one option is present
+		options := 0
+		if c.ISOs[idx].ISOFile != "" {
+			options++
+		}
+		if len(c.ISOs[idx].ISOConfig.ISOUrls) > 0 || c.ISOs[idx].ISOConfig.RawSingleISOUrl != "" {
+			options++
+		}
+		if len(c.ISOs[idx].CDFiles) > 0 || len(c.ISOs[idx].CDContent) > 0 {
+			options++
+		}
+		if options != 1 {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("one of iso_file, iso_url, or a combination of cd_files and cd_content must be specified for ISO file %s", c.ISOs[idx].Type))
+		}
+		if len(c.ISOs[idx].ISOConfig.ISOUrls) == 0 && c.ISOs[idx].ISOConfig.RawSingleISOUrl == "" && c.ISOs[idx].ISODownloadPVE {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("iso_download_pve can only be used together with iso_url"))
+		}
+	}
+
+	// validate disks
 	for idx, disk := range c.Disks {
-		if disk.Type == "" {
+		switch disk.Type {
+		case "ide", "sata", "scsi", "virtio":
+		default:
 			log.Printf("Disk %d type not set, using default 'scsi'", idx)
 			c.Disks[idx].Type = "scsi"
 		}
@@ -689,6 +757,7 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 			warnings = append(warnings, "storage_pool_type is deprecated and should be omitted, it will be removed in a later version of the proxmox plugin")
 		}
 	}
+
 	if len(c.Serials) > 4 {
 		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("too many serials: %d serials defined, but proxmox accepts 4 elements maximum", len(c.Serials)))
 	}
@@ -755,88 +824,6 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		}
 		if (nic.MTU < 0) || (nic.MTU > 65520) {
 			errs = packersdk.MultiErrorAppend(errs, errors.New("network_adapters[%d].mtu only positive values up to 65520 are supported"))
-		}
-	}
-	for idx := range c.AdditionalISOFiles {
-		// Check AdditionalISO config
-		// Either a pre-uploaded ISO should be referenced in iso_file, OR a URL
-		// (possibly to a local file) to an ISO file that will be downloaded and
-		// then uploaded to Proxmox.
-		if c.AdditionalISOFiles[idx].ISOFile != "" {
-			c.AdditionalISOFiles[idx].ShouldUploadISO = false
-		} else {
-			c.AdditionalISOFiles[idx].DownloadPathKey = "downloaded_additional_iso_path_" + strconv.Itoa(idx)
-			if len(c.AdditionalISOFiles[idx].CDFiles) > 0 || len(c.AdditionalISOFiles[idx].CDContent) > 0 {
-				cdErrors := c.AdditionalISOFiles[idx].CDConfig.Prepare(&c.Ctx)
-				errs = packersdk.MultiErrorAppend(errs, cdErrors...)
-			} else {
-				isoWarnings, isoErrors := c.AdditionalISOFiles[idx].ISOConfig.Prepare(&c.Ctx)
-				errs = packersdk.MultiErrorAppend(errs, isoErrors...)
-				warnings = append(warnings, isoWarnings...)
-			}
-			c.AdditionalISOFiles[idx].ShouldUploadISO = true
-		}
-		if c.AdditionalISOFiles[idx].Device == "" {
-			log.Printf("AdditionalISOFile %d Device not set, using default 'ide3'", idx)
-			c.AdditionalISOFiles[idx].Device = "ide3"
-		}
-		if strings.HasPrefix(c.AdditionalISOFiles[idx].Device, "ide") {
-			busnumber, err := strconv.Atoi(c.AdditionalISOFiles[idx].Device[3:])
-			if err != nil {
-				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("%s is not a valid bus index", c.AdditionalISOFiles[idx].Device[3:]))
-			}
-			if busnumber == 2 {
-				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("IDE bus 2 is used by boot ISO"))
-			}
-			if busnumber > 3 {
-				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("IDE bus index can't be higher than 3"))
-			}
-		}
-		if strings.HasPrefix(c.AdditionalISOFiles[idx].Device, "sata") {
-			busnumber, err := strconv.Atoi(c.AdditionalISOFiles[idx].Device[4:])
-			if err != nil {
-				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("%s is not a valid bus index", c.AdditionalISOFiles[idx].Device[4:]))
-			}
-			if busnumber > 5 {
-				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("SATA bus index can't be higher than 5"))
-			}
-		}
-		if strings.HasPrefix(c.AdditionalISOFiles[idx].Device, "scsi") {
-			busnumber, err := strconv.Atoi(c.AdditionalISOFiles[idx].Device[4:])
-			if err != nil {
-				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("%s is not a valid bus index", c.AdditionalISOFiles[idx].Device[4:]))
-			}
-			if busnumber > 30 {
-				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("SCSI bus index can't be higher than 30"))
-			}
-		}
-		if strings.HasPrefix(c.AdditionalISOFiles[idx].Device, "virtio") {
-			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("VirtIO is not a supported device type for ISOs"))
-		}
-		if len(c.AdditionalISOFiles[idx].CDFiles) > 0 || len(c.AdditionalISOFiles[idx].CDContent) > 0 {
-			if c.AdditionalISOFiles[idx].ISOStoragePool == "" {
-				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("iso_storage_pool not set for storage of generated ISO from cd_files or cd_content"))
-			}
-		}
-		if len(c.AdditionalISOFiles[idx].ISOUrls) != 0 && c.AdditionalISOFiles[idx].ISOStoragePool == "" {
-			errs = packersdk.MultiErrorAppend(errs, errors.New("when specifying iso_url in an additional_iso_files block, iso_storage_pool must also be specified"))
-		}
-		// Check only one option is present
-		options := 0
-		if c.AdditionalISOFiles[idx].ISOFile != "" {
-			options++
-		}
-		if len(c.AdditionalISOFiles[idx].ISOConfig.ISOUrls) > 0 || c.AdditionalISOFiles[idx].ISOConfig.RawSingleISOUrl != "" {
-			options++
-		}
-		if len(c.AdditionalISOFiles[idx].CDFiles) > 0 || len(c.AdditionalISOFiles[idx].CDContent) > 0 {
-			options++
-		}
-		if options != 1 {
-			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("one of iso_file, iso_url, or a combination of cd_files and cd_content must be specified for AdditionalISO file %s", c.AdditionalISOFiles[idx].Device))
-		}
-		if len(c.AdditionalISOFiles[idx].ISOConfig.ISOUrls) == 0 && c.AdditionalISOFiles[idx].ISOConfig.RawSingleISOUrl == "" && c.AdditionalISOFiles[idx].ISODownloadPVE {
-			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("iso_download_pve can only be used together with iso_url"))
 		}
 	}
 	if c.EFIDisk != "" {

@@ -40,11 +40,11 @@ func (m *uploaderMock) DeleteVolume(vmr *proxmox.VmRef, storageName string, volu
 
 var _ uploader = &uploaderMock{}
 
-func TestUploadAdditionalISO(t *testing.T) {
+func TestUploadISO(t *testing.T) {
 	cs := []struct {
 		name               string
 		builderConfig      *Config
-		step               *stepUploadAdditionalISO
+		step               *stepUploadISO
 		testAssert         func(m *uploaderMock, action multistep.StepAction)
 		downloadPath       string
 		generatedISOPath   string
@@ -59,8 +59,8 @@ func TestUploadAdditionalISO(t *testing.T) {
 		{
 			name:          "should not call upload unless configured to do so",
 			builderConfig: &Config{},
-			step: &stepUploadAdditionalISO{
-				ISO: &additionalISOsConfig{
+			step: &stepUploadISO{
+				ISO: &ISOsConfig{
 					ShouldUploadISO: false,
 				},
 			},
@@ -70,8 +70,8 @@ func TestUploadAdditionalISO(t *testing.T) {
 		{
 			name:          "StepCreateCD not called (no cd_path present) should halt",
 			builderConfig: &Config{},
-			step: &stepUploadAdditionalISO{
-				ISO: &additionalISOsConfig{
+			step: &stepUploadISO{
+				ISO: &ISOsConfig{
 					ShouldUploadISO: true,
 					CDConfig: commonsteps.CDConfig{
 						CDFiles: []string{"testfile"},
@@ -84,8 +84,8 @@ func TestUploadAdditionalISO(t *testing.T) {
 		{
 			name:          "DownloadPathKey not valid should halt",
 			builderConfig: &Config{},
-			step: &stepUploadAdditionalISO{
-				ISO: &additionalISOsConfig{
+			step: &stepUploadISO{
+				ISO: &ISOsConfig{
 					ShouldUploadISO: true,
 					DownloadPathKey: "",
 				},
@@ -96,8 +96,8 @@ func TestUploadAdditionalISO(t *testing.T) {
 		{
 			name:          "ISO not found should halt",
 			builderConfig: &Config{},
-			step: &stepUploadAdditionalISO{
-				ISO: &additionalISOsConfig{
+			step: &stepUploadISO{
+				ISO: &ISOsConfig{
 					ShouldUploadISO: true,
 					DownloadPathKey: "filethatdoesnotexist.iso",
 				},
@@ -109,8 +109,8 @@ func TestUploadAdditionalISO(t *testing.T) {
 		{
 			name:          "generated ISO should be uploaded and deleted",
 			builderConfig: &Config{},
-			step: &stepUploadAdditionalISO{
-				ISO: &additionalISOsConfig{
+			step: &stepUploadISO{
+				ISO: &ISOsConfig{
 					ShouldUploadISO: true,
 					ISOStoragePool:  "local",
 					CDConfig: commonsteps.CDConfig{
@@ -130,8 +130,8 @@ func TestUploadAdditionalISO(t *testing.T) {
 		{
 			name:          "generated ISO should be uploaded but deletion failed",
 			builderConfig: &Config{},
-			step: &stepUploadAdditionalISO{
-				ISO: &additionalISOsConfig{
+			step: &stepUploadISO{
+				ISO: &ISOsConfig{
 					ShouldUploadISO: true,
 					ISOStoragePool:  "local",
 					CDConfig: commonsteps.CDConfig{
@@ -151,8 +151,8 @@ func TestUploadAdditionalISO(t *testing.T) {
 		{
 			name:          "downloaded ISO should be uploaded",
 			builderConfig: &Config{},
-			step: &stepUploadAdditionalISO{
-				ISO: &additionalISOsConfig{
+			step: &stepUploadISO{
+				ISO: &ISOsConfig{
 					ShouldUploadISO: true,
 					ISOStoragePool:  "local",
 					DownloadPathKey: "../iso/testdata/test.iso",
@@ -169,8 +169,8 @@ func TestUploadAdditionalISO(t *testing.T) {
 		{
 			name:          "downloaded ISO fail upload",
 			builderConfig: &Config{},
-			step: &stepUploadAdditionalISO{
-				ISO: &additionalISOsConfig{
+			step: &stepUploadISO{
+				ISO: &ISOsConfig{
 					ShouldUploadISO: true,
 					ISOStoragePool:  "local",
 					DownloadPathKey: "../iso/testdata/test.iso",
