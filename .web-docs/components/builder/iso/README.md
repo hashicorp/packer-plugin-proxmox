@@ -1168,7 +1168,9 @@ source "proxmox-iso" "fedora-kickstart" {
   }
   http_directory           = "config"
   insecure_skip_tls_verify = true
-  iso_file                 = "local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso"
+  isos {
+    iso_file                 = "local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso"
+  }
   network_adapters {
     bridge = "vmbr0"
     model  = "virtio"
@@ -1181,7 +1183,6 @@ source "proxmox-iso" "fedora-kickstart" {
   ssh_username         = "root"
   template_description = "Fedora 29-1.2, generated on ${timestamp()}"
   template_name        = "fedora-29"
-  unmount_iso          = true
   username             = "${var.username}"
 }
 
@@ -1224,7 +1225,11 @@ build {
           "pre_enrolled_keys": true,
           "efi_type": "4m"
       },
-      "iso_file": "local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso",
+      "isos": [
+        {
+          "iso_file": "local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso"
+        }
+      ],
       "http_directory": "config",
       "boot_wait": "10s",
       "boot_command": [
@@ -1233,7 +1238,6 @@ build {
       "ssh_username": "root",
       "ssh_timeout": "15m",
       "ssh_password": "packer",
-      "unmount_iso": true,
       "template_name": "fedora-29",
       "template_description": "Fedora 29-1.2, generated on {{ isotime \"2006-01-02T15:04:05Z\" }}"
     }
