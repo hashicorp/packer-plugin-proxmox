@@ -35,70 +35,38 @@ in the image's Cloud-Init settings for provisioning.
 
 ### Required:
 
-<!-- Code generated from the comments of the ISOsConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the Config struct in builder/proxmox/iso/config.go; DO NOT EDIT MANUALLY -->
 
-One or more ISO files attached to the virtual machine.
+- `iso` (common.ISOsConfig) - Boot ISO attached to the virtual machine.
+  
+  JSON Example:
+  
+  ```json
+  
+  	"iso": {
+  			  "type": "scsi",
+  			  "iso_file": "local:iso/debian-12.5.0-amd64-netinst.iso",
+  			  "unmount": true,
+  			  "iso_checksum": "sha512:33c08e56c83d13007e4a5511b9bf2c4926c4aa12fd5dd56d493c0653aecbab380988c5bf1671dbaea75c582827797d98c4a611f7fb2b131fbde2c677d5258ec9"
+  		}
+  
+  ```
+  HCL2 example:
+  
+  ```hcl
+  
+  	iso {
+  	  type = "scsi"
+  	  iso_file = "local:iso/debian-12.5.0-amd64-netinst.iso"
+  	  unmount = true
+  	  iso_checksum = "sha512:33c08e56c83d13007e4a5511b9bf2c4926c4aa12fd5dd56d493c0653aecbab380988c5bf1671dbaea75c582827797d98c4a611f7fb2b131fbde2c677d5258ec9"
+  	}
+  
+  ```
+  See [ISOs](#isos) for additional options.
 
-JSON Example:
+<!-- End of code generated from the comments of the Config struct in builder/proxmox/iso/config.go; -->
 
-```json
-
-	"isos": [
-		{
-			  "type": "scsi",
-			  "iso_file": "local:iso/virtio-win-0.1.185.iso",
-			  "unmount": true,
-			  "iso_checksum": "af2b3cc9fa7905dea5e58d31508d75bba717c2b0d5553962658a47aebc9cc386"
-		}
-	 ]
-
-```
-HCL2 example:
-
-```hcl
-
-	isos {
-	  type = "scsi"
-	  iso_file = "local:iso/virtio-win-0.1.185.iso"
-	  unmount = true
-	  iso_checksum = "af2b3cc9fa7905dea5e58d31508d75bba717c2b0d5553962658a47aebc9cc386"
-	}
-
-```
-
-<!-- End of code generated from the comments of the ISOsConfig struct in builder/proxmox/common/config.go; -->
-
-
-<!-- Code generated from the comments of the ISOConfig struct in multistep/commonsteps/iso_config.go; DO NOT EDIT MANUALLY -->
-
-- `iso_checksum` (string) - The checksum for the ISO file or virtual hard drive file. The type of
-  the checksum is specified within the checksum field as a prefix, ex:
-  "md5:{$checksum}". The type of the checksum can also be omitted and
-  Packer will try to infer it based on string length. Valid values are
-  "none", "{$checksum}", "md5:{$checksum}", "sha1:{$checksum}",
-  "sha256:{$checksum}", "sha512:{$checksum}" or "file:{$path}". Here is a
-  list of valid checksum values:
-   * md5:090992ba9fd140077b0661cb75f7ce13
-   * 090992ba9fd140077b0661cb75f7ce13
-   * sha1:ebfb681885ddf1234c18094a45bbeafd91467911
-   * ebfb681885ddf1234c18094a45bbeafd91467911
-   * sha256:ed363350696a726b7932db864dda019bd2017365c9e299627830f06954643f93
-   * ed363350696a726b7932db864dda019bd2017365c9e299627830f06954643f93
-   * file:http://releases.ubuntu.com/20.04/SHA256SUMS
-   * file:file://./local/path/file.sum
-   * file:./local/path/file.sum
-   * none
-  Although the checksum will not be verified when it is set to "none",
-  this is not recommended since these files can be very large and
-  corruption does happen from time to time.
-
-- `iso_url` (string) - A URL to the ISO containing the installation image or virtual hard drive
-  (VHD or VHDX) file to clone.
-
-<!-- End of code generated from the comments of the ISOConfig struct in multistep/commonsteps/iso_config.go; -->
-
-
-See also [ISO Files](#iso-files).
 
 ### Optional:
 
@@ -238,8 +206,8 @@ See also [ISO Files](#iso-files).
 - `cloud_init_disk_type` (string) - The type of Cloud-Init disk. Can be `scsi`, `sata`, or `ide`
   Defaults to `ide`.
 
-- `isos` ([]ISOsConfig) - ISO files attached to the virtual machine.
-  See [ISO Files](#iso-files).
+- `additional_iso_files` ([]ISOsConfig) - ISO files attached to the virtual machine.
+  See [ISOs](#isos).
 
 - `vm_interface` (string) - Name of the network interface that Packer gets
   the VMs IP from. Defaults to the first non loopback interface.
@@ -274,17 +242,17 @@ See also [ISO Files](#iso-files).
 <!-- End of code generated from the comments of the ISOConfig struct in multistep/commonsteps/iso_config.go; -->
 
 
-### ISO Files
+### ISOs
 
 <!-- Code generated from the comments of the ISOsConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
-One or more ISO files attached to the virtual machine.
+ISO files attached to the virtual machine.
 
 JSON Example:
 
 ```json
 
-	"isos": [
+	"additional_iso_files": [
 		{
 			  "type": "scsi",
 			  "iso_file": "local:iso/virtio-win-0.1.185.iso",
@@ -298,7 +266,7 @@ HCL2 example:
 
 ```hcl
 
-	isos {
+	additional_iso_files {
 	  type = "scsi"
 	  iso_file = "local:iso/virtio-win-0.1.185.iso"
 	  unmount = true
@@ -309,87 +277,6 @@ HCL2 example:
 
 <!-- End of code generated from the comments of the ISOsConfig struct in builder/proxmox/common/config.go; -->
 
-
-<!-- Code generated from the comments of the ISOConfig struct in multistep/commonsteps/iso_config.go; DO NOT EDIT MANUALLY -->
-
-By default, Packer will symlink, download or copy image files to the Packer
-cache into a "`hash($iso_url+$iso_checksum).$iso_target_extension`" file.
-Packer uses [hashicorp/go-getter](https://github.com/hashicorp/go-getter) in
-file mode in order to perform a download.
-
-go-getter supports the following protocols:
-
-* Local files
-* Git
-* Mercurial
-* HTTP
-* Amazon S3
-
-Examples:
-go-getter can guess the checksum type based on `iso_checksum` length, and it is
-also possible to specify the checksum type.
-
-In JSON:
-
-```json
-
-	"iso_checksum": "946a6077af6f5f95a51f82fdc44051c7aa19f9cfc5f737954845a6050543d7c2",
-	"iso_url": "ubuntu.org/.../ubuntu-14.04.1-server-amd64.iso"
-
-```
-
-```json
-
-	"iso_checksum": "file:ubuntu.org/..../ubuntu-14.04.1-server-amd64.iso.sum",
-	"iso_url": "ubuntu.org/.../ubuntu-14.04.1-server-amd64.iso"
-
-```
-
-```json
-
-	"iso_checksum": "file://./shasums.txt",
-	"iso_url": "ubuntu.org/.../ubuntu-14.04.1-server-amd64.iso"
-
-```
-
-```json
-
-	"iso_checksum": "file:./shasums.txt",
-	"iso_url": "ubuntu.org/.../ubuntu-14.04.1-server-amd64.iso"
-
-```
-
-In HCL2:
-
-```hcl
-
-	iso_checksum = "946a6077af6f5f95a51f82fdc44051c7aa19f9cfc5f737954845a6050543d7c2"
-	iso_url = "ubuntu.org/.../ubuntu-14.04.1-server-amd64.iso"
-
-```
-
-```hcl
-
-	iso_checksum = "file:ubuntu.org/..../ubuntu-14.04.1-server-amd64.iso.sum"
-	iso_url = "ubuntu.org/.../ubuntu-14.04.1-server-amd64.iso"
-
-```
-
-```hcl
-
-	iso_checksum = "file://./shasums.txt"
-	iso_url = "ubuntu.org/.../ubuntu-14.04.1-server-amd64.iso"
-
-```
-
-```hcl
-
-	iso_checksum = "file:./shasums.txt",
-	iso_url = "ubuntu.org/.../ubuntu-14.04.1-server-amd64.iso"
-
-```
-
-<!-- End of code generated from the comments of the ISOConfig struct in multistep/commonsteps/iso_config.go; -->
 
 
 #### Required
@@ -453,7 +340,7 @@ In HCL2:
   `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
   Either `iso_file` OR `iso_url` must be specifed.
 
-- `storage_pool` (string) - Proxmox storage pool onto which to upload
+- `iso_storage_pool` (string) - Proxmox storage pool onto which to upload
   the ISO file.
 
 - `iso_download_pve` (bool) - Download the ISO directly from the PVE node rather than through Packer.
@@ -1163,7 +1050,7 @@ source "proxmox-iso" "fedora-kickstart" {
   }
   http_directory           = "config"
   insecure_skip_tls_verify = true
-  isos {
+  iso {
     iso_file                 = "local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso"
   }
   network_adapters {
@@ -1220,11 +1107,9 @@ build {
           "pre_enrolled_keys": true,
           "efi_type": "4m"
       },
-      "isos": [
-        {
+      "iso": {
           "iso_file": "local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso"
-        }
-      ],
+      },
       "http_directory": "config",
       "boot_wait": "10s",
       "boot_command": [

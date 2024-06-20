@@ -271,8 +271,8 @@ boot time.
 - `cloud_init_disk_type` (string) - The type of Cloud-Init disk. Can be `scsi`, `sata`, or `ide`
   Defaults to `ide`.
 
-- `isos` ([]ISOsConfig) - ISO files attached to the virtual machine.
-  See [ISO Files](#iso-files).
+- `additional_iso_files` ([]ISOsConfig) - ISO files attached to the virtual machine.
+  See [ISOs](#isos).
 
 - `vm_interface` (string) - Name of the network interface that Packer gets
   the VMs IP from. Defaults to the first non loopback interface.
@@ -502,13 +502,13 @@ Usage example (JSON):
 
 <!-- Code generated from the comments of the ISOsConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
-One or more ISO files attached to the virtual machine.
+ISO files attached to the virtual machine.
 
 JSON Example:
 
 ```json
 
-	"isos": [
+	"additional_iso_files": [
 		{
 			  "type": "scsi",
 			  "iso_file": "local:iso/virtio-win-0.1.185.iso",
@@ -522,7 +522,7 @@ HCL2 example:
 
 ```hcl
 
-	isos {
+	additional_iso_files {
 	  type = "scsi"
 	  iso_file = "local:iso/virtio-win-0.1.185.iso"
 	  unmount = true
@@ -677,7 +677,7 @@ In HCL2:
   `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
   Either `iso_file` OR `iso_url` must be specifed.
 
-- `storage_pool` (string) - Proxmox storage pool onto which to upload
+- `iso_storage_pool` (string) - Proxmox storage pool onto which to upload
   the ISO file.
 
 - `iso_download_pve` (bool) - Download the ISO directly from the PVE node rather than through Packer.

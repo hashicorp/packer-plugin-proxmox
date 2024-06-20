@@ -1,12 +1,12 @@
 <!-- Code generated from the comments of the ISOsConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
-One or more ISO files attached to the virtual machine.
+ISO files attached to the virtual machine.
 
 JSON Example:
 
 ```json
 
-	"isos": [
+	"additional_iso_files": [
 		{
 			  "type": "scsi",
 			  "iso_file": "local:iso/virtio-win-0.1.185.iso",
@@ -20,7 +20,7 @@ HCL2 example:
 
 ```hcl
 
-	isos {
+	additional_iso_files {
 	  type = "scsi"
 	  iso_file = "local:iso/virtio-win-0.1.185.iso"
 	  unmount = true

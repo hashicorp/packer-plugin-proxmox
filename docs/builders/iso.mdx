@@ -29,11 +29,7 @@ to you to use it or delete it.
 
 ### Required:
 
-@include 'builder/proxmox/common/ISOsConfig.mdx'
-
-@include 'packer-plugin-sdk/multistep/commonsteps/ISOConfig-required.mdx'
-
-See also [ISO Files](#iso-files).
+@include 'builder/proxmox/iso/Config-required.mdx'
 
 ### Optional:
 
@@ -43,11 +39,10 @@ See also [ISO Files](#iso-files).
 
 @include 'packer-plugin-sdk/multistep/commonsteps/ISOConfig-not-required.mdx'
 
-### ISO Files
+### ISOs
 
 @include 'builder/proxmox/common/ISOsConfig.mdx'
 
-@include 'packer-plugin-sdk/multistep/commonsteps/ISOConfig.mdx'
 
 #### Required
 
@@ -168,7 +163,7 @@ source "proxmox-iso" "fedora-kickstart" {
   }
   http_directory           = "config"
   insecure_skip_tls_verify = true
-  isos {
+  iso {
     iso_file                 = "local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso"
   }
   network_adapters {
@@ -225,11 +220,9 @@ build {
           "pre_enrolled_keys": true,
           "efi_type": "4m"
       },
-      "isos": [
-        {
+      "iso": {
           "iso_file": "local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso"
-        }
-      ],
+      },
       "http_directory": "config",
       "boot_wait": "10s",
       "boot_command": [
