@@ -237,9 +237,12 @@ type Config struct {
 // ```
 type ISOsConfig struct {
 	commonsteps.ISOConfig `mapstructure:",squash"`
-	// Bus type and bus index that the ISO will be mounted on. Can be `ide`,
-	// `sata` or `scsi`.
-	// Defaults to `ide`.
+	// Bus type that the ISO will be mounted on. Can be `ide`, `sata` or `scsi`. Defaults to `ide`.
+	//
+	// In v1.9 bus indexes are no longer accepted for ISOs. ISOs are now attached to VMs in the order
+	// they are configured, using free bus indexes after disks are attached.
+	// Example: if two Disks and one ISO are defined as type `sata`, the disks will be attached to the VM
+	// as `sata0`, `sata1`, and the ISO will be mapped to `sata2` (the next free device index)
 	Type string `mapstructure:"type"`
 	// Path to the ISO file to boot from, expressed as a
 	// proxmox datastore path, for example
