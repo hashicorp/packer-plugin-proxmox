@@ -15,9 +15,9 @@ import (
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
-// stepUploadAdditionalISO uploads an ISO file
-type stepUploadAdditionalISO struct {
-	ISO *additionalISOsConfig
+// stepUploadISO uploads an ISO file
+type stepUploadISO struct {
+	ISO *ISOsConfig
 }
 
 type uploader interface {
@@ -27,7 +27,7 @@ type uploader interface {
 
 var _ uploader = &proxmoxapi.Client{}
 
-func (s *stepUploadAdditionalISO) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
+func (s *stepUploadISO) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packersdk.Ui)
 	client := state.Get("proxmoxClient").(uploader)
 	c := state.Get("config").(*Config)
@@ -86,7 +86,7 @@ func (s *stepUploadAdditionalISO) Run(ctx context.Context, state multistep.State
 	return multistep.ActionContinue
 }
 
-func (s *stepUploadAdditionalISO) Cleanup(state multistep.StateBag) {
+func (s *stepUploadISO) Cleanup(state multistep.StateBag) {
 	c := state.Get("config").(*Config)
 	ui := state.Get("ui").(packersdk.Ui)
 	client := state.Get("proxmoxClient").(uploader)

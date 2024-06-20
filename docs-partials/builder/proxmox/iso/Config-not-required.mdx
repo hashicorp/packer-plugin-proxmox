@@ -1,18 +1,4 @@
 <!-- Code generated from the comments of the Config struct in builder/proxmox/iso/config.go; DO NOT EDIT MANUALLY -->
 
-- `iso_file` (string) - Path to the ISO file to boot from, expressed as a
-  proxmox datastore path, for example
-  `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
-  Either `iso_file` OR `iso_url` must be specifed.
-
-- `iso_storage_pool` (string) - Proxmox storage pool onto which to upload
-  the ISO file.
-
-- `iso_download_pve` (bool) - Download the ISO directly from the PVE node rather than through Packer.
-  
-  Defaults to `false`
-
-- `unmount_iso` (bool) - If true, remove the mounted ISO from the template
-  after finishing. Defaults to `false`.
 
 <!-- End of code generated from the comments of the Config struct in builder/proxmox/iso/config.go; -->

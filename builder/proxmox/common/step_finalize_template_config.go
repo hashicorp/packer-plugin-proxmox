@@ -105,19 +105,24 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 		}
 	}
 
-	if len(c.AdditionalISOFiles) > 0 {
-		for idx := range c.AdditionalISOFiles {
-			cdrom := c.AdditionalISOFiles[idx].Device
-			if c.AdditionalISOFiles[idx].Unmount {
+	deleteItems := []string{}
+	if len(c.ISOs) > 0 {
+		for idx := range c.ISOs {
+			cdrom := c.ISOs[idx].AssignedDeviceIndex
+			if c.ISOs[idx].Unmount {
 				if vmParams[cdrom] == nil || !strings.Contains(vmParams[cdrom].(string), "media=cdrom") {
 					err := fmt.Errorf("Cannot eject ISO from cdrom drive, %s is not present or not a cdrom media", cdrom)
 					state.Put("error", err)
 					ui.Error(err.Error())
 					return multistep.ActionHalt
 				}
-				changes[cdrom] = "none,media=cdrom"
+				if c.ISOs[idx].KeepCDRomDevice {
+					changes[cdrom] = "none,media=cdrom"
+				} else {
+					deleteItems = append(deleteItems, cdrom)
+				}
 			} else {
-				changes[cdrom] = c.AdditionalISOFiles[idx].ISOFile + ",media=cdrom"
+				changes[cdrom] = c.ISOs[idx].ISOFile + ",media=cdrom"
 			}
 		}
 	}
@@ -125,13 +130,13 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 	// Disks that get replaced by the builder end up as unused disks -
 	// find and remove them.
 	rxUnused := regexp.MustCompile(`^unused\d+`)
-	unusedDisks := []string{}
 	for key := range vmParams {
 		if unusedDisk := rxUnused.FindString(key); unusedDisk != "" {
-			unusedDisks = append(unusedDisks, unusedDisk)
+			deleteItems = append(deleteItems, unusedDisk)
 		}
 	}
-	changes["delete"] = strings.Join(unusedDisks, ",")
+
+	changes["delete"] = strings.Join(deleteItems, ",")
 
 	if len(changes) > 0 {
 		_, err := client.SetVmConfig(vmRef, changes)

@@ -20,7 +20,7 @@ import (
 // stepDownloadISOOnPVE downloads an ISO file directly to the specified PVE node.
 // Checksums are also calculated and compared on the PVE node, not by Packer.
 type stepDownloadISOOnPVE struct {
-	ISO *additionalISOsConfig
+	ISO *ISOsConfig
 }
 
 func (s *stepDownloadISOOnPVE) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
