@@ -169,10 +169,10 @@ func TestISOs(t *testing.T) {
 				"cd_files": []string{
 					"config_test.go",
 				},
-				"iso_file":     "local:iso/test.iso",
-				"iso_url":      "http://example.com",
-				"iso_checksum": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-				"storage_pool": "local",
+				"iso_file":         "local:iso/test.iso",
+				"iso_url":          "http://example.com",
+				"iso_checksum":     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+				"iso_storage_pool": "local",
 			},
 		},
 		{
@@ -193,7 +193,7 @@ func TestISOs(t *testing.T) {
 				"cd_files": []string{
 					"config_test.go",
 				},
-				"storage_pool": "local",
+				"iso_storage_pool": "local",
 			},
 		},
 		{
@@ -204,17 +204,17 @@ func TestISOs(t *testing.T) {
 				"cd_content": map[string]string{
 					"test": "config_test.go",
 				},
-				"storage_pool": "local",
+				"iso_storage_pool": "local",
 			},
 		},
 		{
 			name:           "iso_url valid should succeed",
 			expectedToFail: false,
 			ISOs: map[string]interface{}{
-				"type":         "ide",
-				"iso_url":      "http://example.com",
-				"iso_checksum": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-				"storage_pool": "local",
+				"type":             "ide",
+				"iso_url":          "http://example.com",
+				"iso_checksum":     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+				"iso_storage_pool": "local",
 			},
 		},
 		{
@@ -230,7 +230,7 @@ func TestISOs(t *testing.T) {
 	for _, c := range isotests {
 		t.Run(c.name, func(t *testing.T) {
 			cfg := mandatoryConfig(t)
-			cfg["isos"] = c.ISOs
+			cfg["additional_iso_files"] = c.ISOs
 
 			var config Config
 			_, _, err := config.Prepare(&config, cfg)

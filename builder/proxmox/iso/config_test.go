@@ -34,14 +34,12 @@ func TestBasicExampleFromDocsIsValid(t *testing.T) {
           "storage_pool_type": "lvm"
         }
       ],
-	  "isos": [
-		{
+	  "iso": {
 			"type": "sata",
 			"iso_file": "local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso",
-			"storage_pool": "local-lvm",
+			"iso_storage_pool": "local-lvm",
 			"unmount": "true"
-		}
-	  ],
+		},
       "http_directory":"config",
       "boot_wait": "10s",
       "boot_command": [
@@ -235,13 +233,11 @@ func mandatoryConfig(t *testing.T) map[string]interface{} {
 		"password":     "supersecret",
 		"node":         "my-proxmox",
 		"ssh_username": "root",
-		"isos": []map[string]interface{}{
-			{
-				"type":         "sata",
-				"iso_file":     "local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso",
-				"storage_pool": "local-lvm",
-				"unmount":      "true",
-			},
+		"iso": map[string]interface{}{
+			"type":             "sata",
+			"iso_file":         "local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso",
+			"iso_storage_pool": "local-lvm",
+			"unmount":          "true",
 		},
 	}
 }

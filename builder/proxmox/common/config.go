@@ -190,8 +190,8 @@ type Config struct {
 	CloudInitDiskType string `mapstructure:"cloud_init_disk_type"`
 
 	// ISO files attached to the virtual machine.
-	// See [ISO Files](#iso-files).
-	ISOs []ISOsConfig `mapstructure:"isos"`
+	// See [ISOs](#isos).
+	ISOs []ISOsConfig `mapstructure:"additional_iso_files"`
 	// Name of the network interface that Packer gets
 	// the VMs IP from. Defaults to the first non loopback interface.
 	VMInterface string `mapstructure:"vm_interface"`
@@ -207,13 +207,13 @@ type Config struct {
 	Ctx interpolate.Context `mapstructure-to-hcl2:",skip"`
 }
 
-// One or more ISO files attached to the virtual machine.
+// ISO files attached to the virtual machine.
 //
 // JSON Example:
 //
 // ```json
 //
-//	"isos": [
+//	"additional_iso_files": [
 //		{
 //			  "type": "scsi",
 //			  "iso_file": "local:iso/virtio-win-0.1.185.iso",
@@ -227,7 +227,7 @@ type Config struct {
 //
 // ```hcl
 //
-//	isos {
+//	additional_iso_files {
 //	  type = "scsi"
 //	  iso_file = "local:iso/virtio-win-0.1.185.iso"
 //	  unmount = true
@@ -248,7 +248,7 @@ type ISOsConfig struct {
 	ISOFile string `mapstructure:"iso_file"`
 	// Proxmox storage pool onto which to upload
 	// the ISO file.
-	ISOStoragePool string `mapstructure:"storage_pool"`
+	ISOStoragePool string `mapstructure:"iso_storage_pool"`
 	// Download the ISO directly from the PVE node rather than through Packer.
 	//
 	// Defaults to `false`
@@ -670,7 +670,7 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		if c.ISOs[idx].ISOFile != "" {
 			c.ISOs[idx].ShouldUploadISO = false
 		} else {
-			c.ISOs[idx].DownloadPathKey = "downloaded_iso_path_" + strconv.Itoa(idx)
+			c.ISOs[idx].DownloadPathKey = "downloaded_additional_iso_path_" + strconv.Itoa(idx)
 			if len(c.ISOs[idx].CDFiles) > 0 || len(c.ISOs[idx].CDContent) > 0 {
 				cdErrors := c.ISOs[idx].CDConfig.Prepare(&c.Ctx)
 				errs = packersdk.MultiErrorAppend(errs, cdErrors...)
@@ -681,14 +681,14 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 			}
 			c.ISOs[idx].ShouldUploadISO = true
 		}
-		// count isos
+		// validate device type, assign if unset
 		switch c.ISOs[idx].Type {
 		case "ide", "sata", "scsi":
 		case "":
-			log.Printf("ISO %d Device not set, using default type 'ide'", idx)
+			log.Printf("additional_iso %d device type not set, using default 'ide'", idx)
 			c.ISOs[idx].Type = "ide"
 		default:
-			errs = packersdk.MultiErrorAppend(errs, errors.New("isos must be of type ide, sata or scsi. VirtIO not supported for ISO devices"))
+			errs = packersdk.MultiErrorAppend(errs, errors.New("ISOs must be of type ide, sata or scsi. VirtIO not supported by Proxmox for ISO devices"))
 		}
 		if len(c.ISOs[idx].CDFiles) > 0 || len(c.ISOs[idx].CDContent) > 0 {
 			if c.ISOs[idx].ISOStoragePool == "" {
@@ -696,7 +696,7 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 			}
 		}
 		if len(c.ISOs[idx].ISOUrls) != 0 && c.ISOs[idx].ISOStoragePool == "" {
-			errs = packersdk.MultiErrorAppend(errs, errors.New("when specifying iso_url in an isos block, iso_storage_pool must also be specified"))
+			errs = packersdk.MultiErrorAppend(errs, errors.New("when specifying iso_url in an additional_isos block, iso_storage_pool must also be specified"))
 		}
 		// Check only one option is present
 		options := 0
@@ -710,7 +710,7 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 			options++
 		}
 		if options != 1 {
-			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("one of iso_file, iso_url, or a combination of cd_files and cd_content must be specified for ISO file %s", c.ISOs[idx].Type))
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("one of iso_file, iso_url, or a combination of cd_files and cd_content must be specified for additional_iso %d", idx))
 		}
 		if len(c.ISOs[idx].ISOConfig.ISOUrls) == 0 && c.ISOs[idx].ISOConfig.RawSingleISOUrl == "" && c.ISOs[idx].ISODownloadPVE {
 			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("iso_download_pve can only be used together with iso_url"))

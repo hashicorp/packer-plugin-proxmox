@@ -29,10 +29,15 @@ func (b *Builder) Prepare(raws ...interface{}) ([]string, []string, error) {
 	return b.config.Prepare(raws...)
 }
 
-const downloadPathKey = "downloaded_iso_path"
-
 func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook) (packersdk.Artifact, error) {
 	state := new(multistep.BasicStateBag)
+
+	// prepend boot iso device to any defined additional_isos
+	var isoArray []proxmox.ISOsConfig
+	isoArray = append(isoArray, b.config.BootISO)
+	isoArray = append(isoArray, b.config.ISOs...)
+	b.config.ISOs = isoArray
+
 	state.Put("iso-config", &b.config)
 
 	preSteps := []multistep.Step{}

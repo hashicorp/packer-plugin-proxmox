@@ -116,7 +116,7 @@ type FlatConfig struct {
 	CloudInit                 *bool                 `mapstructure:"cloud_init" cty:"cloud_init" hcl:"cloud_init"`
 	CloudInitStoragePool      *string               `mapstructure:"cloud_init_storage_pool" cty:"cloud_init_storage_pool" hcl:"cloud_init_storage_pool"`
 	CloudInitDiskType         *string               `mapstructure:"cloud_init_disk_type" cty:"cloud_init_disk_type" hcl:"cloud_init_disk_type"`
-	ISOs                      []FlatISOsConfig      `mapstructure:"isos" cty:"isos" hcl:"isos"`
+	ISOs                      []FlatISOsConfig      `mapstructure:"additional_iso_files" cty:"additional_iso_files" hcl:"additional_iso_files"`
 	VMInterface               *string               `mapstructure:"vm_interface" cty:"vm_interface" hcl:"vm_interface"`
 	AdditionalArgs            *string               `mapstructure:"qemu_additional_args" cty:"qemu_additional_args" hcl:"qemu_additional_args"`
 }
@@ -239,7 +239,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"cloud_init":                   &hcldec.AttrSpec{Name: "cloud_init", Type: cty.Bool, Required: false},
 		"cloud_init_storage_pool":      &hcldec.AttrSpec{Name: "cloud_init_storage_pool", Type: cty.String, Required: false},
 		"cloud_init_disk_type":         &hcldec.AttrSpec{Name: "cloud_init_disk_type", Type: cty.String, Required: false},
-		"isos":                         &hcldec.BlockListSpec{TypeName: "isos", Nested: hcldec.ObjectSpec((*FlatISOsConfig)(nil).HCL2Spec())},
+		"additional_iso_files":         &hcldec.BlockListSpec{TypeName: "additional_iso_files", Nested: hcldec.ObjectSpec((*FlatISOsConfig)(nil).HCL2Spec())},
 		"vm_interface":                 &hcldec.AttrSpec{Name: "vm_interface", Type: cty.String, Required: false},
 		"qemu_additional_args":         &hcldec.AttrSpec{Name: "qemu_additional_args", Type: cty.String, Required: false},
 	}
@@ -256,7 +256,7 @@ type FlatISOsConfig struct {
 	TargetExtension *string           `mapstructure:"iso_target_extension" cty:"iso_target_extension" hcl:"iso_target_extension"`
 	Type            *string           `mapstructure:"type" cty:"type" hcl:"type"`
 	ISOFile         *string           `mapstructure:"iso_file" cty:"iso_file" hcl:"iso_file"`
-	ISOStoragePool  *string           `mapstructure:"storage_pool" cty:"storage_pool" hcl:"storage_pool"`
+	ISOStoragePool  *string           `mapstructure:"iso_storage_pool" cty:"iso_storage_pool" hcl:"iso_storage_pool"`
 	ISODownloadPVE  *bool             `mapstructure:"iso_download_pve" cty:"iso_download_pve" hcl:"iso_download_pve"`
 	Unmount         *bool             `mapstructure:"unmount" cty:"unmount" hcl:"unmount"`
 	KeepCDRomDevice *bool             `mapstructure:"keep_cdrom_device" cty:"keep_cdrom_device" hcl:"keep_cdrom_device"`
@@ -284,7 +284,7 @@ func (*FlatISOsConfig) HCL2Spec() map[string]hcldec.Spec {
 		"iso_target_extension": &hcldec.AttrSpec{Name: "iso_target_extension", Type: cty.String, Required: false},
 		"type":                 &hcldec.AttrSpec{Name: "type", Type: cty.String, Required: false},
 		"iso_file":             &hcldec.AttrSpec{Name: "iso_file", Type: cty.String, Required: false},
-		"storage_pool":         &hcldec.AttrSpec{Name: "storage_pool", Type: cty.String, Required: false},
+		"iso_storage_pool":     &hcldec.AttrSpec{Name: "iso_storage_pool", Type: cty.String, Required: false},
 		"iso_download_pve":     &hcldec.AttrSpec{Name: "iso_download_pve", Type: cty.Bool, Required: false},
 		"unmount":              &hcldec.AttrSpec{Name: "unmount", Type: cty.Bool, Required: false},
 		"keep_cdrom_device":    &hcldec.AttrSpec{Name: "keep_cdrom_device", Type: cty.Bool, Required: false},

@@ -1,0 +1,31 @@
+<!-- Code generated from the comments of the Config struct in builder/proxmox/iso/config.go; DO NOT EDIT MANUALLY -->
+
+- `iso` (common.ISOsConfig) - Boot ISO attached to the virtual machine.
+  
+  JSON Example:
+  
+  ```json
+  
+  	"iso": {
+  			  "type": "scsi",
+  			  "iso_file": "local:iso/debian-12.5.0-amd64-netinst.iso",
+  			  "unmount": true,
+  			  "iso_checksum": "sha512:33c08e56c83d13007e4a5511b9bf2c4926c4aa12fd5dd56d493c0653aecbab380988c5bf1671dbaea75c582827797d98c4a611f7fb2b131fbde2c677d5258ec9"
+  		}
+  
+  ```
+  HCL2 example:
+  
+  ```hcl
+  
+  	iso {
+  	  type = "scsi"
+  	  iso_file = "local:iso/debian-12.5.0-amd64-netinst.iso"
+  	  unmount = true
+  	  iso_checksum = "sha512:33c08e56c83d13007e4a5511b9bf2c4926c4aa12fd5dd56d493c0653aecbab380988c5bf1671dbaea75c582827797d98c4a611f7fb2b131fbde2c677d5258ec9"
+  	}
+  
+  ```
+  See [ISOs](#isos) for additional options.
+
+<!-- End of code generated from the comments of the Config struct in builder/proxmox/iso/config.go; -->

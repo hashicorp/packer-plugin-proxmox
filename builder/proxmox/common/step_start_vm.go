@@ -113,7 +113,6 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 
 	errs, disks := generateProxmoxDisks(c.Disks, c.ISOs, c.CloneSourceDisks)
 	if errs != nil && len(errs.Errors) > 0 {
-		log.Print("checkpoint")
 		state.Put("error", errs)
 		ui.Error(errs.Error())
 		return multistep.ActionHalt
