@@ -447,6 +447,9 @@ Example:
 - `asyncio` (string) - Configure Asynchronous I/O. Can be `native`, `threads`, or `io_uring`.
   Defaults to io_uring.
 
+- `exclude_from_backup` (bool) - Exclude disk from Proxmox backup jobs
+  Defaults to false.
+
 - `discard` (bool) - Relay TRIM commands to the underlying storage. Defaults
   to false. See the
   [Proxmox documentation](https://pve.proxmox.com/pve-docs/pve-admin-guide.html#qm_hard_disk_discard)

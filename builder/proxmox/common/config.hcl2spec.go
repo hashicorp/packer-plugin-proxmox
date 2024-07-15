@@ -333,16 +333,17 @@ func (*FlatNICConfig) HCL2Spec() map[string]hcldec.Spec {
 // FlatdiskConfig is an auto-generated flat version of diskConfig.
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatdiskConfig struct {
-	Type            *string `mapstructure:"type" cty:"type" hcl:"type"`
-	StoragePool     *string `mapstructure:"storage_pool" cty:"storage_pool" hcl:"storage_pool"`
-	StoragePoolType *string `mapstructure:"storage_pool_type" cty:"storage_pool_type" hcl:"storage_pool_type"`
-	Size            *string `mapstructure:"disk_size" cty:"disk_size" hcl:"disk_size"`
-	CacheMode       *string `mapstructure:"cache_mode" cty:"cache_mode" hcl:"cache_mode"`
-	DiskFormat      *string `mapstructure:"format" cty:"format" hcl:"format"`
-	IOThread        *bool   `mapstructure:"io_thread" cty:"io_thread" hcl:"io_thread"`
-	AsyncIO         *string `mapstructure:"asyncio" cty:"asyncio" hcl:"asyncio"`
-	Discard         *bool   `mapstructure:"discard" cty:"discard" hcl:"discard"`
-	SSD             *bool   `mapstructure:"ssd" cty:"ssd" hcl:"ssd"`
+	Type              *string `mapstructure:"type" cty:"type" hcl:"type"`
+	StoragePool       *string `mapstructure:"storage_pool" cty:"storage_pool" hcl:"storage_pool"`
+	StoragePoolType   *string `mapstructure:"storage_pool_type" cty:"storage_pool_type" hcl:"storage_pool_type"`
+	Size              *string `mapstructure:"disk_size" cty:"disk_size" hcl:"disk_size"`
+	CacheMode         *string `mapstructure:"cache_mode" cty:"cache_mode" hcl:"cache_mode"`
+	DiskFormat        *string `mapstructure:"format" cty:"format" hcl:"format"`
+	IOThread          *bool   `mapstructure:"io_thread" cty:"io_thread" hcl:"io_thread"`
+	AsyncIO           *string `mapstructure:"asyncio" cty:"asyncio" hcl:"asyncio"`
+	ExcludeFromBackup *bool   `mapstructure:"exclude_from_backup" cty:"exclude_from_backup" hcl:"exclude_from_backup"`
+	Discard           *bool   `mapstructure:"discard" cty:"discard" hcl:"discard"`
+	SSD               *bool   `mapstructure:"ssd" cty:"ssd" hcl:"ssd"`
 }
 
 // FlatMapstructure returns a new FlatdiskConfig.
@@ -357,16 +358,17 @@ func (*diskConfig) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Sp
 // The decoded values from this spec will then be applied to a FlatdiskConfig.
 func (*FlatdiskConfig) HCL2Spec() map[string]hcldec.Spec {
 	s := map[string]hcldec.Spec{
-		"type":              &hcldec.AttrSpec{Name: "type", Type: cty.String, Required: false},
-		"storage_pool":      &hcldec.AttrSpec{Name: "storage_pool", Type: cty.String, Required: false},
-		"storage_pool_type": &hcldec.AttrSpec{Name: "storage_pool_type", Type: cty.String, Required: false},
-		"disk_size":         &hcldec.AttrSpec{Name: "disk_size", Type: cty.String, Required: false},
-		"cache_mode":        &hcldec.AttrSpec{Name: "cache_mode", Type: cty.String, Required: false},
-		"format":            &hcldec.AttrSpec{Name: "format", Type: cty.String, Required: false},
-		"io_thread":         &hcldec.AttrSpec{Name: "io_thread", Type: cty.Bool, Required: false},
-		"asyncio":           &hcldec.AttrSpec{Name: "asyncio", Type: cty.String, Required: false},
-		"discard":           &hcldec.AttrSpec{Name: "discard", Type: cty.Bool, Required: false},
-		"ssd":               &hcldec.AttrSpec{Name: "ssd", Type: cty.Bool, Required: false},
+		"type":                &hcldec.AttrSpec{Name: "type", Type: cty.String, Required: false},
+		"storage_pool":        &hcldec.AttrSpec{Name: "storage_pool", Type: cty.String, Required: false},
+		"storage_pool_type":   &hcldec.AttrSpec{Name: "storage_pool_type", Type: cty.String, Required: false},
+		"disk_size":           &hcldec.AttrSpec{Name: "disk_size", Type: cty.String, Required: false},
+		"cache_mode":          &hcldec.AttrSpec{Name: "cache_mode", Type: cty.String, Required: false},
+		"format":              &hcldec.AttrSpec{Name: "format", Type: cty.String, Required: false},
+		"io_thread":           &hcldec.AttrSpec{Name: "io_thread", Type: cty.Bool, Required: false},
+		"asyncio":             &hcldec.AttrSpec{Name: "asyncio", Type: cty.String, Required: false},
+		"exclude_from_backup": &hcldec.AttrSpec{Name: "exclude_from_backup", Type: cty.Bool, Required: false},
+		"discard":             &hcldec.AttrSpec{Name: "discard", Type: cty.Bool, Required: false},
+		"ssd":                 &hcldec.AttrSpec{Name: "ssd", Type: cty.Bool, Required: false},
 	}
 	return s
 }

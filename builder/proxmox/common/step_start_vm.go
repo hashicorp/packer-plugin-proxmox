@@ -299,6 +299,10 @@ func generateProxmoxDisks(disks []diskConfig, isos []ISOsConfig, cloneSourceDisk
 		case "K":
 			size = proxmox.QemuDiskSize(tmpSize)
 		}
+		backup := true
+		if disks[idx].ExcludeFromBackup {
+			backup = false
+		}
 
 		switch disks[idx].Type {
 		case "ide":
@@ -311,6 +315,7 @@ func generateProxmoxDisks(disks []diskConfig, isos []ISOsConfig, cloneSourceDisk
 					Format:          proxmox.QemuDiskFormat(disks[idx].DiskFormat),
 					Discard:         disks[idx].Discard,
 					EmulateSSD:      disks[idx].SSD,
+					Backup:          backup,
 				},
 			}
 			for {
@@ -371,6 +376,7 @@ func generateProxmoxDisks(disks []diskConfig, isos []ISOsConfig, cloneSourceDisk
 					Discard:         disks[idx].Discard,
 					EmulateSSD:      disks[idx].SSD,
 					IOThread:        disks[idx].IOThread,
+					Backup:          backup,
 				},
 			}
 			for {
@@ -400,6 +406,7 @@ func generateProxmoxDisks(disks []diskConfig, isos []ISOsConfig, cloneSourceDisk
 					Format:          proxmox.QemuDiskFormat(disks[idx].DiskFormat),
 					Discard:         disks[idx].Discard,
 					EmulateSSD:      disks[idx].SSD,
+					Backup:          backup,
 				},
 			}
 			for {
@@ -429,6 +436,7 @@ func generateProxmoxDisks(disks []diskConfig, isos []ISOsConfig, cloneSourceDisk
 					Format:          proxmox.QemuDiskFormat(disks[idx].DiskFormat),
 					Discard:         disks[idx].Discard,
 					IOThread:        disks[idx].IOThread,
+					Backup:          backup,
 				},
 			}
 			for {
