@@ -460,6 +460,7 @@ func generateProxmoxEfi(efi efiConfig) proxmox.QemuDevice {
 	dev := make(proxmox.QemuDevice)
 	setDeviceParamIfDefined(dev, "storage", efi.EFIStoragePool)
 	setDeviceParamIfDefined(dev, "efitype", efi.EFIType)
+	setDeviceParamIfDefined(dev, "format", efi.EFIFormat)
 	// efi.PreEnrolledKeys can be false, but we only want to set pre-enrolled-keys=0
 	// when other EFI options are set.
 	if len(dev) > 0 {

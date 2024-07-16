@@ -361,6 +361,7 @@ type diskConfig struct {
 //	{
 //	  "efi_storage_pool": "local",
 //	  "pre_enrolled_keys": true,
+//	  "efi_format": "raw",
 //	  "efi_type": "4m"
 //	}
 //
@@ -368,6 +369,10 @@ type diskConfig struct {
 type efiConfig struct {
 	// Name of the Proxmox storage pool to store the EFI disk on.
 	EFIStoragePool string `mapstructure:"efi_storage_pool"`
+	// The format of the file backing the disk. Can be
+	// `raw`, `cow`, `qcow`, `qed`, `qcow2`, `vmdk` or `cloop`. Defaults to
+	// `raw`.
+	EFIFormat string `mapstructure:"efi_format"`
 	// Whether Microsoft Standard Secure Boot keys should be pre-loaded on
 	// the EFI disk. Defaults to `false`.
 	PreEnrolledKeys bool `mapstructure:"pre_enrolled_keys"`
