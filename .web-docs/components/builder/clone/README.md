@@ -772,6 +772,7 @@ Usage example (JSON):
 	{
 	  "efi_storage_pool": "local",
 	  "pre_enrolled_keys": true,
+	  "efi_format": "raw",
 	  "efi_type": "4m"
 	}
 
@@ -785,6 +786,10 @@ Usage example (JSON):
 <!-- Code generated from the comments of the efiConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
 - `efi_storage_pool` (string) - Name of the Proxmox storage pool to store the EFI disk on.
+
+- `efi_format` (string) - The format of the file backing the disk. Can be
+  `raw`, `cow`, `qcow`, `qed`, `qcow2`, `vmdk` or `cloop`. Defaults to
+  `raw`.
 
 - `pre_enrolled_keys` (bool) - Whether Microsoft Standard Secure Boot keys should be pre-loaded on
   the EFI disk. Defaults to `false`.
