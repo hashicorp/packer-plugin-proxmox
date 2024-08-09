@@ -39,6 +39,7 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 			Debug:        b.config.PackerDebug,
 			DebugKeyPath: fmt.Sprintf("%s.pem", b.config.PackerBuildName),
 		},
+		&StepMapSourceDisks{},
 	}
 	postSteps := []multistep.Step{}
 

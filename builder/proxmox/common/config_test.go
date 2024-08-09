@@ -137,24 +137,24 @@ func TestVMandTemplateName(t *testing.T) {
 	}
 }
 
-func TestAdditionalISOs(t *testing.T) {
-	additionalisotests := []struct {
-		name               string
-		expectedToFail     bool
-		additionalISOFiles map[string]interface{}
+func TestISOs(t *testing.T) {
+	isotests := []struct {
+		name           string
+		expectedToFail bool
+		ISOs           map[string]interface{}
 	}{
 		{
 			name:           "missing ISO definition should error",
 			expectedToFail: true,
-			additionalISOFiles: map[string]interface{}{
-				"device": "ide1",
+			ISOs: map[string]interface{}{
+				"type": "ide",
 			},
 		},
 		{
 			name:           "cd_files and iso_file specified should fail",
 			expectedToFail: true,
-			additionalISOFiles: map[string]interface{}{
-				"device": "ide1",
+			ISOs: map[string]interface{}{
+				"type": "ide",
 				"cd_files": []string{
 					"config_test.go",
 				},
@@ -164,8 +164,8 @@ func TestAdditionalISOs(t *testing.T) {
 		{
 			name:           "cd_files, iso_file and iso_url specified should fail",
 			expectedToFail: true,
-			additionalISOFiles: map[string]interface{}{
-				"device": "ide1",
+			ISOs: map[string]interface{}{
+				"type": "ide",
 				"cd_files": []string{
 					"config_test.go",
 				},
@@ -178,8 +178,8 @@ func TestAdditionalISOs(t *testing.T) {
 		{
 			name:           "missing iso_storage_pool should error",
 			expectedToFail: true,
-			additionalISOFiles: map[string]interface{}{
-				"device": "ide1",
+			ISOs: map[string]interface{}{
+				"type": "ide",
 				"cd_files": []string{
 					"config_test.go",
 				},
@@ -188,8 +188,8 @@ func TestAdditionalISOs(t *testing.T) {
 		{
 			name:           "cd_files valid should succeed",
 			expectedToFail: false,
-			additionalISOFiles: map[string]interface{}{
-				"device": "ide1",
+			ISOs: map[string]interface{}{
+				"type": "ide",
 				"cd_files": []string{
 					"config_test.go",
 				},
@@ -199,8 +199,8 @@ func TestAdditionalISOs(t *testing.T) {
 		{
 			name:           "cd_content valid should succeed",
 			expectedToFail: false,
-			additionalISOFiles: map[string]interface{}{
-				"device": "ide1",
+			ISOs: map[string]interface{}{
+				"type": "ide",
 				"cd_content": map[string]string{
 					"test": "config_test.go",
 				},
@@ -210,8 +210,8 @@ func TestAdditionalISOs(t *testing.T) {
 		{
 			name:           "iso_url valid should succeed",
 			expectedToFail: false,
-			additionalISOFiles: map[string]interface{}{
-				"device":           "ide1",
+			ISOs: map[string]interface{}{
+				"type":             "ide",
 				"iso_url":          "http://example.com",
 				"iso_checksum":     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 				"iso_storage_pool": "local",
@@ -220,17 +220,17 @@ func TestAdditionalISOs(t *testing.T) {
 		{
 			name:           "iso_file valid should succeed",
 			expectedToFail: false,
-			additionalISOFiles: map[string]interface{}{
-				"device":   "ide1",
+			ISOs: map[string]interface{}{
+				"type":     "ide",
 				"iso_file": "local:iso/test.iso",
 			},
 		},
 	}
 
-	for _, c := range additionalisotests {
+	for _, c := range isotests {
 		t.Run(c.name, func(t *testing.T) {
 			cfg := mandatoryConfig(t)
-			cfg["additional_iso_files"] = c.additionalISOFiles
+			cfg["additional_iso_files"] = c.ISOs
 
 			var config Config
 			_, _, err := config.Prepare(&config, cfg)
