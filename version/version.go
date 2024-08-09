@@ -6,20 +6,8 @@ package version
 import "github.com/hashicorp/packer-plugin-sdk/version"
 
 var (
-	// Version is the main version number that is being run at the moment.
-	Version = "1.1.9"
-
-	// VersionPrerelease is A pre-release marker for the Version. If this is ""
-	// (empty string) then it means that it is a final release. Otherwise, this
-	// is a pre-release such as "dev" (in development), "beta", "rc1", etc.
+	Version           = "1.1.9"
 	VersionPrerelease = "dev"
-
-	// VersionMetadata is extra metadata to add to the version. This could
-	// be anything that Semver accepts, and will not be taken into account
-	// into version comparisons by Packer core.
-	VersionMetadata = ""
-
-	// PluginVersion is used by the plugin set to allow Packer to recognize
-	// what version this plugin is.
-	PluginVersion = version.NewPluginVersion(Version, VersionPrerelease, VersionMetadata)
+	VersionMetadata   = ""
+	PluginVersion     = version.NewPluginVersion(Version, VersionPrerelease, VersionMetadata)
 )
