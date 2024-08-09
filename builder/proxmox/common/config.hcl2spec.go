@@ -371,6 +371,7 @@ func (*FlatdiskConfig) HCL2Spec() map[string]hcldec.Spec {
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatefiConfig struct {
 	EFIStoragePool  *string `mapstructure:"efi_storage_pool" cty:"efi_storage_pool" hcl:"efi_storage_pool"`
+	EFIFormat       *string `mapstructure:"efi_format" cty:"efi_format" hcl:"efi_format"`
 	PreEnrolledKeys *bool   `mapstructure:"pre_enrolled_keys" cty:"pre_enrolled_keys" hcl:"pre_enrolled_keys"`
 	EFIType         *string `mapstructure:"efi_type" cty:"efi_type" hcl:"efi_type"`
 }
@@ -388,6 +389,7 @@ func (*efiConfig) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Spe
 func (*FlatefiConfig) HCL2Spec() map[string]hcldec.Spec {
 	s := map[string]hcldec.Spec{
 		"efi_storage_pool":  &hcldec.AttrSpec{Name: "efi_storage_pool", Type: cty.String, Required: false},
+		"efi_format":        &hcldec.AttrSpec{Name: "efi_format", Type: cty.String, Required: false},
 		"pre_enrolled_keys": &hcldec.AttrSpec{Name: "pre_enrolled_keys", Type: cty.Bool, Required: false},
 		"efi_type":          &hcldec.AttrSpec{Name: "efi_type", Type: cty.String, Required: false},
 	}
