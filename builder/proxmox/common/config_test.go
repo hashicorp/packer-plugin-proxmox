@@ -5,6 +5,7 @@ package proxmox
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -244,7 +245,47 @@ func TestISOs(t *testing.T) {
 			}
 		})
 	}
+}
 
+func TestDeprecatedISOOptionsAreConverted(t *testing.T) {
+	isotests := []struct {
+		name string
+		ISOs map[string]interface{}
+	}{
+		{
+			// Ensure deprecated device field is converted
+			name: "device should be converted to type and index",
+			ISOs: map[string]interface{}{
+				"device":   "ide3",
+				"iso_file": "local:iso/test.iso",
+			},
+		},
+	}
+	for _, c := range isotests {
+		t.Run(c.name, func(t *testing.T) {
+			cfg := mandatoryConfig(t)
+			cfg["additional_iso_files"] = c.ISOs
+
+			var config Config
+			_, _, err := config.Prepare(&config, cfg)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			rd := regexp.MustCompile(`\D+`)
+			bus := rd.FindString(config.ISOs[0].Device)
+
+			rb := regexp.MustCompile(`\d+`)
+			index := rb.FindString(config.ISOs[0].Device)
+
+			if config.ISOs[0].Type != bus {
+				t.Errorf("Expected device to be converted to type %s", bus)
+			}
+			if config.ISOs[0].Index != index {
+				t.Errorf("Expected device to be converted to index %s", index)
+			}
+		})
+	}
 }
 
 func TestRng0(t *testing.T) {

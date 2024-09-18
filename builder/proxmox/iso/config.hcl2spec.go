@@ -120,7 +120,16 @@ type FlatConfig struct {
 	ISOs                      []proxmox.FlatISOsConfig      `mapstructure:"additional_iso_files" cty:"additional_iso_files" hcl:"additional_iso_files"`
 	VMInterface               *string                       `mapstructure:"vm_interface" cty:"vm_interface" hcl:"vm_interface"`
 	AdditionalArgs            *string                       `mapstructure:"qemu_additional_args" cty:"qemu_additional_args" hcl:"qemu_additional_args"`
-	BootISO                   *proxmox.FlatISOsConfig       `mapstructure:"iso" required:"true" cty:"iso" hcl:"iso"`
+	ISOChecksum               *string                       `mapstructure:"iso_checksum" required:"true" cty:"iso_checksum" hcl:"iso_checksum"`
+	RawSingleISOUrl           *string                       `mapstructure:"iso_url" required:"true" cty:"iso_url" hcl:"iso_url"`
+	ISOUrls                   []string                      `mapstructure:"iso_urls" cty:"iso_urls" hcl:"iso_urls"`
+	TargetPath                *string                       `mapstructure:"iso_target_path" cty:"iso_target_path" hcl:"iso_target_path"`
+	TargetExtension           *string                       `mapstructure:"iso_target_extension" cty:"iso_target_extension" hcl:"iso_target_extension"`
+	ISOFile                   *string                       `mapstructure:"iso_file" cty:"iso_file" hcl:"iso_file"`
+	ISOStoragePool            *string                       `mapstructure:"iso_storage_pool" cty:"iso_storage_pool" hcl:"iso_storage_pool"`
+	ISODownloadPVE            *bool                         `mapstructure:"iso_download_pve" cty:"iso_download_pve" hcl:"iso_download_pve"`
+	UnmountISO                *bool                         `mapstructure:"unmount_iso" cty:"unmount_iso" hcl:"unmount_iso"`
+	BootISO                   *proxmox.FlatISOsConfig       `mapstructure:"boot_iso" required:"true" cty:"boot_iso" hcl:"boot_iso"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -244,7 +253,16 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"additional_iso_files":         &hcldec.BlockListSpec{TypeName: "additional_iso_files", Nested: hcldec.ObjectSpec((*proxmox.FlatISOsConfig)(nil).HCL2Spec())},
 		"vm_interface":                 &hcldec.AttrSpec{Name: "vm_interface", Type: cty.String, Required: false},
 		"qemu_additional_args":         &hcldec.AttrSpec{Name: "qemu_additional_args", Type: cty.String, Required: false},
-		"iso":                          &hcldec.BlockSpec{TypeName: "iso", Nested: hcldec.ObjectSpec((*proxmox.FlatISOsConfig)(nil).HCL2Spec())},
+		"iso_checksum":                 &hcldec.AttrSpec{Name: "iso_checksum", Type: cty.String, Required: false},
+		"iso_url":                      &hcldec.AttrSpec{Name: "iso_url", Type: cty.String, Required: false},
+		"iso_urls":                     &hcldec.AttrSpec{Name: "iso_urls", Type: cty.List(cty.String), Required: false},
+		"iso_target_path":              &hcldec.AttrSpec{Name: "iso_target_path", Type: cty.String, Required: false},
+		"iso_target_extension":         &hcldec.AttrSpec{Name: "iso_target_extension", Type: cty.String, Required: false},
+		"iso_file":                     &hcldec.AttrSpec{Name: "iso_file", Type: cty.String, Required: false},
+		"iso_storage_pool":             &hcldec.AttrSpec{Name: "iso_storage_pool", Type: cty.String, Required: false},
+		"iso_download_pve":             &hcldec.AttrSpec{Name: "iso_download_pve", Type: cty.Bool, Required: false},
+		"unmount_iso":                  &hcldec.AttrSpec{Name: "unmount_iso", Type: cty.Bool, Required: false},
+		"boot_iso":                     &hcldec.BlockSpec{TypeName: "boot_iso", Nested: hcldec.ObjectSpec((*proxmox.FlatISOsConfig)(nil).HCL2Spec())},
 	}
 	return s
 }

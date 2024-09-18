@@ -237,13 +237,17 @@ type Config struct {
 // ```
 type ISOsConfig struct {
 	commonsteps.ISOConfig `mapstructure:",squash"`
+	// DEPRECATED. Assign bus type with `type`. Optionally assign a bus index with `index`.
+	// Bus type and bus index that the ISO will be mounted on. Can be `ideX`,
+	// `sataX` or `scsiX`.
+	// For `ide` the bus index ranges from 0 to 3, for `sata` from 0 to 5 and for
+	// `scsi` from 0 to 30.
+	// Defaulted to `ide3` in versions up to v1.8, now defaults to dynamic assignment (next available bus index after hard disks are allocated)
+	Device string `mapstructure:"device"`
 	// Bus type that the ISO will be mounted on. Can be `ide`, `sata` or `scsi`. Defaults to `ide`.
-	//
-	// In v1.9 bus indexes are no longer accepted for ISOs. ISOs are now attached to VMs in the order
-	// they are configured, using free bus indexes after disks are attached.
-	// Example: if two Disks and one ISO are defined as type `sata`, the disks will be attached to the VM
-	// as `sata0`, `sata1`, and the ISO will be mapped to `sata2` (the next free device index)
 	Type string `mapstructure:"type"`
+	// Optional: Used in combination with `type` to statically assign an ISO to a bus index.
+	Index string `mapstructure:"index"`
 	// Path to the ISO file to boot from, expressed as a
 	// proxmox datastore path, for example
 	// `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
@@ -681,6 +685,52 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 				warnings = append(warnings, isoWarnings...)
 			}
 			c.ISOs[idx].ShouldUploadISO = true
+		}
+		// validate device field
+		if c.ISOs[idx].Device != "" {
+			warnings = append(warnings, "additional_iso_files field 'device' is deprecated and will be removed in a future release, assign bus type with 'type'. Optionally assign a bus index with 'index'")
+			if strings.HasPrefix(c.ISOs[idx].Device, "ide") {
+				busnumber, err := strconv.Atoi(c.ISOs[idx].Device[3:])
+				if err != nil {
+					errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("%s is not a valid bus index", c.ISOs[idx].Device[3:]))
+				}
+				if busnumber > 3 {
+					errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("IDE bus index can't be higher than 3"))
+				} else {
+					// convert device field to type and index fields
+					log.Printf("converting deprecated field 'device' value %s to 'type' %s and 'index' %d", c.ISOs[idx].Device, "ide", busnumber)
+					c.ISOs[idx].Type = "ide"
+					c.ISOs[idx].Index = strconv.Itoa(busnumber)
+				}
+			}
+			if strings.HasPrefix(c.ISOs[idx].Device, "sata") {
+				busnumber, err := strconv.Atoi(c.ISOs[idx].Device[4:])
+				if err != nil {
+					errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("%s is not a valid bus index", c.ISOs[idx].Device[4:]))
+				}
+				if busnumber > 5 {
+					errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("SATA bus index can't be higher than 5"))
+				} else {
+					// convert device field to type and index fields
+					log.Printf("converting deprecated field 'device' value %s to 'type' %s and 'index' %d", c.ISOs[idx].Device, "sata", busnumber)
+					c.ISOs[idx].Type = "sata"
+					c.ISOs[idx].Index = strconv.Itoa(busnumber)
+				}
+			}
+			if strings.HasPrefix(c.ISOs[idx].Device, "scsi") {
+				busnumber, err := strconv.Atoi(c.ISOs[idx].Device[4:])
+				if err != nil {
+					errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("%s is not a valid bus index", c.ISOs[idx].Device[4:]))
+				}
+				if busnumber > 30 {
+					errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("SCSI bus index can't be higher than 30"))
+				} else {
+					// convert device field to type and index fields
+					log.Printf("converting deprecated field 'device' value %s to 'type' %s and 'index' %d", c.ISOs[idx].Device, "scsi", busnumber)
+					c.ISOs[idx].Type = "scsi"
+					c.ISOs[idx].Index = strconv.Itoa(busnumber)
+				}
+			}
 		}
 		// validate device type, assign if unset
 		switch c.ISOs[idx].Type {

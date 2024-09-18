@@ -671,12 +671,16 @@ In HCL2:
 
 <!-- Code generated from the comments of the ISOsConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
+- `device` (string) - DEPRECATED. Assign bus type with `type`. Optionally assign a bus index with `index`.
+  Bus type and bus index that the ISO will be mounted on. Can be `ideX`,
+  `sataX` or `scsiX`.
+  For `ide` the bus index ranges from 0 to 3, for `sata` from 0 to 5 and for
+  `scsi` from 0 to 30.
+  Defaulted to `ide3` in versions up to v1.8, now defaults to dynamic assignment (next available bus index after hard disks are allocated)
+
 - `type` (string) - Bus type that the ISO will be mounted on. Can be `ide`, `sata` or `scsi`. Defaults to `ide`.
-  
-  In v1.9 bus indexes are no longer accepted for ISOs. ISOs are now attached to VMs in the order
-  they are configured, using free bus indexes after disks are attached.
-  Example: if two Disks and one ISO are defined as type `sata`, the disks will be attached to the VM
-  as `sata0`, `sata1`, and the ISO will be mapped to `sata2` (the next free device index)
+
+- `index` (string) - Optional: Used in combination with `type` to statically assign an ISO to a bus index.
 
 - `iso_file` (string) - Path to the ISO file to boot from, expressed as a
   proxmox datastore path, for example

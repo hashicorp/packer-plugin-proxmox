@@ -1,12 +1,12 @@
 <!-- Code generated from the comments of the Config struct in builder/proxmox/iso/config.go; DO NOT EDIT MANUALLY -->
 
-- `iso` (common.ISOsConfig) - Boot ISO attached to the virtual machine.
+- `boot_iso` (common.ISOsConfig) - Boot ISO attached to the virtual machine.
   
   JSON Example:
   
   ```json
   
-  	"iso": {
+  	"boot_iso": {
   			  "type": "scsi",
   			  "iso_file": "local:iso/debian-12.5.0-amd64-netinst.iso",
   			  "unmount": true,
@@ -18,7 +18,7 @@
   
   ```hcl
   
-  	iso {
+  	boot_iso {
   	  type = "scsi"
   	  iso_file = "local:iso/debian-12.5.0-amd64-netinst.iso"
   	  unmount = true

@@ -34,7 +34,7 @@ func TestBasicExampleFromDocsIsValid(t *testing.T) {
           "storage_pool_type": "lvm"
         }
       ],
-	  "iso": {
+	  "boot_iso": {
 			"type": "sata",
 			"iso_file": "local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso",
 			"iso_storage_pool": "local-lvm",
@@ -114,6 +114,58 @@ func TestBasicExampleFromDocsIsValid(t *testing.T) {
 	}
 	if b.config.CloudInit != false {
 		t.Errorf("Expected CloudInit to be false, got %t", b.config.CloudInit)
+	}
+}
+
+func TestDeprecatedBootISOOptionsAreConverted(t *testing.T) {
+	const config = `{
+  "builders": [
+    {
+  	  "type": "proxmox-iso",
+      "proxmox_url": "https://my-proxmox.my-domain:8006/api2/json",
+      "insecure_skip_tls_verify": true,
+      "username": "apiuser@pve",
+      "password": "supersecret",
+	  "node": "my-proxmox",
+
+	  "iso_file": "local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso",
+	  "unmount_iso": true,
+	  "iso_storage_pool": "local",
+	  "iso_target_path": "./test",
+	  "iso_target_extension": "img",
+
+	  "ssh_username": "root",
+	  "ssh_password": "packer"
+    }
+  ]
+}`
+	tpl, err := template.Parse(strings.NewReader(config))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	b := &Builder{}
+	_, _, err = b.Prepare(tpl.Builders["proxmox-iso"].Config)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Validate that each deprecated boot ISO option is converted over to the iso struct
+
+	if b.config.BootISO.ISOFile != "local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso" {
+		t.Errorf("Expected iso_file to be converted to boot_iso.iso_file: local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso, got %s", b.config.BootISO.ISOFile)
+	}
+	if !b.config.BootISO.Unmount {
+		t.Errorf("Expected unmount_iso to be converted to boot_iso.unmount: true, got %t", b.config.BootISO.Unmount)
+	}
+	if b.config.BootISO.ISOStoragePool != "local" {
+		t.Errorf("Expected iso_storage_pool to be converted to boot_iso.iso_storage_pool: local, got %s", b.config.BootISO.ISOStoragePool)
+	}
+	if b.config.BootISO.TargetExtension != "img" {
+		t.Errorf("Expected iso_target_extension to be converted to boot_iso.iso_target_extension: img, got %s", b.config.BootISO.TargetExtension)
+	}
+	if b.config.BootISO.TargetPath != "./test" {
+		t.Errorf("Expected iso_target_path to be converted to boot_iso.iso_target_path: ./test, got %s", b.config.BootISO.TargetExtension)
 	}
 }
 
@@ -233,7 +285,7 @@ func mandatoryConfig(t *testing.T) map[string]interface{} {
 		"password":     "supersecret",
 		"node":         "my-proxmox",
 		"ssh_username": "root",
-		"iso": map[string]interface{}{
+		"boot_iso": map[string]interface{}{
 			"type":             "sata",
 			"iso_file":         "local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso",
 			"iso_storage_pool": "local-lvm",
