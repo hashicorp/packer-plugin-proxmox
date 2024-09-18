@@ -37,13 +37,13 @@ in the image's Cloud-Init settings for provisioning.
 
 <!-- Code generated from the comments of the Config struct in builder/proxmox/iso/config.go; DO NOT EDIT MANUALLY -->
 
-- `iso` (common.ISOsConfig) - Boot ISO attached to the virtual machine.
+- `boot_iso` (common.ISOsConfig) - Boot ISO attached to the virtual machine.
   
   JSON Example:
   
   ```json
   
-  	"iso": {
+  	"boot_iso": {
   			  "type": "scsi",
   			  "iso_file": "local:iso/debian-12.5.0-amd64-netinst.iso",
   			  "unmount": true,
@@ -55,7 +55,7 @@ in the image's Cloud-Init settings for provisioning.
   
   ```hcl
   
-  	iso {
+  	boot_iso {
   	  type = "scsi"
   	  iso_file = "local:iso/debian-12.5.0-amd64-netinst.iso"
   	  unmount = true
@@ -221,6 +221,24 @@ in the image's Cloud-Init settings for provisioning.
 
 <!-- Code generated from the comments of the Config struct in builder/proxmox/iso/config.go; DO NOT EDIT MANUALLY -->
 
+- `iso_file` (string) - DEPRECATED. Define Boot ISO config with the `boot_iso` block instead.
+  Path to the ISO file to boot from, expressed as a
+  proxmox datastore path, for example
+  `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
+  Either `iso_file` OR `iso_url` must be specifed.
+
+- `iso_storage_pool` (string) - DEPRECATED. Define Boot ISO config with the `boot_iso` block instead.
+  Proxmox storage pool onto which to upload
+  the ISO file.
+
+- `iso_download_pve` (bool) - DEPRECATED. Define Boot ISO config with the `boot_iso` block instead.
+  Download the ISO directly from the PVE node rather than through Packer.
+  
+  Defaults to `false`
+
+- `unmount_iso` (bool) - DEPRECATED. Define Boot ISO config with the `boot_iso` block instead.
+  If true, remove the mounted ISO from the template
+  after finishing. Defaults to `false`.
 
 <!-- End of code generated from the comments of the Config struct in builder/proxmox/iso/config.go; -->
 
@@ -331,12 +349,16 @@ HCL2 example:
 
 <!-- Code generated from the comments of the ISOsConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
 
+- `device` (string) - DEPRECATED. Assign bus type with `type`. Optionally assign a bus index with `index`.
+  Bus type and bus index that the ISO will be mounted on. Can be `ideX`,
+  `sataX` or `scsiX`.
+  For `ide` the bus index ranges from 0 to 3, for `sata` from 0 to 5 and for
+  `scsi` from 0 to 30.
+  Defaulted to `ide3` in versions up to v1.8, now defaults to dynamic assignment (next available bus index after hard disks are allocated)
+
 - `type` (string) - Bus type that the ISO will be mounted on. Can be `ide`, `sata` or `scsi`. Defaults to `ide`.
-  
-  In v1.9 bus indexes are no longer accepted for ISOs. ISOs are now attached to VMs in the order
-  they are configured, using free bus indexes after disks are attached.
-  Example: if two Disks and one ISO are defined as type `sata`, the disks will be attached to the VM
-  as `sata0`, `sata1`, and the ISO will be mapped to `sata2` (the next free device index)
+
+- `index` (string) - Optional: Used in combination with `type` to statically assign an ISO to a bus index.
 
 - `iso_file` (string) - Path to the ISO file to boot from, expressed as a
   proxmox datastore path, for example

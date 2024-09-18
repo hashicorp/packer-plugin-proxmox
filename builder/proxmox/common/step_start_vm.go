@@ -111,11 +111,16 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		kvm = false
 	}
 
-	errs, disks := generateProxmoxDisks(c.Disks, c.ISOs, c.CloneSourceDisks)
+	errs, warnings, disks := generateProxmoxDisks(c.Disks, c.ISOs, c.CloneSourceDisks)
 	if errs != nil && len(errs.Errors) > 0 {
 		state.Put("error", errs)
 		ui.Error(errs.Error())
 		return multistep.ActionHalt
+	}
+	if len(warnings) > 0 {
+		for idx := range warnings {
+			ui.Sayf("Warning: %s", warnings[idx])
+		}
 	}
 
 	config := proxmox.ConfigQemu{
@@ -272,11 +277,17 @@ func generateProxmoxNetworkAdapters(nics []NICConfig) proxmox.QemuDevices {
 	return devs
 }
 
-func generateProxmoxDisks(disks []diskConfig, isos []ISOsConfig, cloneSourceDisks []string) (*packersdk.MultiError, *proxmox.QemuStorages) {
+func generateProxmoxDisks(disks []diskConfig, isos []ISOsConfig, cloneSourceDisks []string) (*packersdk.MultiError, []string, *proxmox.QemuStorages) {
 	ideDisks := proxmox.QemuIdeDisks{}
 	sataDisks := proxmox.QemuSataDisks{}
 	scsiDisks := proxmox.QemuScsiDisks{}
 	virtIODisks := proxmox.QemuVirtIODisks{}
+	qemuStorages := proxmox.QemuStorages{
+		Ide:    &ideDisks,
+		Sata:   &sataDisks,
+		Scsi:   &scsiDisks,
+		VirtIO: &virtIODisks,
+	}
 
 	ideCount := 0
 	sataCount := 0
@@ -284,8 +295,104 @@ func generateProxmoxDisks(disks []diskConfig, isos []ISOsConfig, cloneSourceDisk
 	virtIOCount := 0
 
 	var errs *packersdk.MultiError
+	var warnings []string
 
-	// Map Disks first
+	// Versions up to 1.8 supported static assignment of ISOs to a bus index, however hard disks did not support static bus indexes.
+	// For backwards compatibility handle statically mapped ISOs first (guarantee allocation) then allocate hard disks and remaining ISOs in free slots around them.
+
+	// Map ISOs with a static index assignment
+	if len(isos) > 0 {
+		for idx := range isos {
+			// if a static assignment has been defined
+			if isos[idx].Index != "" {
+				// IsoFile struct parses the ISO File and Storage Pool as separate fields.
+				isoFile := strings.Split(isos[idx].ISOFile, ":iso/")
+
+				// define QemuCdRom containing isoFile properties
+				cdrom := &proxmox.QemuCdRom{
+					Iso: &proxmox.IsoFile{
+						File:    isoFile[1],
+						Storage: isoFile[0],
+					},
+				}
+
+				switch isos[idx].Type {
+				case "ide":
+					dev := proxmox.QemuIdeStorage{
+						CdRom: cdrom,
+					}
+					deviceIndex := fmt.Sprintf("ide%s", isos[idx].Index)
+					log.Printf("Mapping static assigned ISO to %s", deviceIndex)
+					if slices.Contains(cloneSourceDisks, deviceIndex) {
+						// Backwards compatibility: statically assigned ISOs overwrote assignments of existing disks when using the clone builder
+						// issue a warning so users are aware and can decide if they want to remap the ISO device
+						warnings = append(warnings, fmt.Sprintf("an existing hard disk was found at %s on the clone source VM, overwriting with ISO configured for the same address", deviceIndex))
+					}
+					// We need reflection here as the storage objects are not exposed
+					// as a slice, but as a series of named fields in the structure
+					// that the APIs use.
+					//
+					// This means that assigning the disks in the order they're defined
+					// in would result in a bunch of `switch` cases for the index, and
+					// named field assignation for each.
+					//
+					// Example:
+					// ```
+					// switch ideCount {
+					// case 0:
+					//	dev.Disk_0 = dev
+					// case 1:
+					//	dev.Disk_1 = dev
+					// [...]
+					// }
+					// ```
+					//
+					// Instead, we use reflection to address the fields algorithmically,
+					// so we don't need to write this verbose code.
+					reflect.
+						// We need to get the pointer to the structure so we can
+						// assign a value to the disk
+						ValueOf(&ideDisks).Elem().
+						// Get the field from its name, each disk's field has a
+						// similar format 'Disk_%d'
+						FieldByName(fmt.Sprintf("Disk_%s", isos[idx].Index)).
+						// Assign dev to the Disk_%d field
+						Set(reflect.ValueOf(&dev))
+					isos[idx].AssignedDeviceIndex = deviceIndex
+				case "sata":
+					dev := proxmox.QemuSataStorage{
+						CdRom: cdrom,
+					}
+					deviceIndex := fmt.Sprintf("sata%s", isos[idx].Index)
+					log.Printf("Mapping static assigned ISO to %s", deviceIndex)
+					if slices.Contains(cloneSourceDisks, deviceIndex) {
+						warnings = append(warnings, fmt.Sprintf("an existing hard disk was found at %s on the clone source VM, overwriting with ISO configured for the same address", deviceIndex))
+					}
+					reflect.
+						ValueOf(&sataDisks).Elem().
+						FieldByName(fmt.Sprintf("Disk_%s", isos[idx].Index)).
+						Set(reflect.ValueOf(&dev))
+					isos[idx].AssignedDeviceIndex = deviceIndex
+				case "scsi":
+					dev := proxmox.QemuScsiStorage{
+						CdRom: cdrom,
+					}
+					deviceIndex := fmt.Sprintf("scsi%s", isos[idx].Index)
+					log.Printf("Mapping static assigned ISO to %s", deviceIndex)
+					if slices.Contains(cloneSourceDisks, fmt.Sprintf("scsi%d", scsiCount)) {
+						warnings = append(warnings, fmt.Sprintf("an existing hard disk was found at %s on the clone source VM, overwriting with ISO configured for the same address", deviceIndex))
+					}
+					reflect.
+						ValueOf(&scsiDisks).Elem().
+						FieldByName(fmt.Sprintf("Disk_%s", isos[idx].Index)).
+						Set(reflect.ValueOf(&dev))
+					isos[idx].AssignedDeviceIndex = deviceIndex
+				}
+			}
+		}
+	}
+
+	// Map Hard Disks
 	for idx := range disks {
 		tmpSize, _ := strconv.ParseInt(disks[idx].Size[:len(disks[idx].Size)-1], 10, 0)
 		size := proxmox.QemuDiskSize(0)
@@ -327,36 +434,15 @@ func generateProxmoxDisks(disks []diskConfig, isos []ISOsConfig, cloneSourceDisk
 				}
 
 				// If this ide device index isn't occupied by a disk on a clone builder source vm
-				if !slices.Contains(cloneSourceDisks, fmt.Sprintf("ide%d", ideCount)) {
-					// We need reflection here as the storage objects are not exposed
-					// as a slice, but as a series of named fields in the structure
-					// that the APIs use.
-					//
-					// This means that assigning the disks in the order they're defined
-					// in would result in a bunch of `switch` cases for the index, and
-					// named field assignation for each.
-					//
-					// Example:
-					// ```
-					// switch ideCount {
-					// case 0:
-					//	dev.Disk_0 = dev
-					// case 1:
-					//	dev.Disk_1 = dev
-					// [...]
-					// }
-					// ```
-					//
-					// Instead, we use reflection to address the fields algorithmically,
-					// so we don't need to write this verbose code.
+				if !slices.Contains(cloneSourceDisks, fmt.Sprintf("ide%d", ideCount)) &&
+					// or occupied by a statically mapped ISO
 					reflect.
-						// We need to get the pointer to the structure so we can
-						// assign a value to the disk
 						ValueOf(&ideDisks).Elem().
-						// Get the field from its name, each disk's field has a
-						// similar format 'Disk_%d'
 						FieldByName(fmt.Sprintf("Disk_%d", ideCount)).
-						// Assign dev to the Disk_%d field
+						IsNil() {
+					reflect.
+						ValueOf(&ideDisks).Elem().
+						FieldByName(fmt.Sprintf("Disk_%d", ideCount)).
 						Set(reflect.ValueOf(&dev))
 					ideCount++
 					break
@@ -385,7 +471,10 @@ func generateProxmoxDisks(disks []diskConfig, isos []ISOsConfig, cloneSourceDisk
 					errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("storage enumeration reached scsi index %d, too many scsi devices configured. Ensure total disk and ISO scsi assignments don't exceed 31 devices", scsiCount))
 					break
 				}
-				if !slices.Contains(cloneSourceDisks, fmt.Sprintf("scsi%d", scsiCount)) {
+				if !slices.Contains(cloneSourceDisks, fmt.Sprintf("scsi%d", scsiCount)) &&
+					reflect.ValueOf(&scsiDisks).Elem().
+						FieldByName(fmt.Sprintf("Disk_%d", scsiCount)).
+						IsNil() {
 					reflect.
 						ValueOf(&scsiDisks).Elem().
 						FieldByName(fmt.Sprintf("Disk_%d", scsiCount)).
@@ -415,7 +504,10 @@ func generateProxmoxDisks(disks []diskConfig, isos []ISOsConfig, cloneSourceDisk
 					break
 				}
 				log.Printf("Mapping Disk to sata%d", sataCount)
-				if !slices.Contains(cloneSourceDisks, fmt.Sprintf("sata%d", sataCount)) {
+				if !slices.Contains(cloneSourceDisks, fmt.Sprintf("sata%d", sataCount)) &&
+					reflect.ValueOf(&sataDisks).Elem().
+						FieldByName(fmt.Sprintf("Disk_%d", sataCount)).
+						IsNil() {
 					reflect.
 						ValueOf(&sataDisks).Elem().
 						FieldByName(fmt.Sprintf("Disk_%d", sataCount)).
@@ -445,7 +537,10 @@ func generateProxmoxDisks(disks []diskConfig, isos []ISOsConfig, cloneSourceDisk
 					errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("enumeration reached virtio index %d, too many virtio devices configured. Ensure total disk and ISO virtio assignments don't exceed 16 devices", virtIOCount))
 					break
 				}
-				if !slices.Contains(cloneSourceDisks, fmt.Sprintf("virtio%d", virtIOCount)) {
+				if !slices.Contains(cloneSourceDisks, fmt.Sprintf("virtio%d", virtIOCount)) &&
+					reflect.ValueOf(&virtIODisks).Elem().
+						FieldByName(fmt.Sprintf("Disk_%d", virtIOCount)).
+						IsNil() {
 					reflect.
 						ValueOf(&virtIODisks).Elem().
 						FieldByName(fmt.Sprintf("Disk_%d", virtIOCount)).
@@ -459,97 +554,104 @@ func generateProxmoxDisks(disks []diskConfig, isos []ISOsConfig, cloneSourceDisk
 		}
 	}
 
-	// Map ISOs in remaining device indexes
+	// Map ISOs without static mappings in remaining device indexes
 	if len(isos) > 0 {
 		for idx := range isos {
-			// IsoFile struct parses the ISO File and Storage Pool as separate fields.
-			isoFile := strings.Split(isos[idx].ISOFile, ":iso/")
+			// if a static assignment has not been defined
+			if isos[idx].Index == "" {
+				// IsoFile struct parses the ISO File and Storage Pool as separate fields.
+				isoFile := strings.Split(isos[idx].ISOFile, ":iso/")
 
-			// define QemuCdRom containing isoFile properties
-			cdrom := &proxmox.QemuCdRom{
-				Iso: &proxmox.IsoFile{
-					File:    isoFile[1],
-					Storage: isoFile[0],
-				},
-			}
-
-			switch isos[idx].Type {
-			case "ide":
-				dev := proxmox.QemuIdeStorage{
-					CdRom: cdrom,
+				// define QemuCdRom containing isoFile properties
+				cdrom := &proxmox.QemuCdRom{
+					Iso: &proxmox.IsoFile{
+						File:    isoFile[1],
+						Storage: isoFile[0],
+					},
 				}
-				for {
-					log.Printf("Mapping ISO to ide%d", ideCount)
-					if ideCount > 3 {
-						errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("storage enumeration reached ide index %d, too many ide devices configured. Ensure total Disk and ISO ide assignments don't exceed 4 devices", ideCount))
-						break
+
+				switch isos[idx].Type {
+				case "ide":
+					dev := proxmox.QemuIdeStorage{
+						CdRom: cdrom,
 					}
-					if !slices.Contains(cloneSourceDisks, fmt.Sprintf("ide%d", ideCount)) {
-						reflect.
-							ValueOf(&ideDisks).Elem().
-							FieldByName(fmt.Sprintf("Disk_%d", ideCount)).
-							Set(reflect.ValueOf(&dev))
-						isos[idx].AssignedDeviceIndex = fmt.Sprintf("ide%d", ideCount)
+					for {
+						log.Printf("Mapping ISO to ide%d", ideCount)
+						if ideCount > 3 {
+							errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("storage enumeration reached ide index %d, too many ide devices configured. Ensure total Disk and ISO ide assignments don't exceed 4 devices", ideCount))
+							break
+						}
+						if !slices.Contains(cloneSourceDisks, fmt.Sprintf("ide%d", ideCount)) &&
+							reflect.ValueOf(&ideDisks).Elem().
+								FieldByName(fmt.Sprintf("Disk_%d", ideCount)).
+								IsNil() {
+							reflect.
+								ValueOf(&ideDisks).Elem().
+								FieldByName(fmt.Sprintf("Disk_%d", ideCount)).
+								Set(reflect.ValueOf(&dev))
+							isos[idx].AssignedDeviceIndex = fmt.Sprintf("ide%d", ideCount)
+							ideCount++
+							break
+						}
+						log.Printf("ide%d occupied, trying next device index", ideCount)
 						ideCount++
-						break
 					}
-					log.Printf("ide%d occupied, trying next device index", ideCount)
-					ideCount++
-				}
-			case "sata":
-				dev := proxmox.QemuSataStorage{
-					CdRom: cdrom,
-				}
-				for {
-					if sataCount > 5 {
-						errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("storage enumeration reached sata index %d, too many sata devices configured. Ensure total disk and ISO sata assignments don't exceed 6 devices", sataCount))
-						break
+				case "sata":
+					dev := proxmox.QemuSataStorage{
+						CdRom: cdrom,
 					}
-					log.Printf("Mapping ISO to sata%d", sataCount)
-					if !slices.Contains(cloneSourceDisks, fmt.Sprintf("sata%d", sataCount)) {
-						reflect.
-							ValueOf(&sataDisks).Elem().
-							FieldByName(fmt.Sprintf("Disk_%d", sataCount)).
-							Set(reflect.ValueOf(&dev))
-						isos[idx].AssignedDeviceIndex = fmt.Sprintf("sata%d", sataCount)
+					for {
+						if sataCount > 5 {
+							errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("storage enumeration reached sata index %d, too many sata devices configured. Ensure total disk and ISO sata assignments don't exceed 6 devices", sataCount))
+							break
+						}
+						log.Printf("Mapping ISO to sata%d", sataCount)
+						if !slices.Contains(cloneSourceDisks, fmt.Sprintf("sata%d", sataCount)) &&
+							reflect.ValueOf(&sataDisks).Elem().
+								FieldByName(fmt.Sprintf("Disk_%d", sataCount)).
+								IsNil() {
+							reflect.
+								ValueOf(&sataDisks).Elem().
+								FieldByName(fmt.Sprintf("Disk_%d", sataCount)).
+								Set(reflect.ValueOf(&dev))
+							isos[idx].AssignedDeviceIndex = fmt.Sprintf("sata%d", sataCount)
+							sataCount++
+							break
+						}
+						log.Printf("sata%d occupied, trying next device index", sataCount)
 						sataCount++
-						break
 					}
-					log.Printf("sata%d occupied, trying next device index", sataCount)
-					sataCount++
-				}
-			case "scsi":
-				dev := proxmox.QemuScsiStorage{
-					CdRom: cdrom,
-				}
-				for {
-					log.Printf("Mapping ISO to scsi%d", scsiCount)
-					if scsiCount > 30 {
-						errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("storage enumeration reached scsi index %d, too many scsi devices configured. Ensure total disk and ISO scsi assignments don't exceed 31 devices", scsiCount))
-						break
+				case "scsi":
+					dev := proxmox.QemuScsiStorage{
+						CdRom: cdrom,
 					}
-					if !slices.Contains(cloneSourceDisks, fmt.Sprintf("scsi%d", scsiCount)) {
-						reflect.
-							ValueOf(&scsiDisks).Elem().
-							FieldByName(fmt.Sprintf("Disk_%d", scsiCount)).
-							Set(reflect.ValueOf(&dev))
-						isos[idx].AssignedDeviceIndex = fmt.Sprintf("scsi%d", scsiCount)
+					for {
+						log.Printf("Mapping ISO to scsi%d", scsiCount)
+						if scsiCount > 30 {
+							errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("storage enumeration reached scsi index %d, too many scsi devices configured. Ensure total disk and ISO scsi assignments don't exceed 31 devices", scsiCount))
+							break
+						}
+						if !slices.Contains(cloneSourceDisks, fmt.Sprintf("scsi%d", scsiCount)) &&
+							reflect.ValueOf(&scsiDisks).Elem().
+								FieldByName(fmt.Sprintf("Disk_%d", scsiCount)).
+								IsNil() {
+							reflect.
+								ValueOf(&scsiDisks).Elem().
+								FieldByName(fmt.Sprintf("Disk_%d", scsiCount)).
+								Set(reflect.ValueOf(&dev))
+							isos[idx].AssignedDeviceIndex = fmt.Sprintf("scsi%d", scsiCount)
+							scsiCount++
+							break
+						}
+						log.Printf("scsi%d occupied, trying next device index", scsiCount)
 						scsiCount++
-						break
 					}
-					log.Printf("scsi%d occupied, trying next device index", scsiCount)
-					scsiCount++
 				}
 			}
 		}
 	}
 
-	return errs, &proxmox.QemuStorages{
-		Ide:    &ideDisks,
-		Sata:   &sataDisks,
-		Scsi:   &scsiDisks,
-		VirtIO: &virtIODisks,
-	}
+	return errs, warnings, &qemuStorages
 }
 
 func generateProxmoxPCIDeviceMap(devices []pciDeviceConfig) proxmox.QemuDevices {
