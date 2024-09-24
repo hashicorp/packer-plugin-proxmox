@@ -236,11 +236,11 @@ func TestISOs(t *testing.T) {
 			var config Config
 			_, _, err := config.Prepare(&config, cfg)
 
-			if c.expectedToFail == true && err == nil {
+			if c.expectedToFail && err == nil {
 				t.Error("expected config preparation to fail, but no error occured")
 			}
 
-			if c.expectedToFail == false && err != nil {
+			if !c.expectedToFail && err != nil {
 				t.Errorf("expected config preparation to succeed, but %s", err.Error())
 			}
 		})
@@ -318,11 +318,11 @@ func TestDeprecatedISOOptionsAreConverted(t *testing.T) {
 				t.Errorf("Expected device to be converted to index %s", index)
 			}
 
-			if c.expectedToFail == true && err == nil {
+			if c.expectedToFail && err == nil {
 				t.Error("expected config preparation to fail, but no error occured")
 			}
 
-			if c.expectedToFail == false && err != nil {
+			if !c.expectedToFail && err != nil {
 				t.Errorf("expected config preparation to succeed, but %s", err.Error())
 			}
 
