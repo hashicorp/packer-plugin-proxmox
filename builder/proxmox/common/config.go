@@ -242,7 +242,7 @@ type ISOsConfig struct {
 	// `sataX` or `scsiX`.
 	// For `ide` the bus index ranges from 0 to 3, for `sata` from 0 to 5 and for
 	// `scsi` from 0 to 30.
-	// Defaulted to `ide3` in versions up to v1.8, now defaults to dynamic assignment (next available bus index after hard disks are allocated)
+	// Defaulted to `ide3` in versions up to v1.8, now defaults to dynamic ide assignment (next available ide bus index after hard disks are allocated)
 	Device string `mapstructure:"device"`
 	// Bus type that the ISO will be mounted on. Can be `ide`, `sata` or `scsi`. Defaults to `ide`.
 	Type string `mapstructure:"type"`

@@ -249,14 +249,47 @@ func TestISOs(t *testing.T) {
 
 func TestDeprecatedISOOptionsAreConverted(t *testing.T) {
 	isotests := []struct {
-		name string
-		ISOs map[string]interface{}
+		name           string
+		expectedToFail bool
+		ISOs           map[string]interface{}
 	}{
 		{
-			// Ensure deprecated device field is converted
-			name: "device should be converted to type and index",
+			name:           "cd_files valid should succeed",
+			expectedToFail: false,
 			ISOs: map[string]interface{}{
-				"device":   "ide3",
+				"device": "ide1",
+				"cd_files": []string{
+					"config_test.go",
+				},
+				"iso_storage_pool": "local",
+			},
+		},
+		{
+			name:           "cd_content valid should succeed",
+			expectedToFail: false,
+			ISOs: map[string]interface{}{
+				"device": "ide1",
+				"cd_content": map[string]string{
+					"test": "config_test.go",
+				},
+				"iso_storage_pool": "local",
+			},
+		},
+		{
+			name:           "iso_url valid should succeed",
+			expectedToFail: false,
+			ISOs: map[string]interface{}{
+				"device":           "ide1",
+				"iso_url":          "http://example.com",
+				"iso_checksum":     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+				"iso_storage_pool": "local",
+			},
+		},
+		{
+			name:           "iso_file valid should succeed",
+			expectedToFail: false,
+			ISOs: map[string]interface{}{
+				"device":   "ide1",
 				"iso_file": "local:iso/test.iso",
 			},
 		},
@@ -284,6 +317,15 @@ func TestDeprecatedISOOptionsAreConverted(t *testing.T) {
 			if config.ISOs[0].Index != index {
 				t.Errorf("Expected device to be converted to index %s", index)
 			}
+
+			if c.expectedToFail == true && err == nil {
+				t.Error("expected config preparation to fail, but no error occured")
+			}
+
+			if c.expectedToFail == false && err != nil {
+				t.Errorf("expected config preparation to succeed, but %s", err.Error())
+			}
+
 		})
 	}
 }
