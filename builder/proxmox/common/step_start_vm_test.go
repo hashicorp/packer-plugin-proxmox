@@ -501,10 +501,12 @@ func TestStartVM_AssertInitialQuemuConfig(t *testing.T) {
 
 func TestGenerateProxmoxDisks(t *testing.T) {
 	tests := []struct {
-		name         string
-		disks        []diskConfig
-		isos         []ISOsConfig
-		expectOutput *proxmox.QemuStorages
+		name             string
+		disks            []diskConfig
+		isos             []ISOsConfig
+		clonesourcedisks []string
+		expectedToFail   bool
+		expectOutput     *proxmox.QemuStorages
 	}{
 		{
 			"plain config, no special option set",
@@ -522,6 +524,8 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 				},
 			},
 			[]ISOsConfig{},
+			[]string{},
+			false,
 			&proxmox.QemuStorages{
 				Ide:  &proxmox.QemuIdeDisks{},
 				Sata: &proxmox.QemuSataDisks{},
@@ -559,6 +563,8 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 				},
 			},
 			[]ISOsConfig{},
+			[]string{},
+			false,
 			&proxmox.QemuStorages{
 				Ide:  &proxmox.QemuIdeDisks{},
 				Sata: &proxmox.QemuSataDisks{},
@@ -596,6 +602,8 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 				},
 			},
 			[]ISOsConfig{},
+			[]string{},
+			false,
 			&proxmox.QemuStorages{
 				Ide:  &proxmox.QemuIdeDisks{},
 				Sata: &proxmox.QemuSataDisks{},
@@ -633,6 +641,8 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 				},
 			},
 			[]ISOsConfig{},
+			[]string{},
+			false,
 			&proxmox.QemuStorages{
 				Ide:  &proxmox.QemuIdeDisks{},
 				Sata: &proxmox.QemuSataDisks{},
@@ -669,6 +679,8 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 				},
 			},
 			[]ISOsConfig{},
+			[]string{},
+			false,
 			&proxmox.QemuStorages{
 				Ide:  &proxmox.QemuIdeDisks{},
 				Sata: &proxmox.QemuSataDisks{},
@@ -687,6 +699,62 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			"overallocate sata, should error",
+			[]diskConfig{
+				{
+					Type:        "sata",
+					StoragePool: "local-lvm",
+					Size:        "11G",
+					CacheMode:   "none",
+					DiskFormat:  "qcow2",
+					IOThread:    true,
+				},
+				{
+					Type:        "sata",
+					StoragePool: "local-lvm",
+					Size:        "11G",
+					CacheMode:   "none",
+					DiskFormat:  "qcow2",
+					IOThread:    true,
+				},
+				{
+					Type:        "sata",
+					StoragePool: "local-lvm",
+					Size:        "11G",
+					CacheMode:   "none",
+					DiskFormat:  "qcow2",
+					IOThread:    true,
+				},
+				{
+					Type:        "sata",
+					StoragePool: "local-lvm",
+					Size:        "11G",
+					CacheMode:   "none",
+					DiskFormat:  "qcow2",
+					IOThread:    true,
+				},
+				{
+					Type:        "sata",
+					StoragePool: "local-lvm",
+					Size:        "11G",
+					CacheMode:   "none",
+					DiskFormat:  "qcow2",
+					IOThread:    true,
+				},
+			},
+			[]ISOsConfig{
+				{
+					Type:    "sata",
+					ISOFile: "local:iso/test.iso",
+				},
+			},
+			[]string{
+				"sata0",
+			},
+			true,
+			&proxmox.QemuStorages{},
 		},
 		{
 			"bunch of disks, should be defined in the discovery order",
@@ -757,6 +825,8 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 				},
 			},
 			[]ISOsConfig{},
+			[]string{},
+			false,
 			&proxmox.QemuStorages{
 				Ide: &proxmox.QemuIdeDisks{
 					Disk_0: &proxmox.QemuIdeStorage{
@@ -910,6 +980,8 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 					ISOFile: "local:iso/test.iso",
 				},
 			},
+			[]string{},
+			false,
 			&proxmox.QemuStorages{
 				Ide: &proxmox.QemuIdeDisks{
 					Disk_0: &proxmox.QemuIdeStorage{
@@ -993,8 +1065,19 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, _, devs := generateProxmoxDisks(tt.disks, tt.isos, nil)
-			assert.Equal(t, devs, tt.expectOutput)
+			err, _, devs := generateProxmoxDisks(tt.disks, tt.isos, tt.clonesourcedisks)
+
+			if tt.expectedToFail && err == nil {
+				t.Error("expected config preparation to fail, but no error occured")
+			}
+
+			if !tt.expectedToFail && err != nil {
+				t.Errorf("expected config preparation to succeed, but %s", err.Error())
+			}
+
+			if !tt.expectedToFail {
+				assert.Equal(t, devs, tt.expectOutput)
+			}
 		})
 	}
 }

@@ -91,7 +91,6 @@ func (s *StepMapSourceDisks) Run(ctx context.Context, state multistep.StateBag) 
 	// store discovered disks in common config
 	d := state.Get("config").(*proxmox.Config)
 	d.CloneSourceDisks = sourceDisks
-	state.Put("config", d)
 
 	return multistep.ActionContinue
 }
