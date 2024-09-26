@@ -25,7 +25,7 @@ Then, run [`packer init`](https://www.packer.io/docs/commands/init).
 packer {
   required_plugins {
     proxmox = {
-      version = ">= 1.1.8"
+      version = ">= 1.2.0"
       source  = "github.com/hashicorp/proxmox"
     }
   }
