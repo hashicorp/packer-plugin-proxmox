@@ -17,18 +17,18 @@ import (
 // stepFinalizeTemplateConfig does any required modifications to the configuration _after_
 // the VM has been converted into a template, such as updating name and description, or
 // unmounting the installation ISO.
-type stepFinalizeTemplateConfig struct{}
+type stepFinalizeConfig struct{}
 
-type templateFinalizer interface {
+type finalizer interface {
 	GetVmConfig(*proxmox.VmRef) (map[string]interface{}, error)
 	SetVmConfig(*proxmox.VmRef, map[string]interface{}) (interface{}, error)
 }
 
-var _ templateFinalizer = &proxmox.Client{}
+var _ finalizer = &proxmox.Client{}
 
-func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
+func (s *stepFinalizeConfig) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packersdk.Ui)
-	client := state.Get("proxmoxClient").(templateFinalizer)
+	client := state.Get("proxmoxClient").(finalizer)
 	c := state.Get("config").(*Config)
 	vmRef := state.Get("vmRef").(*proxmox.VmRef)
 
@@ -151,4 +151,4 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 	return multistep.ActionContinue
 }
 
-func (s *stepFinalizeTemplateConfig) Cleanup(state multistep.StateBag) {}
+func (s *stepFinalizeConfig) Cleanup(state multistep.StateBag) {}

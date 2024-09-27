@@ -34,27 +34,45 @@ func TestConvertToTemplate(t *testing.T) {
 		expectCallCreateTemplate bool
 		createTemplateErr        error
 		expectedAction           multistep.StepAction
-		expectTemplateIdSet      bool
+		expectArtifactIdSet      bool
+		expectArtifactType       string
+		builderConfig            *Config
 	}{
 		{
-			name:                     "no errors returns continue and sets template id",
+			name:                     "no errors returns continue and sets template artifact type",
 			expectCallCreateTemplate: true,
 			expectedAction:           multistep.ActionContinue,
-			expectTemplateIdSet:      true,
+			expectArtifactIdSet:      true,
+			expectArtifactType:       "template",
+			builderConfig:            &Config{},
+		},
+		{
+			name:                     "no errors returns continue and sets vm artifact type",
+			expectCallCreateTemplate: true,
+			expectedAction:           multistep.ActionContinue,
+			expectArtifactIdSet:      true,
+			expectArtifactType:       "VM",
+			builderConfig: &Config{
+				SkipConvertToTemplate: true,
+			},
 		},
 		{
 			name:                     "when shutdown fails, don't try to create template and halt",
 			shutdownErr:              fmt.Errorf("failed to stop vm"),
 			expectCallCreateTemplate: false,
 			expectedAction:           multistep.ActionHalt,
-			expectTemplateIdSet:      false,
+			expectArtifactIdSet:      false,
+			expectArtifactType:       "",
+			builderConfig:            &Config{},
 		},
 		{
 			name:                     "when create template fails, halt",
 			expectCallCreateTemplate: true,
 			createTemplateErr:        fmt.Errorf("failed to stop vm"),
 			expectedAction:           multistep.ActionHalt,
-			expectTemplateIdSet:      false,
+			expectArtifactIdSet:      false,
+			expectArtifactType:       "",
+			builderConfig:            &Config{},
 		},
 	}
 
@@ -85,6 +103,7 @@ func TestConvertToTemplate(t *testing.T) {
 			state.Put("ui", packersdk.TestUi(t))
 			state.Put("vmRef", proxmox.NewVmRef(vmid))
 			state.Put("proxmoxClient", converter)
+			state.Put("config", c.builderConfig)
 
 			step := stepConvertToTemplate{}
 			action := step.Run(context.TODO(), state)
@@ -92,14 +111,23 @@ func TestConvertToTemplate(t *testing.T) {
 				t.Errorf("Expected action to be %v, got %v", c.expectedAction, action)
 			}
 
-			id, wasSet := state.GetOk("template_id")
+			artifactId, artifactIdWasSet := state.GetOk("artifact_id")
+			artifactType, artifactTypeWasSet := state.GetOk("artifact_type")
 
-			if c.expectTemplateIdSet != wasSet {
-				t.Errorf("Expected template_id state present=%v was present=%v", c.expectTemplateIdSet, wasSet)
+			if c.expectArtifactIdSet != artifactIdWasSet {
+				t.Errorf("Expected artifact_id state present=%v was present=%v", c.expectArtifactIdSet, artifactIdWasSet)
 			}
 
-			if c.expectTemplateIdSet && id != vmid {
-				t.Errorf("Expected template_id state to be set to %d, got %v", vmid, id)
+			if c.expectArtifactIdSet && artifactId != vmid {
+				t.Errorf("Expected artifact_id state to be set to %d, got %v", vmid, artifactId)
+			}
+
+			if c.expectArtifactType == "" && artifactTypeWasSet {
+				t.Errorf("Expected artifact_type state present=%v was present=%v", c.expectArtifactType, artifactTypeWasSet)
+			}
+
+			if artifactTypeWasSet && c.expectArtifactType != artifactType {
+				t.Errorf("Expected artifact_type state to be set to %s, got %s", c.expectArtifactType, artifactType)
 			}
 		})
 	}

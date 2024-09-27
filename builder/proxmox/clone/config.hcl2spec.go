@@ -114,6 +114,7 @@ type FlatConfig struct {
 	DisableKVM                *bool                         `mapstructure:"disable_kvm" cty:"disable_kvm" hcl:"disable_kvm"`
 	TemplateName              *string                       `mapstructure:"template_name" cty:"template_name" hcl:"template_name"`
 	TemplateDescription       *string                       `mapstructure:"template_description" cty:"template_description" hcl:"template_description"`
+	SkipConvertToTemplate     *bool                         `mapstructure:"skip_convert_to_template" cty:"skip_convert_to_template" hcl:"skip_convert_to_template"`
 	CloudInit                 *bool                         `mapstructure:"cloud_init" cty:"cloud_init" hcl:"cloud_init"`
 	CloudInitStoragePool      *string                       `mapstructure:"cloud_init_storage_pool" cty:"cloud_init_storage_pool" hcl:"cloud_init_storage_pool"`
 	CloudInitDiskType         *string                       `mapstructure:"cloud_init_disk_type" cty:"cloud_init_disk_type" hcl:"cloud_init_disk_type"`
@@ -243,6 +244,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"disable_kvm":                  &hcldec.AttrSpec{Name: "disable_kvm", Type: cty.Bool, Required: false},
 		"template_name":                &hcldec.AttrSpec{Name: "template_name", Type: cty.String, Required: false},
 		"template_description":         &hcldec.AttrSpec{Name: "template_description", Type: cty.String, Required: false},
+		"skip_convert_to_template":     &hcldec.AttrSpec{Name: "skip_convert_to_template", Type: cty.Bool, Required: false},
 		"cloud_init":                   &hcldec.AttrSpec{Name: "cloud_init", Type: cty.Bool, Required: false},
 		"cloud_init_storage_pool":      &hcldec.AttrSpec{Name: "cloud_init_storage_pool", Type: cty.String, Required: false},
 		"cloud_init_disk_type":         &hcldec.AttrSpec{Name: "cloud_init_disk_type", Type: cty.String, Required: false},
