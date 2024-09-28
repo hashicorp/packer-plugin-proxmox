@@ -163,7 +163,7 @@ func getVMIP(state multistep.StateBag) (string, error) {
 				continue
 			}
 
-			for _, addr := range iface.IPAddresses {
+			for _, addr := range iface.IpAddresses {
 				if addr.IsLoopback() {
 					continue
 				}
@@ -175,7 +175,7 @@ func getVMIP(state multistep.StateBag) (string, error) {
 	}
 
 	for _, iface := range ifs {
-		for _, addr := range iface.IPAddresses {
+		for _, addr := range iface.IpAddresses {
 			if addr.IsLoopback() {
 				continue
 			}

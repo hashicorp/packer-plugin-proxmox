@@ -15,6 +15,7 @@ import (
 	"github.com/Telmate/proxmox-api-go/proxmox"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/hashicorp/packer-plugin-sdk/template/config"
 )
 
 // stepStartVM takes the given configuration and starts a VM on the given Proxmox node.
@@ -101,11 +102,6 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 	client := state.Get("proxmoxClient").(vmStarter)
 	c := state.Get("config").(*Config)
 
-	agent := 1
-	if c.Agent.False() {
-		agent = 0
-	}
-
 	kvm := true
 	if c.DisableKVM {
 		kvm = false
@@ -125,9 +121,9 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 
 	config := proxmox.ConfigQemu{
 		Name:           c.VMName,
-		Agent:          agent,
+		Agent:          generateAgentConfig(c.Agent),
 		QemuKVM:        &kvm,
-		Tags:           c.Tags,
+		Tags:           generateTags(c.Tags),
 		Boot:           c.Boot, // Boot priority, example: "order=virtio0;ide2;net0", virtio0:Disk0 -> ide0:CDROM -> net0:Network
 		QemuCpu:        c.CPUType,
 		Description:    "Packer ephemeral build VM",
@@ -149,6 +145,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		Scsihw:         c.SCSIController,
 		Onboot:         &c.Onboot,
 		Args:           c.AdditionalArgs,
+		Pool:           (*proxmox.PoolName)(&c.Pool),
 	}
 
 	// 0 disables the ballooning device, which is useful for all VMs
@@ -199,7 +196,6 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		vmRef.SetNode(c.Node)
 		if c.Pool != "" {
 			vmRef.SetPool(c.Pool)
-			config.Pool = c.Pool
 		}
 
 		err := s.vmCreator.Create(vmRef, config, state)
@@ -252,6 +248,30 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 	}
 
 	return multistep.ActionContinue
+}
+
+func generateAgentConfig(agent config.Trilean) *proxmox.QemuGuestAgent {
+	var enableAgent bool
+
+	if agent.True() {
+		enableAgent = true
+	}
+
+	return &proxmox.QemuGuestAgent{
+		Enable: &enableAgent,
+	}
+}
+
+func generateTags(rawTags string) *[]proxmox.Tag {
+	tags := make([]proxmox.Tag, 0)
+	if rawTags == "" {
+		return &tags
+	}
+	tagArray := strings.Split(rawTags, ";")
+	for _, tag := range tagArray {
+		tags = append(tags, proxmox.Tag(tag))
+	}
+	return &tags
 }
 
 func generateProxmoxNetworkAdapters(nics []NICConfig) proxmox.QemuDevices {
