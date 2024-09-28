@@ -71,7 +71,7 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook,
 		},
 		&stepRemoveCloudInitDrive{},
 		&stepConvertToTemplate{},
-		&stepFinalizeTemplateConfig{},
+		&stepFinalizeConfig{},
 		&stepSuccess{},
 	}
 	preSteps := b.preSteps
@@ -118,19 +118,24 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook,
 		return nil, errors.New("build was cancelled")
 	}
 
-	// Verify that the template_id was set properly, otherwise we didn't progress through the last step
-	tplID, ok := state.Get("template_id").(int)
+	// Verify that the artifact_id and artifact_type was set properly, otherwise we didn't progress through the last step
+	artifactID, ok := state.Get("artifact_id").(int)
 	if !ok {
-		return nil, fmt.Errorf("template ID could not be determined")
+		return nil, fmt.Errorf("artifact ID could not be determined")
+	}
+
+	artifactType, ok := state.Get("artifact_type").(string)
+	if !ok {
+		return nil, fmt.Errorf("artifact type could not be determined")
 	}
 
 	artifact := &Artifact{
 		builderID:     b.id,
-		templateID:    tplID,
+		artifactID:    artifactID,
+		artifactType:  artifactType,
 		proxmoxClient: b.proxmoxClient,
 		StateData:     map[string]interface{}{"generated_data": state.Get("generated_data")},
 	}
-
 	return artifact, nil
 }
 
