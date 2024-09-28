@@ -31,7 +31,11 @@ func (m finalizerMock) Version() (proxmox.Version, error) {
 	return m.version()
 }
 
-var _ templateFinalizer = finalizerMock{}
+func (m finalizerMock) StartVm(*proxmox.VmRef) (string, error) {
+	return m.startVm()
+}
+
+var _ finalizer = finalizerMock{}
 
 func TestTemplateFinalize(t *testing.T) {
 	cs := []struct {
@@ -265,7 +269,7 @@ func TestTemplateFinalize(t *testing.T) {
 			state.Put("vmRef", proxmox.NewVmRef(1))
 			state.Put("proxmoxClient", finalizer)
 
-			step := stepFinalizeTemplateConfig{}
+			step := stepFinalizeConfig{}
 			action := step.Run(context.TODO(), state)
 			if action != c.expectedAction {
 				t.Errorf("Expected action to be %v, got %v", c.expectedAction, action)
