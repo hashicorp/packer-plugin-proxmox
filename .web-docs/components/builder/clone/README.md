@@ -243,9 +243,12 @@ boot time.
     ]
     ```
 
-- `qemu_agent` (boolean) - Enables QEMU Agent option for this VM. When enabled,
+- `qemu_agent` (boolean) - DEPRECATED. Define QEMU Guest Agent settings in a `qemu_guest_agent` block instead.
+  Enables QEMU Agent option for this VM. When enabled,
   then `qemu-guest-agent` must be installed on the guest. When disabled, then
   `ssh_host` should be used. Defaults to `true`.
+
+- `qemu_guest_agent` (agentConfig) - QEMU Guest Agent configuration. See [QEMU Guest Agent](#qemu-guest-agent)
 
 - `scsi_controller` (string) - The SCSI controller model to emulate. Can be `lsi`,
   `lsi53c810`, `virtio-scsi-pci`, `virtio-scsi-single`, `megasas`, or `pvscsi`.
@@ -824,6 +827,57 @@ Usage example (JSON):
   Defaults to `4m`.
 
 <!-- End of code generated from the comments of the efiConfig struct in builder/proxmox/common/config.go; -->
+
+
+### QEMU Guest Agent
+
+<!-- Code generated from the comments of the agentConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
+
+Set the QEMU Guest Agent options.
+
+JSON Example:
+
+```json
+
+	"qemu_guest_agent": {
+			  "enabled": true,
+			  "type": "isa",
+			  "freeze": false,
+			  "fstrim": false
+	}
+
+```
+HCL2 example:
+
+```hcl
+
+	qemu_guest_agent {
+	  enabled = true
+	  type = "isa"
+	  freeze = false
+	  fstrim = false
+	}
+
+```
+
+<!-- End of code generated from the comments of the agentConfig struct in builder/proxmox/common/config.go; -->
+
+
+#### Optional:
+
+<!-- Code generated from the comments of the agentConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
+
+- `enabled` (boolean) - Enable QEMU Agent option for this VM. When enabled
+  `qemu-guest-agent` must be installed on the guest. When disabled
+  `ssh_host` should be used. Defaults to `true`.
+
+- `type` (string) - Sets the Agent Type. Must be `isa` or `virtio`. Defaults to `virtio`
+
+- `freeze` (boolean) - Enable freeze/thaw of guest filesystem on backup. Defaults to `true`
+
+- `fstrim` (bool) - Run guest-trim after a disk move or VM migration. Defaults to `false`
+
+<!-- End of code generated from the comments of the agentConfig struct in builder/proxmox/common/config.go; -->
 
 
 ### VirtIO RNG device
