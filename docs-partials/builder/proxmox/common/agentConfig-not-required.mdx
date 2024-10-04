@@ -1,0 +1,13 @@
+<!-- Code generated from the comments of the agentConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
+
+- `enabled` (boolean) - Enable QEMU Agent option for this VM. When enabled
+  `qemu-guest-agent` must be installed on the guest. When disabled
+  `ssh_host` should be used. Defaults to `true`.
+
+- `type` (string) - Sets the Agent Type. Must be `isa` or `virtio`. Defaults to `virtio`
+
+- `freeze` (boolean) - Enable freeze/thaw of guest filesystem on backup. Defaults to `true`
+
+- `fstrim` (bool) - Run guest-trim after a disk move or VM migration. Defaults to `false`
+
+<!-- End of code generated from the comments of the agentConfig struct in builder/proxmox/common/config.go; -->
