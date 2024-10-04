@@ -4,6 +4,10 @@
 package proxmoxclone
 
 import (
+	"crypto"
+	"net/netip"
+	"strings"
+
 	proxmoxapi "github.com/Telmate/proxmox-api-go/proxmox"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	proxmox "github.com/hashicorp/packer-plugin-proxmox/builder/proxmox/common"
@@ -61,17 +65,78 @@ func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQ
 	config.FullClone = &fullClone
 
 	// cloud-init options
-	config.CIuser = comm.SSHUsername
-	config.Sshkeys = string(comm.SSHPublicKey)
-	config.Nameserver = c.Nameserver
-	config.Searchdomain = c.Searchdomain
-	IpconfigMap := make(map[int]interface{})
-	for idx := range c.Ipconfigs {
-		if c.Ipconfigs[idx] != (cloudInitIpconfig{}) {
-			IpconfigMap[idx] = c.Ipconfigs[idx].String()
+
+	var nameServers []netip.Addr
+	if c.Nameserver != "" {
+		for _, nameserver := range strings.Split(c.Nameserver, " ") {
+			ip, _ := netip.ParseAddr(nameserver)
+			nameServers = append(nameServers, ip)
 		}
 	}
-	config.Ipconfig = IpconfigMap
+
+	IpconfigMap := proxmoxapi.CloudInitNetworkInterfaces{}
+	for idx := range c.Ipconfigs {
+		if c.Ipconfigs[idx] != (cloudInitIpconfig{}) {
+
+			// backwards compatibility conversions
+
+			var ipv4cfg proxmoxapi.CloudInitIPv4Config
+			var ipv6cfg proxmoxapi.CloudInitIPv6Config
+
+			// cloudInitIpconfig.Ip accepts a CIDR address or 'dhcp' string
+			switch c.Ipconfigs[idx].Ip {
+			case "dhcp":
+				ipv4cfg.DHCP = true
+			default:
+				if c.Ipconfigs[idx].Ip != "" {
+					addr := proxmoxapi.IPv4CIDR(c.Ipconfigs[idx].Ip)
+					ipv4cfg.Address = &addr
+				}
+			}
+			if c.Ipconfigs[idx].Gateway != "" {
+				gw := proxmoxapi.IPv4Address(c.Ipconfigs[idx].Gateway)
+				ipv4cfg.Gateway = &gw
+			}
+
+			// cloudInitIpconfig.Ip6 accepts a CIDR address, 'auto' or 'dhcp' string
+			switch c.Ipconfigs[idx].Ip6 {
+			case "dhcp":
+				ipv6cfg.DHCP = true
+			case "auto":
+				ipv6cfg.SLAAC = true
+			default:
+				if c.Ipconfigs[idx].Ip6 != "" {
+					addr := proxmoxapi.IPv6CIDR(c.Ipconfigs[idx].Ip6)
+					ipv6cfg.Address = &addr
+				}
+			}
+			if c.Ipconfigs[idx].Gateway6 != "" {
+				addr := proxmoxapi.IPv6Address(c.Ipconfigs[idx].Gateway6)
+				ipv6cfg.Gateway = &addr
+			}
+
+			IpconfigMap[proxmoxapi.QemuNetworkInterfaceID(idx)] = proxmoxapi.CloudInitNetworkConfig{
+				IPv4: &ipv4cfg,
+				IPv6: &ipv6cfg,
+			}
+		}
+	}
+
+	var publicKey []crypto.PublicKey
+
+	if comm.SSHPublicKey != nil {
+		publicKey = append(publicKey, crypto.PublicKey(string(comm.SSHPublicKey)))
+	}
+
+	config.CloudInit = &proxmoxapi.CloudInit{
+		Username:      &comm.SSHUsername,
+		PublicSSHkeys: &publicKey,
+		DNS: &proxmoxapi.GuestDNS{
+			NameServers:  &nameServers,
+			SearchDomain: &c.Searchdomain,
+		},
+		NetworkInterfaces: IpconfigMap,
+	}
 
 	var sourceVmr *proxmoxapi.VmRef
 	if c.CloneVM != "" {
