@@ -1389,15 +1389,15 @@ func TestGenerateQEMUAgentConfig(t *testing.T) {
 		{
 			"disable freeze",
 			agentConfig{
-				Enabled: config.TriFalse,
+				Enabled: config.TriTrue,
 				Type:    "virtio",
-				Freeze:  config.TriTrue,
+				Freeze:  config.TriFalse,
 				FsTrim:  true,
 			},
 			&proxmox.QemuGuestAgent{
-				Enable: boolPointer(false),
+				Enable: boolPointer(true),
 				Type:   qemuGuestAgentTypePointer("virtio"),
-				Freeze: boolPointer(true),
+				Freeze: boolPointer(false),
 				FsTrim: boolPointer(true),
 			},
 		},
