@@ -18,6 +18,7 @@ import (
 type finalizerMock struct {
 	getConfig func() (map[string]interface{}, error)
 	setConfig func(map[string]interface{}) (string, error)
+	startVm   func() (string, error)
 }
 
 func (m finalizerMock) GetVmConfig(*proxmox.VmRef) (map[string]interface{}, error) {
@@ -27,7 +28,11 @@ func (m finalizerMock) SetVmConfig(vmref *proxmox.VmRef, c map[string]interface{
 	return m.setConfig(c)
 }
 
-var _ templateFinalizer = finalizerMock{}
+func (m finalizerMock) StartVm(*proxmox.VmRef) (string, error) {
+	return m.startVm()
+}
+
+var _ finalizer = finalizerMock{}
 
 func TestTemplateFinalize(t *testing.T) {
 	cs := []struct {
@@ -218,7 +223,7 @@ func TestTemplateFinalize(t *testing.T) {
 			state.Put("vmRef", proxmox.NewVmRef(1))
 			state.Put("proxmoxClient", finalizer)
 
-			step := stepFinalizeTemplateConfig{}
+			step := stepFinalizeConfig{}
 			action := step.Run(context.TODO(), state)
 			if action != c.expectedAction {
 				t.Errorf("Expected action to be %v, got %v", c.expectedAction, action)
