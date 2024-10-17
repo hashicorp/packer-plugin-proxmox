@@ -781,6 +781,10 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 			log.Printf("Disk %d type not set, using default 'scsi'", idx)
 			c.Disks[idx].Type = "scsi"
 		}
+		if disk.DiskFormat == "" {
+			log.Printf("Disk %d format not set, using default 'raw'", idx)
+			c.Disks[idx].DiskFormat = "raw"
+		}
 		if disk.Size == "" {
 			log.Printf("Disk %d size not set, using default '20G'", idx)
 			c.Disks[idx].Size = "20G"
