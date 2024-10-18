@@ -5,18 +5,27 @@
 package proxmoxtemplate
 
 import (
+	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Telmate/proxmox-api-go/proxmox"
 	"github.com/hashicorp/hcl/v2/hcldec"
+	"github.com/hashicorp/packer-plugin-sdk/common"
 	"github.com/hashicorp/packer-plugin-sdk/hcl2helper"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/zclconf/go-cty/cty"
+	"log"
 	"net/url"
 	"os"
+	"strings"
+	"time"
 )
 
 type Config struct {
+	common.PackerConfig `mapstructure:",squash"`
+
 	// URL to the Proxmox API, including the full path,
 	// so `https://<server>:<port>/api2/json` for example.
 	// Can also be set via the `PROXMOX_URL` environment variable.
@@ -42,6 +51,11 @@ type Config struct {
 	// Either `password` or `token` must be specifed. If both are set,
 	// `token` takes precedence.
 	Token string `mapstructure:"token"`
+	// `task_timeout` (duration string | ex: "10m") - The timeout for
+	//  Promox API operations, e.g. clones. Defaults to 1 minute.
+	TaskTimeout time.Duration `mapstructure:"task_timeout"`
+	//
+	NameRegex string `mapstructure:"name_regex"`
 }
 
 type Datasource struct {
@@ -49,8 +63,7 @@ type Datasource struct {
 }
 
 type DatasourceOutput struct {
-	Foo string `mapstructure:"foo"`
-	Bar string `mapstructure:"bar"`
+	MachinesJSON string `mapstructure:"machines_json"`
 }
 
 func (d *Datasource) ConfigSpec() hcldec.ObjectSpec {
@@ -93,6 +106,10 @@ func (d *Datasource) Configure(raws ...interface{}) error {
 		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("could not parse proxmox_url: %s", err))
 	}
 
+	if d.config.TaskTimeout == 0 {
+		d.config.TaskTimeout = 60 * time.Second
+	}
+
 	if errs != nil && len(errs.Errors) > 0 {
 		return errs
 	}
@@ -104,9 +121,51 @@ func (d *Datasource) OutputSpec() hcldec.ObjectSpec {
 }
 
 func (d *Datasource) Execute() (cty.Value, error) {
+	client, err := newProxmoxClient(d.config)
+	if err != nil {
+		return cty.NullVal(cty.EmptyObject), err
+	}
+
+	vmList, err := proxmox.ListGuests(client)
+	if err != nil {
+		return cty.NullVal(cty.EmptyObject), err
+	}
+
+	vmJson, err := json.Marshal(vmList)
+	if err != nil {
+		return cty.NullVal(cty.EmptyObject), err
+	}
+
 	output := DatasourceOutput{
-		Foo: "foo-value",
-		Bar: "bar-value",
+		MachinesJSON: string(vmJson),
 	}
 	return hcl2helper.HCL2ValueFromConfig(output, d.OutputSpec()), nil
+}
+
+func newProxmoxClient(config Config) (*proxmox.Client, error) {
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: config.SkipCertValidation,
+	}
+
+	client, err := proxmox.NewClient(strings.TrimSuffix(config.proxmoxURL.String(), "/"), nil, "", tlsConfig, "", int(config.TaskTimeout.Seconds()))
+	if err != nil {
+		return nil, err
+	}
+
+	*proxmox.Debug = config.PackerDebug
+
+	if config.Token != "" {
+		// configure token auth
+		log.Print("using token auth")
+		client.SetAPIToken(config.Username, config.Token)
+	} else {
+		// fallback to login if not using tokens
+		log.Print("using password auth")
+		err = client.Login(config.Username, config.Password, "")
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return client, nil
 }
