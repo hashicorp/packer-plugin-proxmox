@@ -22,13 +22,13 @@ func TestExecute(t *testing.T) {
 			w.WriteHeader(http.StatusOK)
 			switch path := r.URL.Path; path {
 			case "/cluster/resources":
-				fmt.Fprintln(w, mockListResponse)
+				_, _ = fmt.Fprintln(w, mockListResponse)
 			case "/nodes/pve/qemu/100/config":
-				fmt.Fprintln(w, mockConfig100Response)
+				_, _ = fmt.Fprintln(w, mockConfig100Response)
 			case "/nodes/pve/qemu/101/config":
-				fmt.Fprintln(w, mockConfig101Response)
+				_, _ = fmt.Fprintln(w, mockConfig101Response)
 			case "/nodes/pve/qemu/102/config":
-				fmt.Fprintln(w, mockConfig102Response)
+				_, _ = fmt.Fprintln(w, mockConfig102Response)
 			default:
 				return
 			}
