@@ -24,7 +24,9 @@ type FlatConfig struct {
 	Password            *string           `mapstructure:"password" cty:"password" hcl:"password"`
 	Token               *string           `mapstructure:"token" cty:"token" hcl:"token"`
 	TaskTimeout         *string           `mapstructure:"task_timeout" cty:"task_timeout" hcl:"task_timeout"`
+	Name                *string           `mapstructure:"name" cty:"name" hcl:"name"`
 	NameRegex           *string           `mapstructure:"name_regex" cty:"name_regex" hcl:"name_regex"`
+	Latest              *bool             `mapstructure:"latest" cty:"latest" hcl:"latest"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -53,7 +55,9 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"password":                   &hcldec.AttrSpec{Name: "password", Type: cty.String, Required: false},
 		"token":                      &hcldec.AttrSpec{Name: "token", Type: cty.String, Required: false},
 		"task_timeout":               &hcldec.AttrSpec{Name: "task_timeout", Type: cty.String, Required: false},
+		"name":                       &hcldec.AttrSpec{Name: "name", Type: cty.String, Required: false},
 		"name_regex":                 &hcldec.AttrSpec{Name: "name_regex", Type: cty.String, Required: false},
+		"latest":                     &hcldec.AttrSpec{Name: "latest", Type: cty.Bool, Required: false},
 	}
 	return s
 }
@@ -61,7 +65,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 // FlatDatasourceOutput is an auto-generated flat version of DatasourceOutput.
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatDatasourceOutput struct {
-	MachinesJSON *string `mapstructure:"machines_json" cty:"machines_json" hcl:"machines_json"`
+	VmId *uint `mapstructure:"vm_id" cty:"vm_id" hcl:"vm_id"`
 }
 
 // FlatMapstructure returns a new FlatDatasourceOutput.
@@ -76,7 +80,7 @@ func (*DatasourceOutput) FlatMapstructure() interface{ HCL2Spec() map[string]hcl
 // The decoded values from this spec will then be applied to a FlatDatasourceOutput.
 func (*FlatDatasourceOutput) HCL2Spec() map[string]hcldec.Spec {
 	s := map[string]hcldec.Spec{
-		"machines_json": &hcldec.AttrSpec{Name: "machines_json", Type: cty.String, Required: false},
+		"vm_id": &hcldec.AttrSpec{Name: "vm_id", Type: cty.Number, Required: false},
 	}
 	return s
 }

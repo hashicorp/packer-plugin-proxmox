@@ -3,11 +3,11 @@ data "proxmox-template" "default" {
     insecure_skip_tls_verify = true
     username = "root@pam"
     password = "password"
+    latest   = true
 }
 
 locals {
-  foo = data.proxmox-template.default.foo
-  bar = data.proxmox-template.default.bar
+  vm_id = data.proxmox-template.default.vm_id
 }
 
 source "null" "basic-example" {
@@ -21,8 +21,7 @@ build {
 
   provisioner "shell-local" {
     inline = [
-      "echo foo: ${local.foo}",
-      "echo bar: ${local.bar}",
+      "echo vm_id: ${local.vm_id}",
     ]
   }
 }

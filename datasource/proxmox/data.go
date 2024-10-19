@@ -6,7 +6,6 @@ package proxmoxtemplate
 
 import (
 	"crypto/tls"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/Telmate/proxmox-api-go/proxmox"
@@ -19,6 +18,8 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -54,8 +55,15 @@ type Config struct {
 	// `task_timeout` (duration string | ex: "10m") - The timeout for
 	//  Promox API operations, e.g. clones. Defaults to 1 minute.
 	TaskTimeout time.Duration `mapstructure:"task_timeout"`
-	//
+	// Exact name of the guest to return. Options `name` and `name_regex` are mutually exclusive.
+	Name string `mapstructure:"name"`
+	// Regex matching the name of the guest to return. Options `name` and `name_regex` are mutually exclusive.
 	NameRegex string `mapstructure:"name_regex"`
+	// Boolean to return only guest of template type.
+	Template bool `mapstructure:"template"`
+	// Get VMID for the latest created guest. This is useful when defined filters
+	// return more than one guest (by default multiple guests result in error).
+	Latest bool `mapstructure:"latest"`
 }
 
 type Datasource struct {
@@ -63,8 +71,10 @@ type Datasource struct {
 }
 
 type DatasourceOutput struct {
-	MachinesJSON string `mapstructure:"machines_json"`
+	VmId uint `mapstructure:"vm_id"`
 }
+
+type vmConfig map[string]interface{}
 
 func (d *Datasource) ConfigSpec() hcldec.ObjectSpec {
 	return d.config.FlatMapstructure().HCL2Spec()
@@ -106,6 +116,20 @@ func (d *Datasource) Configure(raws ...interface{}) error {
 		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("could not parse proxmox_url: %s", err))
 	}
 
+	if d.config.Name == "" && d.config.NameRegex == "" {
+		errs = packersdk.MultiErrorAppend(errs, errors.New("name or name_regex must be specified"))
+	}
+
+	if d.config.Name != "" && d.config.NameRegex != "" {
+		errs = packersdk.MultiErrorAppend(errs, errors.New("name and name_regex are mutually exclusive"))
+	}
+
+	if d.config.NameRegex != "" {
+		if _, err := regexp.Compile(d.config.NameRegex); err != nil {
+			errs = packersdk.MultiErrorAppend(errs, errors.New("cannot compile regex string"))
+		}
+	}
+
 	if d.config.TaskTimeout == 0 {
 		d.config.TaskTimeout = 60 * time.Second
 	}
@@ -121,6 +145,9 @@ func (d *Datasource) OutputSpec() hcldec.ObjectSpec {
 }
 
 func (d *Datasource) Execute() (cty.Value, error) {
+	// This value of VM ID the function should return
+	var vmId uint
+
 	client, err := newProxmoxClient(d.config)
 	if err != nil {
 		return cty.NullVal(cty.EmptyObject), err
@@ -131,15 +158,108 @@ func (d *Datasource) Execute() (cty.Value, error) {
 		return cty.NullVal(cty.EmptyObject), err
 	}
 
-	vmJson, err := json.Marshal(vmList)
-	if err != nil {
-		return cty.NullVal(cty.EmptyObject), err
+	filteredVmIds := filterGuests(d.config, vmList)
+	for i := range vmList {
+		filteredVmIds[i] = vmList[i].Id
+	}
+
+	var vmConfigList []vmConfig
+	if d.config.Latest {
+		// Get configs from PVE in 'map[string]interface{}' format for all VMs in the list.
+		for _, id := range filteredVmIds {
+			var thisConfig vmConfig
+			vmr := proxmox.NewVmRef(int(id))
+			thisConfig, err = client.GetVmConfig(vmr)
+			if err != nil {
+				return cty.NullVal(cty.EmptyObject), err
+			}
+			thisConfig["vmid"] = id
+			vmConfigList = append(vmConfigList, thisConfig)
+		}
+
+		// Find the latest VM among filtered.
+		// The `meta` field contains info about creation time (but it is not described in API docs).
+		var latestConfig vmConfig
+		var maxCtime int
+		for i := range vmConfigList {
+			if metaField, ok := vmConfigList[i]["meta"]; ok {
+				vmCtime, err := parseMetaField(metaField.(string))
+				if err != nil {
+					return cty.NullVal(cty.EmptyObject), err
+				}
+				if vmCtime > maxCtime {
+					maxCtime = vmCtime
+					latestConfig = vmConfigList[i]
+				}
+			} else {
+				return cty.NullVal(cty.EmptyObject), errors.New("no meta field in the guest config")
+			}
+		}
+		vmId = latestConfig["vmid"].(uint)
+	} else {
+		if len(filteredVmIds) > 1 {
+			return cty.NullVal(cty.EmptyObject), errors.New("more than one guest passed filters, cannot return vm_id")
+		}
+		vmId = filteredVmIds[0]
 	}
 
 	output := DatasourceOutput{
-		MachinesJSON: string(vmJson),
+		VmId: vmId,
 	}
 	return hcl2helper.HCL2ValueFromConfig(output, d.OutputSpec()), nil
+}
+
+func filterGuests(config Config, guests []proxmox.GuestResource) []proxmox.GuestResource {
+	result := make([]proxmox.GuestResource, 0)
+	if config.Name != "" {
+		result = filterByName(guests, config.Name)
+	}
+	if config.NameRegex != "" {
+		result = filterByNameRegex(guests, config.NameRegex)
+	}
+	applicable := make([]proxmox.GuestResource, 0)
+	if len(result) == 0 {
+		applicable = guests
+	} else {
+		applicable = result
+	}
+
+	if config.Template {
+		result = filterByTemplate(applicable)
+	}
+
+	return result
+}
+
+func filterByName(guests []proxmox.GuestResource, name string) []proxmox.GuestResource {
+	result := make([]proxmox.GuestResource, 0)
+	for _, i := range guests {
+		if i.Name == name {
+			result = append(result, i)
+		}
+	}
+	return result
+}
+
+func filterByNameRegex(guests []proxmox.GuestResource, nameRegex string) []proxmox.GuestResource {
+	re, _ := regexp.Compile(nameRegex)
+	result := make([]proxmox.GuestResource, 0)
+	for _, i := range guests {
+		if re.MatchString(i.Name) {
+			result = append(result, i)
+		}
+	}
+	return result
+}
+
+func filterByTemplate(guests []proxmox.GuestResource) []proxmox.GuestResource {
+	result := make([]proxmox.GuestResource, 0)
+	for _, i := range guests {
+		if i.Template {
+			result = append(result, i)
+		}
+	}
+	return result
 }
 
 func newProxmoxClient(config Config) (*proxmox.Client, error) {
@@ -168,4 +288,22 @@ func newProxmoxClient(config Config) (*proxmox.Client, error) {
 	}
 
 	return client, nil
+}
+
+func parseMetaField(field string) (int, error) {
+	re, err := regexp.Compile(`.*ctime=(?P<ctime>[0-9]+).*`)
+	if err != nil {
+		return 0, err
+	}
+
+	matched := re.MatchString(field)
+	if !matched {
+		return 0, nil
+	}
+	valueStr := re.ReplaceAllString(field, "${ctime}")
+	value, err := strconv.Atoi(valueStr)
+	if err != nil {
+		return 0, err
+	}
+	return value, nil
 }
