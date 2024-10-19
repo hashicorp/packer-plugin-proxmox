@@ -61,6 +61,11 @@ type Config struct {
 	NameRegex string `mapstructure:"name_regex"`
 	// Boolean to return only guest of template type.
 	Template bool `mapstructure:"template"`
+	// Return only guests that are placed on this node.
+	Node string `mapstructure:"node"`
+	// Return only guests that tagged with these tags. If you need to specify more than one tag,
+	// use semicolon as separator ("tag1;tag2"). Every specified tag must exist in guest.
+	VmTags string `mapstructure:"vm_tags"`
 	// Get VMID for the latest created guest. This is useful when defined filters
 	// return more than one guest (by default multiple guests result in error).
 	Latest bool `mapstructure:"latest"`
@@ -116,10 +121,6 @@ func (d *Datasource) Configure(raws ...interface{}) error {
 		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("could not parse proxmox_url: %s", err))
 	}
 
-	if d.config.Name == "" && d.config.NameRegex == "" {
-		errs = packersdk.MultiErrorAppend(errs, errors.New("name or name_regex must be specified"))
-	}
-
 	if d.config.Name != "" && d.config.NameRegex != "" {
 		errs = packersdk.MultiErrorAppend(errs, errors.New("name and name_regex are mutually exclusive"))
 	}
@@ -158,49 +159,28 @@ func (d *Datasource) Execute() (cty.Value, error) {
 		return cty.NullVal(cty.EmptyObject), err
 	}
 
-	filteredVmIds := filterGuests(d.config, vmList)
-	for i := range vmList {
-		filteredVmIds[i] = vmList[i].Id
+	filteredVms := filterGuests(d.config, vmList)
+	if len(filteredVms) == 0 {
+		return cty.NullVal(cty.EmptyObject), errors.New("not a single vm matches the configured filters")
 	}
 
-	var vmConfigList []vmConfig
 	if d.config.Latest {
-		// Get configs from PVE in 'map[string]interface{}' format for all VMs in the list.
-		for _, id := range filteredVmIds {
-			var thisConfig vmConfig
-			vmr := proxmox.NewVmRef(int(id))
-			thisConfig, err = client.GetVmConfig(vmr)
-			if err != nil {
-				return cty.NullVal(cty.EmptyObject), err
-			}
-			thisConfig["vmid"] = id
-			vmConfigList = append(vmConfigList, thisConfig)
+		vmConfigList, err := getVmConfigs(client, filteredVms)
+		if err != nil {
+			return cty.NullVal(cty.EmptyObject), err
 		}
 
-		// Find the latest VM among filtered.
-		// The `meta` field contains info about creation time (but it is not described in API docs).
-		var latestConfig vmConfig
-		var maxCtime int
-		for i := range vmConfigList {
-			if metaField, ok := vmConfigList[i]["meta"]; ok {
-				vmCtime, err := parseMetaField(metaField.(string))
-				if err != nil {
-					return cty.NullVal(cty.EmptyObject), err
-				}
-				if vmCtime > maxCtime {
-					maxCtime = vmCtime
-					latestConfig = vmConfigList[i]
-				}
-			} else {
-				return cty.NullVal(cty.EmptyObject), errors.New("no meta field in the guest config")
-			}
+		latestConfig, err := findLatestConfig(vmConfigList)
+		if err != nil {
+			return cty.NullVal(cty.EmptyObject), err
 		}
+
 		vmId = latestConfig["vmid"].(uint)
 	} else {
-		if len(filteredVmIds) > 1 {
+		if len(filteredVms) > 1 {
 			return cty.NullVal(cty.EmptyObject), errors.New("more than one guest passed filters, cannot return vm_id")
 		}
-		vmId = filteredVmIds[0]
+		vmId = filteredVms[0].Id
 	}
 
 	output := DatasourceOutput{
@@ -209,23 +189,71 @@ func (d *Datasource) Execute() (cty.Value, error) {
 	return hcl2helper.HCL2ValueFromConfig(output, d.OutputSpec()), nil
 }
 
+// Find the latest VM among filtered.
+// The `meta` field contains info about creation time (but it is not described in API docs).
+func findLatestConfig(configs []vmConfig) (vmConfig, error) {
+	var result vmConfig
+	var maxCtime int
+	for i := range configs {
+		if metaField, ok := configs[i]["meta"]; ok {
+			vmCtime, err := parseMetaField(metaField.(string))
+			if err != nil {
+				return nil, err
+			}
+			if vmCtime > maxCtime {
+				maxCtime = vmCtime
+				result = configs[i]
+			}
+		} else {
+			return nil, errors.New("no meta field in the guest config")
+		}
+	}
+	return result, nil
+}
+
+// Get configs from PVE in 'map[string]interface{}' format for all VMs in the list.
+// Also add value of VM ID to every config (useful for further steps).
+func getVmConfigs(client *proxmox.Client, vmList []proxmox.GuestResource) ([]vmConfig, error) {
+	var result []vmConfig
+	for _, vm := range vmList {
+		var thisConfig vmConfig
+		vmr := proxmox.NewVmRef(int(vm.Id))
+		thisConfig, err := client.GetVmConfig(vmr)
+		if err != nil {
+			return nil, err
+		}
+		thisConfig["vmid"] = vm.Id
+		result = append(result, thisConfig)
+	}
+	return result, nil
+}
+
+// Drop guests from list that are not match some filters in the datasource config.
 func filterGuests(config Config, guests []proxmox.GuestResource) []proxmox.GuestResource {
 	result := make([]proxmox.GuestResource, 0)
+
 	if config.Name != "" {
 		result = filterByName(guests, config.Name)
+	} else {
+		result = guests
 	}
+
 	if config.NameRegex != "" {
 		result = filterByNameRegex(guests, config.NameRegex)
-	}
-	applicable := make([]proxmox.GuestResource, 0)
-	if len(result) == 0 {
-		applicable = guests
 	} else {
-		applicable = result
+		if config.Name == "" {
+			result = guests
+		}
 	}
 
 	if config.Template {
-		result = filterByTemplate(applicable)
+		result = filterByTemplate(result)
+	}
+	if config.Node != "" {
+		result = filterByNode(result, config.Node)
+	}
+	if config.VmTags != "" {
+		result = filterByTags(result, config.VmTags)
 	}
 
 	return result
@@ -260,6 +288,48 @@ func filterByTemplate(guests []proxmox.GuestResource) []proxmox.GuestResource {
 		}
 	}
 	return result
+}
+
+func filterByNode(guests []proxmox.GuestResource, node string) []proxmox.GuestResource {
+	result := make([]proxmox.GuestResource, 0)
+	for _, i := range guests {
+		if i.Node == node {
+			result = append(result, i)
+		}
+	}
+	return result
+}
+
+func filterByTags(guests []proxmox.GuestResource, tags string) []proxmox.GuestResource {
+	result := make([]proxmox.GuestResource, 0)
+	// Split tags string because it can contain several tags separated with ";"
+	tagsSplitted := strings.Split(tags, ";")
+	for _, guest := range guests {
+		if len(guest.Tags) > 0 && configTagsMatchNodeTags(tagsSplitted, guest.Tags) {
+			result = append(result, guest)
+		}
+	}
+	return result
+}
+
+func configTagsMatchNodeTags(configTags []string, nodeTags []proxmox.Tag) bool {
+	var countOfMatchedTags int
+	for _, configTag := range configTags {
+		var matched bool
+		for _, nodeTag := range nodeTags {
+			if configTag == string(nodeTag) {
+				matched = true
+				break
+			}
+		}
+		if matched {
+			countOfMatchedTags += 1
+		}
+	}
+	if countOfMatchedTags != len(configTags) {
+		return false
+	}
+	return true
 }
 
 func newProxmoxClient(config Config) (*proxmox.Client, error) {

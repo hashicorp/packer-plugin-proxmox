@@ -2,6 +2,7 @@ package proxmoxtemplate
 
 import (
 	"fmt"
+	"github.com/Telmate/proxmox-api-go/proxmox"
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
@@ -41,7 +42,8 @@ func TestExecute(t *testing.T) {
 		SkipCertValidation: true,
 		Username:           "dummy@vmhost",
 		Token:              "dummy",
-		Latest:             true,
+		Name:               "second-vm",
+		//Latest:             true,
 	}
 
 	ds := Datasource{
@@ -51,16 +53,6 @@ func TestExecute(t *testing.T) {
 	result, err := ds.Execute()
 	require.NoError(t, err)
 	t.Log(result)
-
-	//client, err := newProxmoxClient(config)
-	//require.NoError(t, err)
-	//
-	//vmList, err := proxmox.ListGuests(client)
-	//require.NoError(t, err)
-	//require.Equal(t, uint(100), vmList[0].Id)
-	//require.Equal(t, []proxmox.Tag{"blue", "red"}, vmList[1].Tags)
-	//t.Log(vmList)
-
 }
 
 func TestParseMetaField(t *testing.T) {
@@ -68,4 +60,10 @@ func TestParseMetaField(t *testing.T) {
 	result, err := parseMetaField(metaField)
 	require.NoError(t, err)
 	require.Equal(t, 1729285377, result)
+}
+
+func TestCompareTags(t *testing.T) {
+	configTags := []string{"blue", "green"}
+	nodeTags := []proxmox.Tag{"blue", "red"}
+	require.Equal(t, false, configTagsMatchNodeTags(configTags, nodeTags))
 }

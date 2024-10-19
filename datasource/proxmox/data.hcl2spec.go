@@ -26,6 +26,9 @@ type FlatConfig struct {
 	TaskTimeout         *string           `mapstructure:"task_timeout" cty:"task_timeout" hcl:"task_timeout"`
 	Name                *string           `mapstructure:"name" cty:"name" hcl:"name"`
 	NameRegex           *string           `mapstructure:"name_regex" cty:"name_regex" hcl:"name_regex"`
+	Template            *bool             `mapstructure:"template" cty:"template" hcl:"template"`
+	Node                *string           `mapstructure:"node" cty:"node" hcl:"node"`
+	VmTags              *string           `mapstructure:"vm_tags" cty:"vm_tags" hcl:"vm_tags"`
 	Latest              *bool             `mapstructure:"latest" cty:"latest" hcl:"latest"`
 }
 
@@ -57,6 +60,9 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"task_timeout":               &hcldec.AttrSpec{Name: "task_timeout", Type: cty.String, Required: false},
 		"name":                       &hcldec.AttrSpec{Name: "name", Type: cty.String, Required: false},
 		"name_regex":                 &hcldec.AttrSpec{Name: "name_regex", Type: cty.String, Required: false},
+		"template":                   &hcldec.AttrSpec{Name: "template", Type: cty.Bool, Required: false},
+		"node":                       &hcldec.AttrSpec{Name: "node", Type: cty.String, Required: false},
+		"vm_tags":                    &hcldec.AttrSpec{Name: "vm_tags", Type: cty.String, Required: false},
 		"latest":                     &hcldec.AttrSpec{Name: "latest", Type: cty.Bool, Required: false},
 	}
 	return s
