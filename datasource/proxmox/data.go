@@ -1,7 +1,9 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
+//go:generate packer-sdc struct-markdown
 //go:generate packer-sdc mapstructure-to-hcl2 -type Config,DatasourceOutput
+
 package proxmoxtemplate
 
 import (
@@ -24,6 +26,11 @@ import (
 	"time"
 )
 
+// Datasource has a bunch of filters which you can use, for example, to find the latest available
+// template in the cluster that matches defined filters.
+//
+// You can combine any number of filters but all of them will be conjuncted with AND.
+// When datasource cannot return only one (zero or >1) guest identifiers it will return error.
 type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
 
@@ -55,19 +62,24 @@ type Config struct {
 	// `task_timeout` (duration string | ex: "10m") - The timeout for
 	//  Promox API operations, e.g. clones. Defaults to 1 minute.
 	TaskTimeout time.Duration `mapstructure:"task_timeout"`
-	// Exact name of the guest to return. Options `name` and `name_regex` are mutually exclusive.
+	// Filter that returns `vm_id` for guest which name exactly matches this value.
+	// Options `name` and `name_regex` are mutually exclusive.
 	Name string `mapstructure:"name"`
-	// Regex matching the name of the guest to return. Options `name` and `name_regex` are mutually exclusive.
+	// Filter that returns `vm_id` for guest which name matches the regular expression.
+	// Expression must use [Go Regex Syntax](https://pkg.go.dev/regexp/syntax).
+	// Options `name` and `name_regex` are mutually exclusive.
 	NameRegex string `mapstructure:"name_regex"`
-	// Boolean to return only guest of template type.
+	// Filter that returns guest `vm_id` only when guest is template.
 	Template bool `mapstructure:"template"`
-	// Return only guests that are placed on this node.
+	// Filter that returns `vm_id` only when guest is located on the specified PVE node.
 	Node string `mapstructure:"node"`
-	// Return only guests that tagged with these tags. If you need to specify more than one tag,
-	// use semicolon as separator ("tag1;tag2"). Every specified tag must exist in guest.
+	// Filter that returns `vm_id` for guest which has all these tags. When you need to
+	// specify more than one tag, use semicolon as separator (`"tag1;tag2"`).
+	// Every specified tag must exist in guest.
 	VmTags string `mapstructure:"vm_tags"`
-	// Get VMID for the latest created guest. This is useful when defined filters
-	// return more than one guest (by default multiple guests result in error).
+	// This filter determines how to handle multiple guests that were matched with all
+	// previous filters. Guest creation time is being used to find latest.
+	// By default, multiple matching guests results in an error.
 	Latest bool `mapstructure:"latest"`
 }
 
@@ -76,6 +88,7 @@ type Datasource struct {
 }
 
 type DatasourceOutput struct {
+	// Identifier of the found guest.
 	VmId uint `mapstructure:"vm_id"`
 }
 

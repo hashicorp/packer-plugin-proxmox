@@ -1,0 +1,49 @@
+<!-- Code generated from the comments of the Config struct in datasource/proxmox/data.go; DO NOT EDIT MANUALLY -->
+
+- `proxmox_url` (string) - URL to the Proxmox API, including the full path,
+  so `https://<server>:<port>/api2/json` for example.
+  Can also be set via the `PROXMOX_URL` environment variable.
+
+- `insecure_skip_tls_verify` (bool) - Skip validating the certificate.
+
+- `username` (string) - Username when authenticating to Proxmox, including
+  the realm. For example `user@pve` to use the local Proxmox realm. When using
+  token authentication, the username must include the token id after an exclamation
+  mark. For example, `user@pve!tokenid`.
+  Can also be set via the `PROXMOX_USERNAME` environment variable.
+
+- `password` (string) - Password for the user.
+  For API tokens please use `token`.
+  Can also be set via the `PROXMOX_PASSWORD` environment variable.
+  Either `password` or `token` must be specifed. If both are set,
+  `token` takes precedence.
+
+- `token` (string) - Token for authenticating API calls.
+  This allows the API client to work with API tokens instead of user passwords.
+  Can also be set via the `PROXMOX_TOKEN` environment variable.
+  Either `password` or `token` must be specifed. If both are set,
+  `token` takes precedence.
+
+- `task_timeout` (duration string | ex: "1h5m2s") - `task_timeout` (duration string | ex: "10m") - The timeout for
+   Promox API operations, e.g. clones. Defaults to 1 minute.
+
+- `name` (string) - Filter that returns `vm_id` for guest which name exactly matches this value.
+  Options `name` and `name_regex` are mutually exclusive.
+
+- `name_regex` (string) - Filter that returns `vm_id` for guest which name matches the regular expression.
+  Expression must use [Go Regex Syntax](https://pkg.go.dev/regexp/syntax).
+  Options `name` and `name_regex` are mutually exclusive.
+
+- `template` (bool) - Filter that returns guest `vm_id` only when guest is template.
+
+- `node` (string) - Filter that returns `vm_id` only when guest is located on the specified PVE node.
+
+- `vm_tags` (string) - Filter that returns `vm_id` for guest which has all these tags. When you need to
+  specify more than one tag, use semicolon as separator (`"tag1;tag2"`).
+  Every specified tag must exist in guest.
+
+- `latest` (bool) - This filter determines how to handle multiple guests that were matched with all
+  previous filters. Guest creation time is being used to find latest.
+  By default, multiple matching guests results in an error.
+
+<!-- End of code generated from the comments of the Config struct in datasource/proxmox/data.go; -->
