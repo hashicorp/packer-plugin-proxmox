@@ -104,21 +104,21 @@ type Config struct {
 	// machine. If `ballooning_minimum` is also set, `memory` defines the maximum amount
 	// of memory the VM will be able to use.
 	// Defaults to `512`.
-	Memory int `mapstructure:"memory"`
+	Memory uint32 `mapstructure:"memory"`
 	// Setting this option enables KVM memory ballooning and
 	// defines the minimum amount of memory (in megabytes) the VM will have.
 	// Defaults to `0` (memory ballooning disabled).
-	BalloonMinimum int `mapstructure:"ballooning_minimum"`
+	BalloonMinimum uint32 `mapstructure:"ballooning_minimum"`
 	// How many CPU cores to give the virtual machine. Defaults
 	// to `1`.
-	Cores int `mapstructure:"cores"`
+	Cores uint8 `mapstructure:"cores"`
 	// The CPU type to emulate. See the Proxmox API
 	// documentation for the complete list of accepted values. For best
 	// performance, set this to `host`. Defaults to `kvm64`.
 	CPUType string `mapstructure:"cpu_type"`
 	// How many CPU sockets to give the virtual machine.
 	// Defaults to `1`
-	Sockets int `mapstructure:"sockets"`
+	Sockets uint8 `mapstructure:"sockets"`
 	// If true, support for non-uniform memory access (NUMA)
 	// is enabled. Defaults to `false`.
 	Numa bool `mapstructure:"numa"`

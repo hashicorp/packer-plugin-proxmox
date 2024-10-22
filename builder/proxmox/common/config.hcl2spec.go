@@ -89,11 +89,11 @@ type FlatConfig struct {
 	VMID                      *int                  `mapstructure:"vm_id" cty:"vm_id" hcl:"vm_id"`
 	Tags                      *string               `mapstructure:"tags" cty:"tags" hcl:"tags"`
 	Boot                      *string               `mapstructure:"boot" cty:"boot" hcl:"boot"`
-	Memory                    *int                  `mapstructure:"memory" cty:"memory" hcl:"memory"`
-	BalloonMinimum            *int                  `mapstructure:"ballooning_minimum" cty:"ballooning_minimum" hcl:"ballooning_minimum"`
-	Cores                     *int                  `mapstructure:"cores" cty:"cores" hcl:"cores"`
+	Memory                    *uint32               `mapstructure:"memory" cty:"memory" hcl:"memory"`
+	BalloonMinimum            *uint32               `mapstructure:"ballooning_minimum" cty:"ballooning_minimum" hcl:"ballooning_minimum"`
+	Cores                     *uint8                `mapstructure:"cores" cty:"cores" hcl:"cores"`
 	CPUType                   *string               `mapstructure:"cpu_type" cty:"cpu_type" hcl:"cpu_type"`
-	Sockets                   *int                  `mapstructure:"sockets" cty:"sockets" hcl:"sockets"`
+	Sockets                   *uint8                `mapstructure:"sockets" cty:"sockets" hcl:"sockets"`
 	Numa                      *bool                 `mapstructure:"numa" cty:"numa" hcl:"numa"`
 	OS                        *string               `mapstructure:"os" cty:"os" hcl:"os"`
 	BIOS                      *string               `mapstructure:"bios" cty:"bios" hcl:"bios"`
