@@ -48,23 +48,23 @@
 - `boot` (string) - Override default boot order. Format example `order=virtio0;ide2;net0`.
   Prior to Proxmox 6.2-15 the format was `cdn` (c:CDROM -> d:Disk -> n:Network)
 
-- `memory` (int) - How much memory (in megabytes) to give the virtual
+- `memory` (uint32) - How much memory (in megabytes) to give the virtual
   machine. If `ballooning_minimum` is also set, `memory` defines the maximum amount
   of memory the VM will be able to use.
   Defaults to `512`.
 
-- `ballooning_minimum` (int) - Setting this option enables KVM memory ballooning and
+- `ballooning_minimum` (uint32) - Setting this option enables KVM memory ballooning and
   defines the minimum amount of memory (in megabytes) the VM will have.
   Defaults to `0` (memory ballooning disabled).
 
-- `cores` (int) - How many CPU cores to give the virtual machine. Defaults
+- `cores` (uint8) - How many CPU cores to give the virtual machine. Defaults
   to `1`.
 
 - `cpu_type` (string) - The CPU type to emulate. See the Proxmox API
   documentation for the complete list of accepted values. For best
   performance, set this to `host`. Defaults to `kvm64`.
 
-- `sockets` (int) - How many CPU sockets to give the virtual machine.
+- `sockets` (uint8) - How many CPU sockets to give the virtual machine.
   Defaults to `1`
 
 - `numa` (bool) - If true, support for non-uniform memory access (NUMA)

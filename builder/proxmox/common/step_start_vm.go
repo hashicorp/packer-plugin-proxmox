@@ -122,17 +122,20 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 	var description = "Packer ephemeral build VM"
 
 	config := proxmox.ConfigQemu{
-		Name:           c.VMName,
-		Agent:          generateAgentConfig(c.Agent),
-		QemuKVM:        &kvm,
-		Tags:           generateTags(c.Tags),
-		Boot:           c.Boot, // Boot priority, example: "order=virtio0;ide2;net0", virtio0:Disk0 -> ide0:CDROM -> net0:Network
-		QemuCpu:        c.CPUType,
-		Description:    &description,
-		Memory:         c.Memory,
-		QemuCores:      c.Cores,
-		QemuSockets:    c.Sockets,
-		QemuNuma:       &c.Numa,
+		Name:    c.VMName,
+		Agent:   generateAgentConfig(c.Agent),
+		QemuKVM: &kvm,
+		Tags:    generateTags(c.Tags),
+		Boot:    c.Boot, // Boot priority, example: "order=virtio0;ide2;net0", virtio0:Disk0 -> ide0:CDROM -> net0:Network
+		CPU: &proxmox.QemuCPU{
+			Cores:   (*proxmox.QemuCpuCores)(&c.Cores),
+			Sockets: (*proxmox.QemuCpuSockets)(&c.Sockets),
+			Numa:    &c.Numa,
+		},
+		Description: &description,
+		Memory: &proxmox.QemuMemory{
+			CapacityMiB: (*proxmox.QemuMemoryCapacity)(&c.Memory),
+		},
 		QemuOs:         c.OS,
 		Bios:           c.BIOS,
 		EFIDisk:        generateProxmoxEfi(c.EFIConfig),
@@ -143,7 +146,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		QemuNetworks:   generateProxmoxNetworkAdapters(c.NICs),
 		Disks:          disks,
 		QemuPCIDevices: generateProxmoxPCIDeviceMap(c.PCIDevices),
-		QemuSerials:    generateProxmoxSerials(c.Serials),
+		Serials:        generateProxmoxSerials(c.Serials),
 		Scsihw:         c.SCSIController,
 		Onboot:         &c.Onboot,
 		Args:           c.AdditionalArgs,
@@ -154,7 +157,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 	// and should be kept enabled by default.
 	// See https://github.com/hashicorp/packer-plugin-proxmox/issues/127#issuecomment-1464030102
 	if c.BalloonMinimum > 0 {
-		config.Balloon = c.BalloonMinimum
+		config.Memory.MinimumCapacityMiB = (*proxmox.QemuMemoryBalloonCapacity)(&c.BalloonMinimum)
 	}
 
 	if c.PackerForce {
@@ -697,11 +700,19 @@ func generateProxmoxPCIDeviceMap(devices []pciDeviceConfig) proxmox.QemuDevices 
 	return devs
 }
 
-func generateProxmoxSerials(serials []string) proxmox.QemuDevices {
-	devs := make(proxmox.QemuDevices)
-	for idx := range serials {
-		devs[idx] = make(proxmox.QemuDevice)
-		setDeviceParamIfDefined(devs[idx], "type", serials[idx])
+func generateProxmoxSerials(serials []string) proxmox.SerialInterfaces {
+	devs := make(proxmox.SerialInterfaces)
+	for idx, serial := range serials {
+		switch serial {
+		case "socket":
+			devs[proxmox.SerialID(idx)] = proxmox.SerialInterface{
+				Socket: true,
+			}
+		default:
+			devs[proxmox.SerialID(idx)] = proxmox.SerialInterface{
+				Path: proxmox.SerialPath(serial),
+			}
+		}
 	}
 	return devs
 }
