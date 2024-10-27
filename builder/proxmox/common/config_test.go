@@ -152,6 +152,17 @@ func TestISOs(t *testing.T) {
 			},
 		},
 		{
+			name:           "iso_file should fail if not correct format",
+			expectedToFail: true,
+			ISOs: map[string]interface{}{
+				"type": "ide",
+				"cd_files": []string{
+					"config_test.go",
+				},
+				"iso_file": "local:/test.iso",
+			},
+		},
+		{
 			name:           "cd_files and iso_file specified should fail",
 			expectedToFail: true,
 			ISOs: map[string]interface{}{
