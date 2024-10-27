@@ -678,6 +678,11 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		// (possibly to a local file) to an ISO file that will be downloaded and
 		// then uploaded to Proxmox.
 		if c.ISOs[idx].ISOFile != "" {
+			// ISOFile should match <storage>:iso/<ISO filename> format
+			res := regexp.MustCompile(`^.+:iso\/.+$`)
+			if !res.MatchString(c.ISOs[idx].ISOFile) {
+				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("iso_path should match pattern \"<storage>:iso/<ISO filename>\". Provided value was \"%s\"", c.ISOs[idx].ISOFile))
+			}
 			c.ISOs[idx].ShouldUploadISO = false
 		} else {
 			c.ISOs[idx].DownloadPathKey = "downloaded_additional_iso_path_" + strconv.Itoa(idx)
