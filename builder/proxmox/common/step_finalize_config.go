@@ -14,7 +14,7 @@ import (
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
-// stepFinalizeTemplateConfig does any required modifications to the configuration _after_
+// stepFinalizeConfig does any required modifications to the configuration _after_
 // the VM has been converted into a template, such as updating name and description, or
 // unmounting the installation ISO.
 type stepFinalizeConfig struct{}
@@ -143,6 +143,18 @@ func (s *stepFinalizeConfig) Run(ctx context.Context, state multistep.StateBag) 
 		_, err := client.SetVmConfig(vmRef, changes)
 		if err != nil {
 			err := fmt.Errorf("Error updating template: %s", err)
+			state.Put("error", err)
+			ui.Error(err.Error())
+			return multistep.ActionHalt
+		}
+	}
+
+	// When build artifact is to be a VM, return a running VM
+	if c.SkipConvertToTemplate {
+		ui.Say("skip_convert_to_template set, resuming VM")
+		_, err := client.StartVm(vmRef)
+		if err != nil {
+			err := fmt.Errorf("Error starting VM: %s", err)
 			state.Put("error", err)
 			ui.Error(err.Error())
 			return multistep.ActionHalt
