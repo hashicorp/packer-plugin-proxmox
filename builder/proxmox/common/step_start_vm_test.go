@@ -116,9 +116,11 @@ func TestCleanupStartVM(t *testing.T) {
 type startVMMock struct {
 	create      func(*proxmox.VmRef, proxmox.ConfigQemu, multistep.StateBag) error
 	startVm     func(*proxmox.VmRef) (string, error)
+	stopVm      func(*proxmox.VmRef) (string, error)
 	setVmConfig func(*proxmox.VmRef, map[string]interface{}) (interface{}, error)
 	getNextID   func(id int) (int, error)
 	getVmConfig func(vmr *proxmox.VmRef) (vmConfig map[string]interface{}, err error)
+	getVmState  func(vmr *proxmox.VmRef) (vmState map[string]interface{}, err error)
 	checkVmRef  func(vmr *proxmox.VmRef) (err error)
 	getVmByName func(vmName string) (vmrs []*proxmox.VmRef, err error)
 	deleteVm    func(vmr *proxmox.VmRef) (exitStatus string, err error)
@@ -130,6 +132,9 @@ func (m *startVMMock) Create(vmRef *proxmox.VmRef, config proxmox.ConfigQemu, st
 func (m *startVMMock) StartVm(vmRef *proxmox.VmRef) (string, error) {
 	return m.startVm(vmRef)
 }
+func (m *startVMMock) StopVm(vmRef *proxmox.VmRef) (string, error) {
+	return m.stopVm(vmRef)
+}
 func (m *startVMMock) SetVmConfig(vmRef *proxmox.VmRef, config map[string]interface{}) (interface{}, error) {
 	return m.setVmConfig(vmRef, config)
 }
@@ -138,6 +143,9 @@ func (m *startVMMock) GetNextID(id int) (int, error) {
 }
 func (m *startVMMock) GetVmConfig(vmr *proxmox.VmRef) (map[string]interface{}, error) {
 	return m.getVmConfig(vmr)
+}
+func (m *startVMMock) GetVmState(vmr *proxmox.VmRef) (map[string]interface{}, error) {
+	return m.getVmState(vmr)
 }
 func (m *startVMMock) CheckVmRef(vmr *proxmox.VmRef) (err error) {
 	return m.checkVmRef(vmr)
@@ -187,6 +195,9 @@ func TestStartVM(t *testing.T) {
 					return nil
 				},
 				startVm: func(*proxmox.VmRef) (string, error) {
+					return "", nil
+				},
+				stopVm: func(*proxmox.VmRef) (string, error) {
 					return "", nil
 				},
 				setVmConfig: func(*proxmox.VmRef, map[string]interface{}) (interface{}, error) {
@@ -308,6 +319,7 @@ func TestStartVMWithForce(t *testing.T) {
 		expectedAction       multistep.StepAction
 		mockGetVmRefsByName  func(vmName string) (vmrs []*proxmox.VmRef, err error)
 		mockGetVmConfig      func(vmr *proxmox.VmRef) (map[string]interface{}, error)
+		mockGetVmState       func(vmr *proxmox.VmRef) (map[string]interface{}, error)
 	}{
 		{
 			name: "Delete existing VM when it's a template and force is enabled",
@@ -323,6 +335,9 @@ func TestStartVMWithForce(t *testing.T) {
 				// proxmox-api-go returns a float for "template"
 				return map[string]interface{}{"template": 1.0}, nil
 			},
+			mockGetVmState: func(vmr *proxmox.VmRef) (map[string]interface{}, error) {
+				return map[string]interface{}{"status": "stopped"}, nil
+			},
 		},
 		{
 			name: "Don't delete VM when it's not a template",
@@ -336,6 +351,9 @@ func TestStartVMWithForce(t *testing.T) {
 			expectedAction:       multistep.ActionHalt,
 			mockGetVmConfig: func(vmr *proxmox.VmRef) (map[string]interface{}, error) {
 				return map[string]interface{}{}, nil
+			},
+			mockGetVmState: func(vmr *proxmox.VmRef) (map[string]interface{}, error) {
+				return map[string]interface{}{"status": "stopped"}, nil
 			},
 		},
 		{
@@ -390,6 +408,9 @@ func TestStartVMWithForce(t *testing.T) {
 			mockGetVmConfig: func(vmr *proxmox.VmRef) (map[string]interface{}, error) {
 				return map[string]interface{}{"template": 1.0}, nil
 			},
+			mockGetVmState: func(vmr *proxmox.VmRef) (map[string]interface{}, error) {
+				return map[string]interface{}{"status": "running"}, nil
+			},
 		},
 	}
 
@@ -401,6 +422,9 @@ func TestStartVMWithForce(t *testing.T) {
 					return nil
 				},
 				startVm: func(*proxmox.VmRef) (string, error) {
+					return "", nil
+				},
+				stopVm: func(*proxmox.VmRef) (string, error) {
 					return "", nil
 				},
 				setVmConfig: func(*proxmox.VmRef, map[string]interface{}) (interface{}, error) {
@@ -417,6 +441,9 @@ func TestStartVMWithForce(t *testing.T) {
 				},
 				getVmConfig: func(vmr *proxmox.VmRef) (config map[string]interface{}, err error) {
 					return c.mockGetVmConfig(vmr)
+				},
+				getVmState: func(vmr *proxmox.VmRef) (config map[string]interface{}, err error) {
+					return c.mockGetVmState(vmr)
 				},
 				deleteVm: func(vmr *proxmox.VmRef) (exitStatus string, err error) {
 					deleteWasCalled = true
