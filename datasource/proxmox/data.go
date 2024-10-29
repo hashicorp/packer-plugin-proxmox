@@ -10,13 +10,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/Telmate/proxmox-api-go/proxmox"
-	"github.com/hashicorp/hcl/v2/hcldec"
-	"github.com/hashicorp/packer-plugin-sdk/common"
-	"github.com/hashicorp/packer-plugin-sdk/hcl2helper"
-	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/hashicorp/packer-plugin-sdk/template/config"
-	"github.com/zclconf/go-cty/cty"
 	"log"
 	"net/url"
 	"os"
@@ -24,6 +17,14 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Telmate/proxmox-api-go/proxmox"
+	"github.com/hashicorp/hcl/v2/hcldec"
+	"github.com/hashicorp/packer-plugin-sdk/common"
+	"github.com/hashicorp/packer-plugin-sdk/hcl2helper"
+	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/hashicorp/packer-plugin-sdk/template/config"
+	"github.com/zclconf/go-cty/cty"
 )
 
 // Datasource has a bunch of filters which you can use, for example, to find the latest available
@@ -243,7 +244,7 @@ func getVmConfigs(client *proxmox.Client, vmList []proxmox.GuestResource) ([]vmC
 
 // Drop guests from list that are not match some filters in the datasource config.
 func filterGuests(config Config, guests []proxmox.GuestResource) []proxmox.GuestResource {
-	result := make([]proxmox.GuestResource, 0)
+	var result []proxmox.GuestResource
 
 	if config.Name != "" {
 		result = filterByName(guests, config.Name)

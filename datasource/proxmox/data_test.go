@@ -2,12 +2,13 @@ package proxmoxtemplate
 
 import (
 	"fmt"
-	"github.com/Telmate/proxmox-api-go/proxmox"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
+
+	"github.com/Telmate/proxmox-api-go/proxmox"
+	"github.com/stretchr/testify/require"
 )
 
 // For the sake of saving code clean have left only test-related fields in these JSONs.
