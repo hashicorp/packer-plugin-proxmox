@@ -125,6 +125,9 @@
 - `template_description` (string) - Description of the template, visible in
   the Proxmox interface.
 
+- `skip_convert_to_template` (bool) - Skip converting the VM to a template on completion of build.
+  Defaults to `false`
+
 - `cloud_init` (bool) - If true, add an empty Cloud-Init CDROM drive after the virtual
   machine has been converted to a template. Defaults to `false`.
 
