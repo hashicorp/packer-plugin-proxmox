@@ -16,16 +16,11 @@ import (
 )
 
 type finalizerMock struct {
-<<<<<<< HEAD
-	getConfig func() (map[string]interface{}, error)
-	setConfig func(map[string]interface{}) (string, error)
-	version   func() (proxmox.Version, error)
-=======
 	getConfig  func() (map[string]interface{}, error)
 	setConfig  func(map[string]interface{}) (string, error)
 	startVm    func() (string, error)
 	shutdownVm func() (string, error)
->>>>>>> a1d970c (common: skip_convert_to_template updates)
+	version    func() (proxmox.Version, error)
 }
 
 func (m finalizerMock) GetVmConfig(*proxmox.VmRef) (map[string]interface{}, error) {
