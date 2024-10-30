@@ -105,7 +105,10 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 							changes["ciupgrade"] = true
 						}
 					} else {
-						ui.Say("cloud_init_disable_upgrade_packages is set to true, but not supported in Proxmox versions lower than 8. Ignoring.")
+						// only write to UI if the cloud_init_disable_upgrade_packages is configured but the backend is an incompatible version
+						if c.CloudInitDisableUpgradePackages {
+							ui.Say("cloud_init_disable_upgrade_packages is set to true, but not supported in Proxmox versions lower than 8. No changes made.")
+						}
 					}
 					cloudInitAttached = true
 					break
