@@ -206,6 +206,9 @@ in the image's Cloud-Init settings for provisioning.
 - `cloud_init_disk_type` (string) - The type of Cloud-Init disk. Can be `scsi`, `sata`, or `ide`
   Defaults to `ide`.
 
+- `cloud_init_disable_upgrade_packages` (bool) - Disable Upgrade Packages behaviour for Cloud-Init.
+  Defaults to `false`.
+
 - `additional_iso_files` ([]ISOsConfig) - ISO files attached to the virtual machine.
   See [ISOs](#isos).
 

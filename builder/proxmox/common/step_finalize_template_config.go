@@ -22,6 +22,7 @@ type stepFinalizeTemplateConfig struct{}
 type templateFinalizer interface {
 	GetVmConfig(*proxmox.VmRef) (map[string]interface{}, error)
 	SetVmConfig(*proxmox.VmRef, map[string]interface{}) (interface{}, error)
+	Version() (proxmox.Version, error)
 }
 
 var _ templateFinalizer = &proxmox.Client{}
@@ -31,6 +32,14 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 	client := state.Get("proxmoxClient").(templateFinalizer)
 	c := state.Get("config").(*Config)
 	vmRef := state.Get("vmRef").(*proxmox.VmRef)
+
+	proxmoxVersion, err := client.Version()
+	if err != nil {
+		err := fmt.Errorf("error fetching backend version: %s", err)
+		state.Put("error", err)
+		ui.Error(err.Error())
+		return multistep.ActionHalt
+	}
 
 	changes := make(map[string]interface{})
 
@@ -87,11 +96,22 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 				if vmParams[controller] == nil {
 					ui.Say("Adding a cloud-init cdrom in storage pool " + cloudInitStoragePool)
 					changes[controller] = cloudInitStoragePool + ":cloudinit"
+					// Cloud-Init `Upgrade Packages` not available in versions lower than 8
+					if proxmoxVersion.Major >= 8 {
+						switch c.CloudInitDisableUpgradePackages {
+						case true:
+							changes["ciupgrade"] = false
+						case false:
+							changes["ciupgrade"] = true
+						}
+					} else {
+						ui.Say("cloud_init_disable_upgrade_packages is set to true, but not supported in Proxmox versions lower than 8. Ignoring.")
+					}
 					cloudInitAttached = true
 					break
 				}
 			}
-			if cloudInitAttached == false {
+			if !cloudInitAttached {
 				err := fmt.Errorf("Found no free controller of type %s for a cloud-init cdrom", c.CloudInitDiskType)
 				state.Put("error", err)
 				ui.Error(err.Error())

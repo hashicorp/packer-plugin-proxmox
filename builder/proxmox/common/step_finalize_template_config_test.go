@@ -18,6 +18,7 @@ import (
 type finalizerMock struct {
 	getConfig func() (map[string]interface{}, error)
 	setConfig func(map[string]interface{}) (string, error)
+	version   func() (proxmox.Version, error)
 }
 
 func (m finalizerMock) GetVmConfig(*proxmox.VmRef) (map[string]interface{}, error) {
@@ -25,6 +26,9 @@ func (m finalizerMock) GetVmConfig(*proxmox.VmRef) (map[string]interface{}, erro
 }
 func (m finalizerMock) SetVmConfig(vmref *proxmox.VmRef, c map[string]interface{}) (interface{}, error) {
 	return m.setConfig(c)
+}
+func (m finalizerMock) Version() (proxmox.Version, error) {
+	return m.version()
 }
 
 var _ templateFinalizer = finalizerMock{}
@@ -40,6 +44,7 @@ func TestTemplateFinalize(t *testing.T) {
 		setConfigErr        error
 		expectedAction      multistep.StepAction
 		expectedDelete      []string
+		proxmoxVersion      uint8
 	}{
 		{
 			name:          "empty config changes name and description",
@@ -106,10 +111,36 @@ func TestTemplateFinalize(t *testing.T) {
 		{
 			name: "all options with cloud-init",
 			builderConfig: &Config{
-				TemplateName:        "my-template",
-				TemplateDescription: "some-description",
-				CloudInit:           true,
-				CloudInitDiskType:   "ide",
+				TemplateName:                    "my-template",
+				TemplateDescription:             "some-description",
+				CloudInit:                       true,
+				CloudInitDiskType:               "ide",
+				CloudInitDisableUpgradePackages: true,
+			},
+			initialVMConfig: map[string]interface{}{
+				"name":        "dummy",
+				"description": "Packer ephemeral build VM",
+				"bootdisk":    "virtio0",
+				"virtio0":     "ceph01:base-223-disk-0,cache=unsafe,media=disk,size=32G",
+				"ciupgrade":   true,
+			},
+			expectCallSetConfig: true,
+			expectedVMConfig: map[string]interface{}{
+				"name":        "my-template",
+				"description": "some-description",
+				"ide0":        "ceph01:cloudinit",
+				"ciupgrade":   false,
+			},
+			expectedAction: multistep.ActionContinue,
+		},
+		{
+			name: "cloud-init ignore disable upgrade packages for proxmox backends below version 8.x",
+			builderConfig: &Config{
+				TemplateName:                    "my-template",
+				TemplateDescription:             "some-description",
+				CloudInit:                       true,
+				CloudInitDiskType:               "ide",
+				CloudInitDisableUpgradePackages: true,
 			},
 			initialVMConfig: map[string]interface{}{
 				"name":        "dummy",
@@ -124,6 +155,7 @@ func TestTemplateFinalize(t *testing.T) {
 				"ide0":        "ceph01:cloudinit",
 			},
 			expectedAction: multistep.ActionContinue,
+			proxmoxVersion: 7,
 		},
 		{
 			name: "no available controller for cloud-init drive",
@@ -209,6 +241,21 @@ func TestTemplateFinalize(t *testing.T) {
 					}
 
 					return "", c.setConfigErr
+				},
+				version: func() (proxmox.Version, error) {
+					if c.proxmoxVersion != 0 {
+						return proxmox.Version{
+							Major: c.proxmoxVersion,
+							Minor: 0,
+							Patch: 0,
+						}, nil
+					} else {
+						return proxmox.Version{
+							Major: 8,
+							Minor: 0,
+							Patch: 0,
+						}, nil
+					}
 				},
 			}
 
