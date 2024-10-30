@@ -32,19 +32,19 @@ func (s *stepConvertToTemplate) Run(ctx context.Context, state multistep.StateBa
 	vmRef := state.Get("vmRef").(*proxmox.VmRef)
 	c := state.Get("config").(*Config)
 
-	ui.Say("Stopping VM")
-	_, err := client.ShutdownVm(vmRef)
-	if err != nil {
-		err := fmt.Errorf("Error converting VM to template, could not stop: %s", err)
-		state.Put("error", err)
-		ui.Error(err.Error())
-		return multistep.ActionHalt
-	}
-
 	if c.SkipConvertToTemplate {
 		ui.Say("skip_convert_to_template set, skipping conversion to template")
 		state.Put("artifact_type", "VM")
 	} else {
+		ui.Say("Stopping VM")
+		_, err := client.ShutdownVm(vmRef)
+		if err != nil {
+			err := fmt.Errorf("Error converting VM to template, could not stop: %s", err)
+			state.Put("error", err)
+			ui.Error(err.Error())
+			return multistep.ActionHalt
+		}
+
 		ui.Say("Converting VM to template")
 		err = client.CreateTemplate(vmRef)
 		if err != nil {

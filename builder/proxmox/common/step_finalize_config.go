@@ -54,7 +54,7 @@ func (s *stepFinalizeConfig) Run(ctx context.Context, state multistep.StateBag) 
 
 	vmParams, err := client.GetVmConfig(vmRef)
 	if err != nil {
-		err := fmt.Errorf("error fetching template config: %s", err)
+		err := fmt.Errorf("error fetching config: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
 		return multistep.ActionHalt
@@ -162,6 +162,17 @@ func (s *stepFinalizeConfig) Run(ctx context.Context, state multistep.StateBag) 
 	changes["delete"] = strings.Join(deleteItems, ",")
 
 	if len(changes) > 0 {
+		// Adding a Cloud-Init drive or removing CD-ROM devices won't take effect without a power off and on of the QEMU VM
+		if c.SkipConvertToTemplate {
+			ui.Say("Hardware changes pending for VM, stopping VM")
+			_, err := client.ShutdownVm(vmRef)
+			if err != nil {
+				err := fmt.Errorf("Error converting VM to template, could not stop: %s", err)
+				state.Put("error", err)
+				ui.Error(err.Error())
+				return multistep.ActionHalt
+			}
+		}
 		_, err := client.SetVmConfig(vmRef, changes)
 		if err != nil {
 			err := fmt.Errorf("Error updating template: %s", err)
@@ -173,7 +184,7 @@ func (s *stepFinalizeConfig) Run(ctx context.Context, state multistep.StateBag) 
 
 	// When build artifact is to be a VM, return a running VM
 	if c.SkipConvertToTemplate {
-		ui.Say("skip_convert_to_template set, resuming VM")
+		ui.Say("Resuming VM")
 		_, err := client.StartVm(vmRef)
 		if err != nil {
 			err := fmt.Errorf("Error starting VM: %s", err)
