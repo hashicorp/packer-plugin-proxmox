@@ -243,8 +243,8 @@ type agentConfig struct {
 	Enabled config.Trilean `mapstructure:"enabled"`
 	// Sets the Agent Type. Must be `isa` or `virtio`. Defaults to `virtio`
 	Type string `mapstructure:"type"`
-	// Enable freeze/thaw of guest filesystem on backup. Defaults to `true`
-	Freeze config.Trilean `mapstructure:"freeze"`
+	// Disable freeze/thaw of guest filesystem on backup. Defaults to `false`
+	DisableFreeze bool `mapstructure:"disable_freeze"`
 	// Run guest-trim after a disk move or VM migration. Defaults to `false`
 	FsTrim bool `mapstructure:"fstrim"`
 }
@@ -646,20 +646,15 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		warnings = append(warnings, "proxmox is deprecated, please use proxmox-iso instead")
 	}
 
-	// Default qemu_agent to true
-	if c.Agent != config.TriFalse {
+	if c.Agent != config.TriUnset {
 		warnings = append(warnings, "qemu_agent is deprecated and will be removed in a future release. define QEMU agent settings in a qemu_guest_agent block instead")
 		// convert to qemu_guest_agent block value
-		c.GuestAgent.Enabled = config.TriTrue
+		c.GuestAgent.Enabled = c.Agent
 	}
 
 	// Default qemu_guest_agent.enable to true
 	if c.GuestAgent.Enabled != config.TriFalse {
 		c.GuestAgent.Enabled = config.TriTrue
-	}
-	// Default qemu_guest_agent.freeze to true
-	if c.GuestAgent.Freeze != config.TriFalse {
-		c.GuestAgent.Freeze = config.TriTrue
 	}
 
 	switch c.GuestAgent.Type {

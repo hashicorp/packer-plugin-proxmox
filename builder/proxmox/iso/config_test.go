@@ -103,7 +103,7 @@ func TestBasicExampleFromDocsIsValid(t *testing.T) {
 	if b.config.Disks[0].CacheMode != "none" {
 		t.Errorf("Expected disk cache mode to be 'none', got %s", b.config.Disks[0].CacheMode)
 	}
-	if b.config.GuestAgent.Enabled.True() != true {
+	if !b.config.GuestAgent.Enabled.True() {
 		t.Errorf("Expected Agent to be true, got %t", b.config.GuestAgent.Enabled.True())
 	}
 	if b.config.DisableKVM != false {

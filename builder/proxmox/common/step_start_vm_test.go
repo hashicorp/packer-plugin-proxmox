@@ -1329,10 +1329,10 @@ func TestGenerateQEMUAgentConfig(t *testing.T) {
 		{
 			"plain config, no special options set",
 			agentConfig{
-				Enabled: config.TriTrue,
-				Type:    "virtio",
-				Freeze:  config.TriTrue,
-				FsTrim:  false,
+				Enabled:       config.TriTrue,
+				Type:          "virtio",
+				DisableFreeze: false,
+				FsTrim:        false,
 			},
 			&proxmox.QemuGuestAgent{
 				Enable: boolPointer(true),
@@ -1344,10 +1344,10 @@ func TestGenerateQEMUAgentConfig(t *testing.T) {
 		{
 			"configure for isa type",
 			agentConfig{
-				Enabled: config.TriTrue,
-				Type:    "isa",
-				Freeze:  config.TriTrue,
-				FsTrim:  false,
+				Enabled:       config.TriTrue,
+				Type:          "isa",
+				DisableFreeze: false,
+				FsTrim:        false,
 			},
 			&proxmox.QemuGuestAgent{
 				Enable: boolPointer(true),
@@ -1359,10 +1359,10 @@ func TestGenerateQEMUAgentConfig(t *testing.T) {
 		{
 			"disable agent",
 			agentConfig{
-				Enabled: config.TriFalse,
-				Type:    "virtio",
-				Freeze:  config.TriTrue,
-				FsTrim:  false,
+				Enabled:       config.TriFalse,
+				Type:          "virtio",
+				DisableFreeze: false,
+				FsTrim:        false,
 			},
 			&proxmox.QemuGuestAgent{
 				Enable: boolPointer(false),
@@ -1374,10 +1374,10 @@ func TestGenerateQEMUAgentConfig(t *testing.T) {
 		{
 			"enable fstrim",
 			agentConfig{
-				Enabled: config.TriFalse,
-				Type:    "virtio",
-				Freeze:  config.TriTrue,
-				FsTrim:  true,
+				Enabled:       config.TriFalse,
+				Type:          "virtio",
+				DisableFreeze: false,
+				FsTrim:        true,
 			},
 			&proxmox.QemuGuestAgent{
 				Enable: boolPointer(false),
@@ -1389,10 +1389,10 @@ func TestGenerateQEMUAgentConfig(t *testing.T) {
 		{
 			"disable freeze",
 			agentConfig{
-				Enabled: config.TriTrue,
-				Type:    "virtio",
-				Freeze:  config.TriFalse,
-				FsTrim:  true,
+				Enabled:       config.TriTrue,
+				Type:          "virtio",
+				DisableFreeze: true,
+				FsTrim:        true,
 			},
 			&proxmox.QemuGuestAgent{
 				Enable: boolPointer(true),

@@ -339,10 +339,10 @@ func (*FlatNICConfig) HCL2Spec() map[string]hcldec.Spec {
 // FlatagentConfig is an auto-generated flat version of agentConfig.
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatagentConfig struct {
-	Enabled *bool   `mapstructure:"enabled" cty:"enabled" hcl:"enabled"`
-	Type    *string `mapstructure:"type" cty:"type" hcl:"type"`
-	Freeze  *bool   `mapstructure:"freeze" cty:"freeze" hcl:"freeze"`
-	FsTrim  *bool   `mapstructure:"fstrim" cty:"fstrim" hcl:"fstrim"`
+	Enabled       *bool   `mapstructure:"enabled" cty:"enabled" hcl:"enabled"`
+	Type          *string `mapstructure:"type" cty:"type" hcl:"type"`
+	DisableFreeze *bool   `mapstructure:"disable_freeze" cty:"disable_freeze" hcl:"disable_freeze"`
+	FsTrim        *bool   `mapstructure:"fstrim" cty:"fstrim" hcl:"fstrim"`
 }
 
 // FlatMapstructure returns a new FlatagentConfig.
@@ -357,10 +357,10 @@ func (*agentConfig) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.S
 // The decoded values from this spec will then be applied to a FlatagentConfig.
 func (*FlatagentConfig) HCL2Spec() map[string]hcldec.Spec {
 	s := map[string]hcldec.Spec{
-		"enabled": &hcldec.AttrSpec{Name: "enabled", Type: cty.Bool, Required: false},
-		"type":    &hcldec.AttrSpec{Name: "type", Type: cty.String, Required: false},
-		"freeze":  &hcldec.AttrSpec{Name: "freeze", Type: cty.Bool, Required: false},
-		"fstrim":  &hcldec.AttrSpec{Name: "fstrim", Type: cty.Bool, Required: false},
+		"enabled":        &hcldec.AttrSpec{Name: "enabled", Type: cty.Bool, Required: false},
+		"type":           &hcldec.AttrSpec{Name: "type", Type: cty.String, Required: false},
+		"disable_freeze": &hcldec.AttrSpec{Name: "disable_freeze", Type: cty.Bool, Required: false},
+		"fstrim":         &hcldec.AttrSpec{Name: "fstrim", Type: cty.Bool, Required: false},
 	}
 	return s
 }

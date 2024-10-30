@@ -256,9 +256,14 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 
 func generateAgentConfig(agent agentConfig) *proxmox.QemuGuestAgent {
 	var agentCfg proxmox.QemuGuestAgent
+	freeze := true
 
 	agentCfg.Enable = agent.Enabled.ToBoolPointer()
-	agentCfg.Freeze = agent.Freeze.ToBoolPointer()
+
+	if agent.DisableFreeze {
+		freeze = false
+	}
+	agentCfg.Freeze = &freeze
 
 	agentType := proxmox.QemuGuestAgentType(agent.Type)
 	agentCfg.Type = &agentType

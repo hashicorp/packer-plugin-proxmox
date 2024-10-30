@@ -714,7 +714,7 @@ HCL2 example:
 
 - `type` (string) - Sets the Agent Type. Must be `isa` or `virtio`. Defaults to `virtio`
 
-- `freeze` (boolean) - Enable freeze/thaw of guest filesystem on backup. Defaults to `true`
+- `disable_freeze` (bool) - Disable freeze/thaw of guest filesystem on backup. Defaults to `false`
 
 - `fstrim` (bool) - Run guest-trim after a disk move or VM migration. Defaults to `false`
 
