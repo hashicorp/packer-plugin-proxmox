@@ -146,7 +146,7 @@ func (s *stepFinalizeConfig) Run(ctx context.Context, state multistep.StateBag) 
 			ui.Say("Hardware changes pending for VM, stopping VM")
 			_, err := client.ShutdownVm(vmRef)
 			if err != nil {
-				err := fmt.Errorf("Error converting VM to template, could not stop: %s", err)
+				err := fmt.Errorf("Error stopping VM: %s", err)
 				state.Put("error", err)
 				ui.Error(err.Error())
 				return multistep.ActionHalt
