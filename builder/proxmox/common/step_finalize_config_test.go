@@ -16,9 +16,10 @@ import (
 )
 
 type finalizerMock struct {
-	getConfig func() (map[string]interface{}, error)
-	setConfig func(map[string]interface{}) (string, error)
-	startVm   func() (string, error)
+	getConfig  func() (map[string]interface{}, error)
+	setConfig  func(map[string]interface{}) (string, error)
+	startVm    func() (string, error)
+	shutdownVm func() (string, error)
 }
 
 func (m finalizerMock) GetVmConfig(*proxmox.VmRef) (map[string]interface{}, error) {
@@ -30,6 +31,10 @@ func (m finalizerMock) SetVmConfig(vmref *proxmox.VmRef, c map[string]interface{
 
 func (m finalizerMock) StartVm(*proxmox.VmRef) (string, error) {
 	return m.startVm()
+}
+
+func (m finalizerMock) ShutdownVm(*proxmox.VmRef) (string, error) {
+	return m.shutdownVm()
 }
 
 var _ finalizer = finalizerMock{}
