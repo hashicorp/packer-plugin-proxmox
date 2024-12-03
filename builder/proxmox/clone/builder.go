@@ -39,10 +39,6 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 	state.Put("clone-config", &b.config)
 
 	preSteps := []multistep.Step{
-		&StepSshKeyPair{
-			Debug:        b.config.PackerDebug,
-			DebugKeyPath: fmt.Sprintf("%s.pem", b.config.PackerBuildName),
-		},
 		&StepMapSourceDisks{},
 	}
 	postSteps := []multistep.Step{}

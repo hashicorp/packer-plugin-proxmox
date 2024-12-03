@@ -52,9 +52,11 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook,
 
 	// Build the steps
 	coreSteps := []multistep.Step{
+		// Since the ISOs get added to the VM before/during this line we need to update the cloud-init data before this line.  It probably needs to be before as CD creation is done in presteps
 		&stepStartVM{
 			vmCreator: b.vmCreator,
 		},
+		// Also need to update the cloud-init data before this line
 		commonsteps.HTTPServerFromHTTPConfig(&b.config.HTTPConfig),
 		&stepTypeBootCommand{
 			BootConfig: b.config.BootConfig,
@@ -67,14 +69,21 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook,
 		},
 		&commonsteps.StepProvision{},
 		&commonsteps.StepCleanupTempKeys{
-			Comm: &b.config.Comm,
+			Comm: comm,
 		},
 		&stepRemoveCloudInitDrive{},
 		&stepConvertToTemplate{},
 		&stepFinalizeTemplateConfig{},
 		&stepSuccess{},
 	}
-	preSteps := b.preSteps
+
+	preSteps := []multistep.Step{
+		&StepSshKeyPair{
+			Debug:		b.config.PackerDebug,
+			DebugKeyPath:	fmt.Sprintf("%s.pem", b.config.PackerBuildName),
+		},
+		&StepUpdateCloudInitSSH{},
+	}
 	for idx := range b.config.ISOs {
 		if b.config.ISOs[idx].ISODownloadPVE {
 			preSteps = append(preSteps,
@@ -104,8 +113,7 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook,
 		}
 	}
 
-	steps := append(preSteps, coreSteps...)
-	steps = append(steps, b.postSteps...)
+	steps := append(preSteps, b.preSteps..., coreSteps..., b.postSteps...)
 	// Run the steps
 	b.runner = commonsteps.NewRunner(steps, b.config.PackerConfig, ui)
 	b.runner.Run(ctx, state)
