@@ -214,7 +214,7 @@ func (d *Datasource) Execute() (cty.Value, error) {
 	return hcl2helper.HCL2ValueFromConfig(output, d.OutputSpec()), nil
 }
 
-// Find the latest VM among filtered.
+// findLatestConfig finds the latest VM among those passed using `configs`.
 // The `meta` field contains info about creation time (but it is not described in API docs).
 func findLatestConfig(configs []vmConfig) (vmConfig, error) {
 	var result vmConfig
@@ -253,87 +253,55 @@ func getVmConfigs(client *proxmox.Client, vmList []proxmox.GuestResource) ([]vmC
 	return result, nil
 }
 
-// Drop guests from list that are not match some filters in the datasource config.
+// filterGuests removes guests from the `guests` list that do not match some filters in the datasource config.
 func filterGuests(config Config, guests []proxmox.GuestResource) []proxmox.GuestResource {
-	var result []proxmox.GuestResource
+	filterFuncs := make([]func(proxmox.GuestResource) bool, 0)
 
 	if config.Name != "" {
-		result = filterByName(guests, config.Name)
-	} else {
-		result = guests
+		filterFuncs = append(filterFuncs, func(vm proxmox.GuestResource) bool {
+			return vm.Name == config.Name
+		})
 	}
 
 	if config.NameRegex != "" {
-		result = filterByNameRegex(guests, config.NameRegex)
-	} else {
-		if config.Name == "" {
-			result = guests
-		}
+		filterFuncs = append(filterFuncs, func(vm proxmox.GuestResource) bool {
+			return regexp.MustCompile(config.NameRegex).MatchString(vm.Name)
+		})
 	}
 
 	if config.Template {
-		result = filterByTemplate(result)
+		filterFuncs = append(filterFuncs, func(vm proxmox.GuestResource) bool {
+			return vm.Template
+		})
 	}
+
 	if config.Node != "" {
-		result = filterByNode(result, config.Node)
+		filterFuncs = append(filterFuncs, func(vm proxmox.GuestResource) bool {
+			return vm.Node == config.Node
+		})
 	}
+
 	if config.VmTags != "" {
-		result = filterByTags(result, config.VmTags)
+		// Split tags string because it can contain several tags separated with ";"
+		tagsSplitted := strings.Split(config.VmTags, ";")
+		filterFuncs = append(filterFuncs, func(vm proxmox.GuestResource) bool {
+			return len(vm.Tags) > 0 && configTagsMatchNodeTags(tagsSplitted, vm.Tags)
+		})
 	}
 
-	return result
-}
-
-func filterByName(guests []proxmox.GuestResource, name string) []proxmox.GuestResource {
 	result := make([]proxmox.GuestResource, 0)
-	for _, i := range guests {
-		if i.Name == name {
-			result = append(result, i)
-		}
-	}
-	return result
-}
-
-func filterByNameRegex(guests []proxmox.GuestResource, nameRegex string) []proxmox.GuestResource {
-	re, _ := regexp.Compile(nameRegex)
-	result := make([]proxmox.GuestResource, 0)
-	for _, i := range guests {
-		if re.MatchString(i.Name) {
-			result = append(result, i)
-		}
-	}
-	return result
-}
-
-func filterByTemplate(guests []proxmox.GuestResource) []proxmox.GuestResource {
-	result := make([]proxmox.GuestResource, 0)
-	for _, i := range guests {
-		if i.Template {
-			result = append(result, i)
-		}
-	}
-	return result
-}
-
-func filterByNode(guests []proxmox.GuestResource, node string) []proxmox.GuestResource {
-	result := make([]proxmox.GuestResource, 0)
-	for _, i := range guests {
-		if i.Node == node {
-			result = append(result, i)
-		}
-	}
-	return result
-}
-
-func filterByTags(guests []proxmox.GuestResource, tags string) []proxmox.GuestResource {
-	result := make([]proxmox.GuestResource, 0)
-	// Split tags string because it can contain several tags separated with ";"
-	tagsSplitted := strings.Split(tags, ";")
 	for _, guest := range guests {
-		if len(guest.Tags) > 0 && configTagsMatchNodeTags(tagsSplitted, guest.Tags) {
+		var ok bool
+		for _, guestPassedFilter := range filterFuncs {
+			if ok = guestPassedFilter(guest); !ok {
+				break
+			}
+		}
+		if ok {
 			result = append(result, guest)
 		}
 	}
+
 	return result
 }
 
