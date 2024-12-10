@@ -1,4 +1,4 @@
-<!-- Code generated from the comments of the Config struct in datasource/proxmox/data.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the Config struct in datasource/virtualmachine/data.go; DO NOT EDIT MANUALLY -->
 
 - `proxmox_url` (string) - URL to the Proxmox API, including the full path,
   so `https://<server>:<port>/api2/json` for example.
@@ -27,23 +27,23 @@
 - `task_timeout` (duration string | ex: "1h5m2s") - `task_timeout` (duration string | ex: "10m") - The timeout for
    Promox API operations, e.g. clones. Defaults to 1 minute.
 
-- `name` (string) - Filter that returns `vm_id` for guest which name exactly matches this value.
+- `name` (string) - Filter that returns `vm_id` for virtual machine which name exactly matches this value.
   Options `name` and `name_regex` are mutually exclusive.
 
-- `name_regex` (string) - Filter that returns `vm_id` for guest which name matches the regular expression.
+- `name_regex` (string) - Filter that returns `vm_id` for virtual machine which name matches the regular expression.
   Expression must use [Go Regex Syntax](https://pkg.go.dev/regexp/syntax).
   Options `name` and `name_regex` are mutually exclusive.
 
-- `template` (bool) - Filter that returns guest `vm_id` only when guest is template.
+- `template` (bool) - Filter that returns virtual machine `vm_id` only when virtual machine is template.
 
-- `node` (string) - Filter that returns `vm_id` only when guest is located on the specified PVE node.
+- `node` (string) - Filter that returns `vm_id` only when virtual machine is located on the specified PVE node.
 
-- `vm_tags` (string) - Filter that returns `vm_id` for guest which has all these tags. When you need to
+- `vm_tags` (string) - Filter that returns `vm_id` for virtual machine which has all these tags. When you need to
   specify more than one tag, use semicolon as separator (`"tag1;tag2"`).
-  Every specified tag must exist in guest.
+  Every specified tag must exist in virtual machine.
 
-- `latest` (bool) - This filter determines how to handle multiple guests that were matched with all
-  previous filters. Guest creation time is being used to find latest.
-  By default, multiple matching guests results in an error.
+- `latest` (bool) - This filter determines how to handle multiple virtual machines that were matched with all
+  previous filters. Virtual machine creation time is being used to find latest.
+  By default, multiple matching virtual machines results in an error.
 
-<!-- End of code generated from the comments of the Config struct in datasource/proxmox/data.go; -->
+<!-- End of code generated from the comments of the Config struct in datasource/virtualmachine/data.go; -->

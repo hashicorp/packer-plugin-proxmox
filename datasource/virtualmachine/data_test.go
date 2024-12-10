@@ -1,4 +1,4 @@
-package proxmoxtemplate
+package virtualmachine
 
 import (
 	"fmt"
@@ -123,6 +123,14 @@ func TestExecute(t *testing.T) {
 			expectedVmId:  102,
 			configDiff: Config{
 				Node:   "pve",
+				Latest: true,
+			},
+		},
+		{
+			name:          "found latest guest at cluster, no error",
+			expectFailure: false,
+			expectedVmId:  102,
+			configDiff: Config{
 				Latest: true,
 			},
 		},
