@@ -19,7 +19,7 @@ integration {
   }
   component {
     type = "data-source"
-    name = "Proxmox Template"
-    slug = "template"
+    name = "Proxmox Virtual Machine"
+    slug = "virtualmachine"
   }
 }

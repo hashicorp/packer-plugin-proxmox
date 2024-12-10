@@ -4,7 +4,7 @@
 //go:generate packer-sdc struct-markdown
 //go:generate packer-sdc mapstructure-to-hcl2 -type Config,DatasourceOutput
 
-package proxmoxtemplate
+package virtualmachine
 
 import (
 	"crypto/tls"
@@ -63,24 +63,24 @@ type Config struct {
 	// `task_timeout` (duration string | ex: "10m") - The timeout for
 	//  Promox API operations, e.g. clones. Defaults to 1 minute.
 	TaskTimeout time.Duration `mapstructure:"task_timeout"`
-	// Filter that returns `vm_id` for guest which name exactly matches this value.
+	// Filter that returns `vm_id` for virtual machine which name exactly matches this value.
 	// Options `name` and `name_regex` are mutually exclusive.
 	Name string `mapstructure:"name"`
-	// Filter that returns `vm_id` for guest which name matches the regular expression.
+	// Filter that returns `vm_id` for virtual machine which name matches the regular expression.
 	// Expression must use [Go Regex Syntax](https://pkg.go.dev/regexp/syntax).
 	// Options `name` and `name_regex` are mutually exclusive.
 	NameRegex string `mapstructure:"name_regex"`
-	// Filter that returns guest `vm_id` only when guest is template.
+	// Filter that returns virtual machine `vm_id` only when virtual machine is template.
 	Template bool `mapstructure:"template"`
-	// Filter that returns `vm_id` only when guest is located on the specified PVE node.
+	// Filter that returns `vm_id` only when virtual machine is located on the specified PVE node.
 	Node string `mapstructure:"node"`
-	// Filter that returns `vm_id` for guest which has all these tags. When you need to
+	// Filter that returns `vm_id` for virtual machine which has all these tags. When you need to
 	// specify more than one tag, use semicolon as separator (`"tag1;tag2"`).
-	// Every specified tag must exist in guest.
+	// Every specified tag must exist in virtual machine.
 	VmTags string `mapstructure:"vm_tags"`
-	// This filter determines how to handle multiple guests that were matched with all
-	// previous filters. Guest creation time is being used to find latest.
-	// By default, multiple matching guests results in an error.
+	// This filter determines how to handle multiple virtual machines that were matched with all
+	// previous filters. Virtual machine creation time is being used to find latest.
+	// By default, multiple matching virtual machines results in an error.
 	Latest bool `mapstructure:"latest"`
 }
 
@@ -89,11 +89,11 @@ type Datasource struct {
 }
 
 type DatasourceOutput struct {
-	// Identifier of the found guest.
+	// Identifier of the found virtual machine.
 	VmId uint `mapstructure:"vm_id"`
-	// Name of the found guest.
+	// Name of the found virtual machine.
 	VmName string `mapstructure:"vm_name"`
-	// Tags of the found guest separated with semicolon.
+	// Tags of the found virtual machine separated with semicolon.
 	VmTags string `mapstructure:"vm_tags"`
 }
 
@@ -180,7 +180,7 @@ func (d *Datasource) Execute() (cty.Value, error) {
 
 	filteredVms := filterGuests(d.config, vmList)
 	if len(filteredVms) == 0 {
-		return cty.NullVal(cty.EmptyObject), errors.New("not a single vm matches the configured filters")
+		return cty.NullVal(cty.EmptyObject), errors.New("no virtual machine matches the filters")
 	}
 
 	if d.config.Latest {
@@ -195,11 +195,11 @@ func (d *Datasource) Execute() (cty.Value, error) {
 		}
 
 		vmId = latestConfig["vmid"].(uint)
-		vmName = latestConfig["name"].(string)
-		vmTags = latestConfig["tags"].(string)
+		vmName = configValueOrEmpty(&latestConfig, "name")
+		vmTags = configValueOrEmpty(&latestConfig, "tags")
 	} else {
 		if len(filteredVms) > 1 {
-			return cty.NullVal(cty.EmptyObject), errors.New("more than one guest passed filters, cannot return vm_id")
+			return cty.NullVal(cty.EmptyObject), errors.New("more than one virtual machine matched the filters")
 		}
 		vmId = filteredVms[0].Id
 		vmName = filteredVms[0].Name
@@ -230,13 +230,13 @@ func findLatestConfig(configs []vmConfig) (vmConfig, error) {
 				result = configs[i]
 			}
 		} else {
-			return nil, errors.New("no meta field in the guest config")
+			return nil, errors.New("no meta field in the virtual machine config")
 		}
 	}
 	return result, nil
 }
 
-// Get configs from PVE in 'map[string]interface{}' format for all VMs in the list.
+// getVmConfigs retrieves configs from PVE in 'map[string]interface{}' format for all VMs in the list.
 // Also add value of VM ID to every config (useful for further steps).
 func getVmConfigs(client *proxmox.Client, vmList []proxmox.GuestResource) ([]vmConfig, error) {
 	var result []vmConfig
@@ -253,7 +253,7 @@ func getVmConfigs(client *proxmox.Client, vmList []proxmox.GuestResource) ([]vmC
 	return result, nil
 }
 
-// filterGuests removes guests from the `guests` list that do not match some filters in the datasource config.
+// filterGuests removes virtual machines from the `guests` list that do not match some filters in the datasource config.
 func filterGuests(config Config, guests []proxmox.GuestResource) []proxmox.GuestResource {
 	filterFuncs := make([]func(proxmox.GuestResource) bool, 0)
 
@@ -292,6 +292,9 @@ func filterGuests(config Config, guests []proxmox.GuestResource) []proxmox.Guest
 	result := make([]proxmox.GuestResource, 0)
 	for _, guest := range guests {
 		var ok bool
+		if len(filterFuncs) == 0 {
+			ok = true
+		}
 		for _, guestPassedFilter := range filterFuncs {
 			if ok = guestPassedFilter(guest); !ok {
 				break
@@ -305,6 +308,8 @@ func filterGuests(config Config, guests []proxmox.GuestResource) []proxmox.Guest
 	return result
 }
 
+// configTagsMatchNodeTags compares two lists of strings and returns true only when all
+// elements from the first list are present in the second list.
 func configTagsMatchNodeTags(configTags []string, nodeTags []proxmox.Tag) bool {
 	var countOfMatchedTags int
 	for _, configTag := range configTags {
@@ -325,6 +330,7 @@ func configTagsMatchNodeTags(configTags []string, nodeTags []proxmox.Tag) bool {
 	return true
 }
 
+// newProxmoxClient creates new client and tries to connect and log in to Proxmox instance.
 func newProxmoxClient(config Config) (*proxmox.Client, error) {
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: config.SkipCertValidation,
@@ -332,7 +338,7 @@ func newProxmoxClient(config Config) (*proxmox.Client, error) {
 
 	client, err := proxmox.NewClient(strings.TrimSuffix(config.proxmoxURL.String(), "/"), nil, "", tlsConfig, "", int(config.TaskTimeout.Seconds()))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not connect to Proxmox: %w", err)
 	}
 
 	*proxmox.Debug = config.PackerDebug
@@ -346,17 +352,19 @@ func newProxmoxClient(config Config) (*proxmox.Client, error) {
 		log.Print("using password auth")
 		err = client.Login(config.Username, config.Password, "")
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not log in to Proxmox: %w", err)
 		}
 	}
 
 	return client, nil
 }
 
+// parseMetaField parses the string from the `meta` field and returns integer value
+// representing the creation date of the virtual machine in epoch seconds format.
 func parseMetaField(field string) (int, error) {
 	re, err := regexp.Compile(`.*ctime=(?P<ctime>[0-9]+).*`)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("could not compile regex to parse meta field: %w", err)
 	}
 
 	matched := re.MatchString(field)
@@ -366,15 +374,34 @@ func parseMetaField(field string) (int, error) {
 	valueStr := re.ReplaceAllString(field, "${ctime}")
 	value, err := strconv.Atoi(valueStr)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("could not convert date field to int: %w", err)
 	}
 	return value, nil
 }
 
+// joinTags used to combine list of strings into one string with defined separator.
 func joinTags(tags []proxmox.Tag, separator string) string {
 	tagsAsStrings := make([]string, len(tags))
 	for i, tag := range tags {
 		tagsAsStrings[i] = string(tag)
 	}
 	return strings.Join(tagsAsStrings, separator)
+}
+
+// configValueOrEmpty tries to retrieve string by key from dynamic map of interfaces.
+// In case when key not found or there was an error, this function returns empty string.
+func configValueOrEmpty(values *vmConfig, key string) string {
+	result := ""
+	if values != nil {
+		value, exists := (*values)[key]
+		if !exists {
+			return result
+		}
+		strValue, ok := value.(string)
+		if !ok {
+			return result
+		}
+		result = strValue
+	}
+	return result
 }

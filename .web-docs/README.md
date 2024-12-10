@@ -37,6 +37,7 @@ Packer is able to target both ISO and existing Cloud-Init images.
 
 #### Data Sources
 
-- [data source](/packer/integrations/hashicorp/proxmox/latest/components/datasource/template) - The proxmox template
-  datasource is able to get info about existing guests from Proxmox cluster and return VM ID of a single guest that
-  matches all specified filters. This ID can later be used in the 'clone' builder to select template.
+- [virtualmachine](/packer/integrations/hashicorp/proxmox/latest/components/datasource/virtualmachine) - The proxmox
+  virtual machine datasource retrieves information about existing virtual machines
+  from Proxmox cluster and returns VM ID of one virtual machine that matches all
+  specified filters. This ID can be used in the clone builder to select a template.
