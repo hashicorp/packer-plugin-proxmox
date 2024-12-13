@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package proxmoxclone
+package proxmox
 
 import (
 	"context"
@@ -47,9 +47,8 @@ func (s *StepSshKeyPair) Run(ctx context.Context, state multistep.StateBag) mult
 			return multistep.ActionHalt
 		}
 
-		c.Comm.SSHPrivateKey = privateKeyBytes
 		c.Comm.SSHKeyPairName = kp.Comment
-		c.Comm.SSHTemporaryKeyPairName = kp.Comment
+		c.Comm.SSHPrivateKey = privateKeyBytes
 		c.Comm.SSHPublicKey = kp.PublicKeyAuthorizedKeysLine
 
 		return multistep.ActionContinue
