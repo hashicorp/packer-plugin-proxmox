@@ -131,6 +131,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 			Cores:   (*proxmox.QemuCpuCores)(&c.Cores),
 			Sockets: (*proxmox.QemuCpuSockets)(&c.Sockets),
 			Numa:    &c.Numa,
+			Type:    (*proxmox.CpuType)(&c.CPUType),
 		},
 		Description: &description,
 		Memory: &proxmox.QemuMemory{
