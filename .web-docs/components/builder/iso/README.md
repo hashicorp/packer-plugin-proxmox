@@ -1043,6 +1043,9 @@ wget http://{{ .HTTPIP }}:{{ .HTTPPort }}/foo/bar/preseed.cfg
 - `http_bind_address` (string) - This is the bind address for the HTTP server. Defaults to 0.0.0.0 so that
   it will work with any network interface.
 
+- `http_network_protocol` (string) - Defines the HTTP Network protocol. Valid options are `tcp`, `tcp4`, `tcp6`,
+  `unix`, and `unixpacket`. This value defaults to `tcp`.
+
 <!-- End of code generated from the comments of the HTTPConfig struct in multistep/commonsteps/http_config.go; -->
 
 
