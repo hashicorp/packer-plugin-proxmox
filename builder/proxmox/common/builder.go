@@ -176,10 +176,17 @@ func getVMIP(state multistep.StateBag) (string, error) {
 
 	for _, iface := range ifs {
 		for _, addr := range iface.IpAddresses {
-			if addr.IsLoopback() {
+			if addr.To4() == nil && addr.To16() == nil {
+				// no IPv4 or IPv6 at all
 				continue
-			}
-			if addr.To4() == nil {
+			} else if addr.IsLinkLocalUnicast() || addr.IsMulticast() || addr.IsLoopback() {
+				// SiteLocalUnicast: fec0::/10
+				// multicast: ff00::/8
+				// multicast interface ff01::1
+				// multicast local: ff02::02
+				// Unique Local Unicast: fc00::/7
+				// global Unicast ::/96
+				// LinkLocalUnicat: fe80::/64
 				continue
 			}
 			return addr.String(), nil
