@@ -176,10 +176,15 @@ func getVMIP(state multistep.StateBag) (string, error) {
 
 	for _, iface := range ifs {
 		for _, addr := range iface.IpAddresses {
-			if addr.IsLoopback() {
+			if addr.To4() == nil && addr.To16() == nil {
+				// no IPv4 or IPv6 at all
 				continue
-			}
-			if addr.To4() == nil {
+			} else if addr.IsLinkLocalUnicast() || addr.IsMulticast() || addr.IsLoopback() || addr.IsUnspecified() {
+				// can not be replaced by !addr.IsGlobalUnicast() because it just returns ips wich are globally routable,
+				// but Unique Local Addresses: fc00::/7 can be used as well for IPv6 setups.
+				// SiteLocalUnicast: fec0::/10
+				// multicast: ff00::/8
+				// LinkLocalUnicat: fe80::/64
 				continue
 			}
 			return addr.String(), nil
