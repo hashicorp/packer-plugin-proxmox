@@ -8,21 +8,22 @@ https://github.com/hashicorp/packer-plugin-proxmox/blob/main/.github/CONTRIBUTIN
 
 ----
 
-### :hammer_and_wrench: Description
+### Description
 What code changed, and why?
 
 
-### :link: Resolved Issues
+### Resolved Issues
 If your PR resolves any open issue(s), please indicate them like this so they will be closed when your PR is merged:
 
 Closes #xxx
 Closes #xxx
 
-### PCI review checklist
 <!-- heimdall_github_prtemplate:grc-pci_dss-2024-01-05 -->
-- [ ] If applicable, I've documented a plan to revert these changes if they require more than reverting the pull request.
-- [ ] If applicable, I've worked with GRC to document the impact of any changes to security controls.
-  Examples of changes to controls include access controls, encryption, logging, etc.
-- [ ] If applicable, I've worked with GRC to ensure compliance due to a significant change to the in-scope PCI environment.
-  Examples include changes to operating systems, ports, protocols, services, cryptography-related components, PII processing code, etc.
+### Rollback Plan
+
+If a change needs to be reverted, we will roll out an update to the code within 7 days.
+
+### Changes to Security Controls
+
+Are there any changes to security controls (access controls, encryption, logging) in this pull request? If so, explain.
 
