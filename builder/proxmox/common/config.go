@@ -340,7 +340,10 @@ type NICConfig struct {
 type diskConfig struct {
 	// The type of disk. Can be `scsi`, `sata`, `virtio` or
 	// `ide`. Defaults to `scsi`.
-	Type string `mapstructure:"type"`
+	Type  string `mapstructure:"type"`
+	// Optional: Used to specify the index of a disk. Can be used in combination
+	// with `type` and `size` to resize disks inherited from a cloned VM
+	Index string `mapstructure:"index" required:"false"`
 	// Required. Name of the Proxmox storage pool
 	// to store the virtual machine disk on. A `local-lvm` pool is allocated
 	// by the installer, for example.
@@ -569,7 +572,7 @@ type pciDeviceConfig struct {
 	HideROMBAR bool `mapstructure:"hide_rombar"`
 	// Custom PCI device rom filename (must be located in `/usr/share/kvm/`).
 	ROMFile string `mapstructure:"romfile"`
-	//Override PCI subsystem device ID visible to guest.
+	// Override PCI subsystem device ID visible to guest.
 	SubDeviceID string `mapstructure:"sub_device_id"`
 	// Override PCI subsystem vendor ID visible to guest.
 	SubVendorID string `mapstructure:"sub_vendor_id"`
