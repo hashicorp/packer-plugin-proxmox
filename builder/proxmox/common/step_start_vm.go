@@ -779,7 +779,7 @@ func setDeviceParamIfDefined(dev proxmox.QemuDevice, key, value string) {
 }
 
 func isDuplicateIDError(err error) bool {
-	return strings.Contains(err.Error(), "already exists on node")
+	return strings.Contains(err.Error(), "already exists")
 }
 
 type startedVMCleaner interface {
