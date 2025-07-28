@@ -109,6 +109,7 @@ type FlatConfig struct {
 	PCIDevices                []FlatpciDeviceConfig `mapstructure:"pci_devices" cty:"pci_devices" hcl:"pci_devices"`
 	Serials                   []string              `mapstructure:"serials" cty:"serials" hcl:"serials"`
 	Agent                     *bool                 `mapstructure:"qemu_agent" cty:"qemu_agent" hcl:"qemu_agent"`
+	GuestAgent                *FlatagentConfig      `mapstructure:"qemu_guest_agent" cty:"qemu_guest_agent" hcl:"qemu_guest_agent"`
 	SCSIController            *string               `mapstructure:"scsi_controller" cty:"scsi_controller" hcl:"scsi_controller"`
 	Onboot                    *bool                 `mapstructure:"onboot" cty:"onboot" hcl:"onboot"`
 	DisableKVM                *bool                 `mapstructure:"disable_kvm" cty:"disable_kvm" hcl:"disable_kvm"`
@@ -233,6 +234,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"pci_devices":                  &hcldec.BlockListSpec{TypeName: "pci_devices", Nested: hcldec.ObjectSpec((*FlatpciDeviceConfig)(nil).HCL2Spec())},
 		"serials":                      &hcldec.AttrSpec{Name: "serials", Type: cty.List(cty.String), Required: false},
 		"qemu_agent":                   &hcldec.AttrSpec{Name: "qemu_agent", Type: cty.Bool, Required: false},
+		"qemu_guest_agent":             &hcldec.BlockSpec{TypeName: "qemu_guest_agent", Nested: hcldec.ObjectSpec((*FlatagentConfig)(nil).HCL2Spec())},
 		"scsi_controller":              &hcldec.AttrSpec{Name: "scsi_controller", Type: cty.String, Required: false},
 		"onboot":                       &hcldec.AttrSpec{Name: "onboot", Type: cty.Bool, Required: false},
 		"disable_kvm":                  &hcldec.AttrSpec{Name: "disable_kvm", Type: cty.Bool, Required: false},
@@ -332,6 +334,35 @@ func (*FlatNICConfig) HCL2Spec() map[string]hcldec.Spec {
 		"bridge":        &hcldec.AttrSpec{Name: "bridge", Type: cty.String, Required: false},
 		"vlan_tag":      &hcldec.AttrSpec{Name: "vlan_tag", Type: cty.String, Required: false},
 		"firewall":      &hcldec.AttrSpec{Name: "firewall", Type: cty.Bool, Required: false},
+	}
+	return s
+}
+
+// FlatagentConfig is an auto-generated flat version of agentConfig.
+// Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
+type FlatagentConfig struct {
+	Enabled       *bool   `mapstructure:"enabled" cty:"enabled" hcl:"enabled"`
+	Type          *string `mapstructure:"type" cty:"type" hcl:"type"`
+	DisableFreeze *bool   `mapstructure:"disable_freeze" cty:"disable_freeze" hcl:"disable_freeze"`
+	FsTrim        *bool   `mapstructure:"fstrim" cty:"fstrim" hcl:"fstrim"`
+}
+
+// FlatMapstructure returns a new FlatagentConfig.
+// FlatagentConfig is an auto-generated flat version of agentConfig.
+// Where the contents a fields with a `mapstructure:,squash` tag are bubbled up.
+func (*agentConfig) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Spec } {
+	return new(FlatagentConfig)
+}
+
+// HCL2Spec returns the hcl spec of a agentConfig.
+// This spec is used by HCL to read the fields of agentConfig.
+// The decoded values from this spec will then be applied to a FlatagentConfig.
+func (*FlatagentConfig) HCL2Spec() map[string]hcldec.Spec {
+	s := map[string]hcldec.Spec{
+		"enabled":        &hcldec.AttrSpec{Name: "enabled", Type: cty.Bool, Required: false},
+		"type":           &hcldec.AttrSpec{Name: "type", Type: cty.String, Required: false},
+		"disable_freeze": &hcldec.AttrSpec{Name: "disable_freeze", Type: cty.Bool, Required: false},
+		"fstrim":         &hcldec.AttrSpec{Name: "fstrim", Type: cty.Bool, Required: false},
 	}
 	return s
 }

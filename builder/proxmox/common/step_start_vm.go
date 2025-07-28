@@ -15,7 +15,6 @@ import (
 	"github.com/Telmate/proxmox-api-go/proxmox"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/hashicorp/packer-plugin-sdk/template/config"
 )
 
 // stepStartVM takes the given configuration and starts a VM on the given Proxmox node.
@@ -123,7 +122,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 
 	config := proxmox.ConfigQemu{
 		Name:    c.VMName,
-		Agent:   generateAgentConfig(c.Agent),
+		Agent:   generateAgentConfig(c.GuestAgent),
 		QemuKVM: &kvm,
 		Tags:    generateTags(c.Tags),
 		Boot:    c.Boot, // Boot priority, example: "order=virtio0;ide2;net0", virtio0:Disk0 -> ide0:CDROM -> net0:Network
@@ -256,16 +255,23 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 	return multistep.ActionContinue
 }
 
-func generateAgentConfig(agent config.Trilean) *proxmox.QemuGuestAgent {
-	var enableAgent bool
+func generateAgentConfig(agent agentConfig) *proxmox.QemuGuestAgent {
+	var agentCfg proxmox.QemuGuestAgent
+	freeze := true
 
-	if agent.True() {
-		enableAgent = true
-	}
+	agentCfg.Enable = agent.Enabled.ToBoolPointer()
 
-	return &proxmox.QemuGuestAgent{
-		Enable: &enableAgent,
+	if agent.DisableFreeze {
+		freeze = false
 	}
+	agentCfg.Freeze = &freeze
+
+	agentType := proxmox.QemuGuestAgentType(agent.Type)
+	agentCfg.Type = &agentType
+
+	agentCfg.FsTrim = &agent.FsTrim
+
+	return &agentCfg
 }
 
 func generateTags(rawTags string) *[]proxmox.Tag {

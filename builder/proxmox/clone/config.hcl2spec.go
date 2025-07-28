@@ -110,6 +110,7 @@ type FlatConfig struct {
 	PCIDevices                []proxmox.FlatpciDeviceConfig `mapstructure:"pci_devices" cty:"pci_devices" hcl:"pci_devices"`
 	Serials                   []string                      `mapstructure:"serials" cty:"serials" hcl:"serials"`
 	Agent                     *bool                         `mapstructure:"qemu_agent" cty:"qemu_agent" hcl:"qemu_agent"`
+	GuestAgent                *proxmox.FlatagentConfig      `mapstructure:"qemu_guest_agent" cty:"qemu_guest_agent" hcl:"qemu_guest_agent"`
 	SCSIController            *string                       `mapstructure:"scsi_controller" cty:"scsi_controller" hcl:"scsi_controller"`
 	Onboot                    *bool                         `mapstructure:"onboot" cty:"onboot" hcl:"onboot"`
 	DisableKVM                *bool                         `mapstructure:"disable_kvm" cty:"disable_kvm" hcl:"disable_kvm"`
@@ -240,6 +241,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"pci_devices":                  &hcldec.BlockListSpec{TypeName: "pci_devices", Nested: hcldec.ObjectSpec((*proxmox.FlatpciDeviceConfig)(nil).HCL2Spec())},
 		"serials":                      &hcldec.AttrSpec{Name: "serials", Type: cty.List(cty.String), Required: false},
 		"qemu_agent":                   &hcldec.AttrSpec{Name: "qemu_agent", Type: cty.Bool, Required: false},
+		"qemu_guest_agent":             &hcldec.BlockSpec{TypeName: "qemu_guest_agent", Nested: hcldec.ObjectSpec((*proxmox.FlatagentConfig)(nil).HCL2Spec())},
 		"scsi_controller":              &hcldec.AttrSpec{Name: "scsi_controller", Type: cty.String, Required: false},
 		"onboot":                       &hcldec.AttrSpec{Name: "onboot", Type: cty.Bool, Required: false},
 		"disable_kvm":                  &hcldec.AttrSpec{Name: "disable_kvm", Type: cty.Bool, Required: false},

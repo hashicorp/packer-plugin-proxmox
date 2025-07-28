@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -1306,6 +1307,107 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 			if !tt.expectedToFail {
 				assert.Equal(t, devs, tt.expectOutput)
 			}
+		})
+	}
+}
+
+func boolPointer(b bool) *bool {
+	return &b
+}
+
+func qemuGuestAgentTypePointer(t proxmox.QemuGuestAgentType) *proxmox.QemuGuestAgentType {
+	return &t
+}
+
+func TestGenerateQEMUAgentConfig(t *testing.T) {
+
+	tests := []struct {
+		name         string
+		agentConfig  agentConfig
+		expectOutput *proxmox.QemuGuestAgent
+	}{
+		{
+			"plain config, no special options set",
+			agentConfig{
+				Enabled:       config.TriTrue,
+				Type:          "virtio",
+				DisableFreeze: false,
+				FsTrim:        false,
+			},
+			&proxmox.QemuGuestAgent{
+				Enable: boolPointer(true),
+				Type:   qemuGuestAgentTypePointer("virtio"),
+				Freeze: boolPointer(true),
+				FsTrim: boolPointer(false),
+			},
+		},
+		{
+			"configure for isa type",
+			agentConfig{
+				Enabled:       config.TriTrue,
+				Type:          "isa",
+				DisableFreeze: false,
+				FsTrim:        false,
+			},
+			&proxmox.QemuGuestAgent{
+				Enable: boolPointer(true),
+				Type:   qemuGuestAgentTypePointer("isa"),
+				Freeze: boolPointer(true),
+				FsTrim: boolPointer(false),
+			},
+		},
+		{
+			"disable agent",
+			agentConfig{
+				Enabled:       config.TriFalse,
+				Type:          "virtio",
+				DisableFreeze: false,
+				FsTrim:        false,
+			},
+			&proxmox.QemuGuestAgent{
+				Enable: boolPointer(false),
+				Type:   qemuGuestAgentTypePointer("virtio"),
+				Freeze: boolPointer(true),
+				FsTrim: boolPointer(false),
+			},
+		},
+		{
+			"enable fstrim",
+			agentConfig{
+				Enabled:       config.TriFalse,
+				Type:          "virtio",
+				DisableFreeze: false,
+				FsTrim:        true,
+			},
+			&proxmox.QemuGuestAgent{
+				Enable: boolPointer(false),
+				Type:   qemuGuestAgentTypePointer("virtio"),
+				Freeze: boolPointer(true),
+				FsTrim: boolPointer(true),
+			},
+		},
+		{
+			"disable freeze",
+			agentConfig{
+				Enabled:       config.TriTrue,
+				Type:          "virtio",
+				DisableFreeze: true,
+				FsTrim:        true,
+			},
+			&proxmox.QemuGuestAgent{
+				Enable: boolPointer(true),
+				Type:   qemuGuestAgentTypePointer("virtio"),
+				Freeze: boolPointer(false),
+				FsTrim: boolPointer(true),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			agentCfg := generateAgentConfig(tt.agentConfig)
+
+			assert.Equal(t, agentCfg, tt.expectOutput)
 		})
 	}
 }
