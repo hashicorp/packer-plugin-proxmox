@@ -379,6 +379,9 @@ type diskConfig struct {
 	//
 	// This cannot work with virtio disks.
 	SSD bool `mapstructure:"ssd"`
+	// Exclude disk from replication jobs.
+	// Defaults to false.
+	SkipReplication bool `mapstructure:"skip_replication"`
 }
 
 // Set the efidisk storage options.

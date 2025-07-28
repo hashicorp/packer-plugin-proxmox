@@ -436,6 +436,10 @@ func generateProxmoxDisks(disks []diskConfig, isos []ISOsConfig, cloneSourceDisk
 		if disks[idx].ExcludeFromBackup {
 			backup = false
 		}
+		replicate := true
+		if disks[idx].SkipReplication {
+			replicate = false
+		}
 
 		switch disks[idx].Type {
 		case "ide":
@@ -449,6 +453,7 @@ func generateProxmoxDisks(disks []diskConfig, isos []ISOsConfig, cloneSourceDisk
 					Discard:         disks[idx].Discard,
 					EmulateSSD:      disks[idx].SSD,
 					Backup:          backup,
+					Replicate:       replicate,
 				},
 			}
 			for {
@@ -489,6 +494,7 @@ func generateProxmoxDisks(disks []diskConfig, isos []ISOsConfig, cloneSourceDisk
 					EmulateSSD:      disks[idx].SSD,
 					IOThread:        disks[idx].IOThread,
 					Backup:          backup,
+					Replicate:       replicate,
 				},
 			}
 			for {
@@ -522,6 +528,7 @@ func generateProxmoxDisks(disks []diskConfig, isos []ISOsConfig, cloneSourceDisk
 					Discard:         disks[idx].Discard,
 					EmulateSSD:      disks[idx].SSD,
 					Backup:          backup,
+					Replicate:       replicate,
 				},
 			}
 			for {
@@ -555,6 +562,7 @@ func generateProxmoxDisks(disks []diskConfig, isos []ISOsConfig, cloneSourceDisk
 					Discard:         disks[idx].Discard,
 					IOThread:        disks[idx].IOThread,
 					Backup:          backup,
+					Replicate:       replicate,
 				},
 			}
 			for {

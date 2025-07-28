@@ -350,6 +350,7 @@ type FlatdiskConfig struct {
 	ExcludeFromBackup *bool   `mapstructure:"exclude_from_backup" cty:"exclude_from_backup" hcl:"exclude_from_backup"`
 	Discard           *bool   `mapstructure:"discard" cty:"discard" hcl:"discard"`
 	SSD               *bool   `mapstructure:"ssd" cty:"ssd" hcl:"ssd"`
+	SkipReplication   *bool   `mapstructure:"skip_replication" cty:"skip_replication" hcl:"skip_replication"`
 }
 
 // FlatMapstructure returns a new FlatdiskConfig.
@@ -375,6 +376,7 @@ func (*FlatdiskConfig) HCL2Spec() map[string]hcldec.Spec {
 		"exclude_from_backup": &hcldec.AttrSpec{Name: "exclude_from_backup", Type: cty.Bool, Required: false},
 		"discard":             &hcldec.AttrSpec{Name: "discard", Type: cty.Bool, Required: false},
 		"ssd":                 &hcldec.AttrSpec{Name: "ssd", Type: cty.Bool, Required: false},
+		"skip_replication":    &hcldec.AttrSpec{Name: "skip_replication", Type: cty.Bool, Required: false},
 	}
 	return s
 }
