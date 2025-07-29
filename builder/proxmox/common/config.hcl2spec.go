@@ -340,6 +340,7 @@ func (*FlatNICConfig) HCL2Spec() map[string]hcldec.Spec {
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatdiskConfig struct {
 	Type              *string `mapstructure:"type" cty:"type" hcl:"type"`
+	Index             *string `mapstructure:"index" required:"false" cty:"index" hcl:"index"`
 	StoragePool       *string `mapstructure:"storage_pool" cty:"storage_pool" hcl:"storage_pool"`
 	StoragePoolType   *string `mapstructure:"storage_pool_type" cty:"storage_pool_type" hcl:"storage_pool_type"`
 	Size              *string `mapstructure:"disk_size" cty:"disk_size" hcl:"disk_size"`
@@ -365,6 +366,7 @@ func (*diskConfig) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Sp
 func (*FlatdiskConfig) HCL2Spec() map[string]hcldec.Spec {
 	s := map[string]hcldec.Spec{
 		"type":                &hcldec.AttrSpec{Name: "type", Type: cty.String, Required: false},
+		"index":               &hcldec.AttrSpec{Name: "index", Type: cty.String, Required: false},
 		"storage_pool":        &hcldec.AttrSpec{Name: "storage_pool", Type: cty.String, Required: false},
 		"storage_pool_type":   &hcldec.AttrSpec{Name: "storage_pool_type", Type: cty.String, Required: false},
 		"disk_size":           &hcldec.AttrSpec{Name: "disk_size", Type: cty.String, Required: false},
