@@ -35,3 +35,9 @@ Packer is able to target both ISO and existing Cloud-Init images.
   takes an ISO source, runs any provisioning necessary on the image after
   launching it, then creates a virtual machine template.
 
+#### Data Sources
+
+- [virtualmachine](/packer/integrations/hashicorp/proxmox/latest/components/datasource/virtualmachine) - The proxmox
+  virtual machine datasource retrieves information about existing virtual machines
+  from Proxmox cluster and returns VM ID of one virtual machine that matches all
+  specified filters. This ID can be used in the clone builder to select a template.
