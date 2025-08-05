@@ -36,7 +36,9 @@ type vmStarter interface {
 	GetVmConfig(vmr *proxmox.VmRef) (vmConfig map[string]interface{}, err error)
 	GetVmRefsByName(vmName string) (vmrs []*proxmox.VmRef, err error)
 	SetVmConfig(*proxmox.VmRef, map[string]interface{}) (interface{}, error)
+	GetVmState(vmr *proxmox.VmRef) (vmState map[string]interface{}, err error)
 	StartVm(*proxmox.VmRef) (string, error)
+	StopVm(*proxmox.VmRef) (string, error)
 }
 
 var (
@@ -84,6 +86,9 @@ func getExistingTemplate(c *Config, client vmStarter) (*proxmox.VmRef, error) {
 		}
 		vmRef = vmRefs[0]
 		log.Printf("found VM with name '%s' (ID: %d)", c.TemplateName, vmRef.VmId())
+	}
+	if c.SkipConvertToTemplate {
+		return vmRef, nil
 	}
 	log.Printf("check if VM %d is a template", vmRef.VmId())
 	vmConfig, err := client.GetVmConfig(vmRef)
@@ -170,14 +175,31 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 			return multistep.ActionHalt
 		}
 		if vmRef.VmId() != 0 {
-			ui.Say(fmt.Sprintf("found existing VM template with ID %d on PVE node %s, deleting it", vmRef.VmId(), vmRef.Node()))
+			ui.Say(fmt.Sprintf("found existing resource with ID %d on PVE node %s, deleting it", vmRef.VmId(), vmRef.Node()))
+			// If building a VM artifact and c.PackerForce is true,
+			// running VMs can't be deleted. Stop before deleting.
+			vmState, err := client.GetVmState(vmRef)
+			if err != nil {
+				state.Put("error", err)
+				ui.Error(fmt.Sprintf("error getting VM state: %s", err.Error()))
+				return multistep.ActionHalt
+			}
+			if vmState["status"] == "running" {
+				log.Printf("VM %d running, stopping for deletion", vmRef.VmId())
+				_, err = client.StopVm(vmRef)
+				if err != nil {
+					state.Put("error", err)
+					ui.Error(fmt.Sprintf("error stopping resource: %s", err.Error()))
+					return multistep.ActionHalt
+				}
+			}
 			_, err = client.DeleteVm(vmRef)
 			if err != nil {
 				state.Put("error", err)
-				ui.Error(fmt.Sprintf("error deleting VM template: %s", err.Error()))
+				ui.Error(fmt.Sprintf("error deleting resource: %s", err.Error()))
 				return multistep.ActionHalt
 			}
-			ui.Say(fmt.Sprintf("Successfully deleted VM template %d", vmRef.VmId()))
+			ui.Say(fmt.Sprintf("Successfully deleted %d", vmRef.VmId()))
 		} else {
 			ui.Say("No existing artifact found")
 		}
