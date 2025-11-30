@@ -53,7 +53,7 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 
 type cloneVMCreator struct{}
 
-func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQemu, state multistep.StateBag) error {
+func (*cloneVMCreator) Create(ctx context.Context, vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQemu, state multistep.StateBag) error {
 	client := state.Get("proxmoxClient").(*proxmoxapi.Client)
 	c := state.Get("clone-config").(*Config)
 	comm := state.Get("config").(*proxmox.Config).Comm
@@ -140,7 +140,7 @@ func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQ
 
 	var sourceVmr *proxmoxapi.VmRef
 	if c.CloneVM != "" {
-		sourceVmrs, err := client.GetVmRefsByName(c.CloneVM)
+		sourceVmrs, err := client.GetVmRefsByName(ctx, c.CloneVM)
 		if err != nil {
 			return err
 		}
@@ -154,17 +154,17 @@ func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQ
 		}
 	} else if c.CloneVMID != 0 {
 		sourceVmr = proxmoxapi.NewVmRef(c.CloneVMID)
-		err := client.CheckVmRef(sourceVmr)
+		err := client.CheckVmRef(ctx, sourceVmr)
 		if err != nil {
 			return err
 		}
 	}
 
-	err := config.CloneVm(sourceVmr, vmRef, client)
+	err := config.CloneVm(ctx, sourceVmr, vmRef, client)
 	if err != nil {
 		return err
 	}
-	_, err = config.Update(false, vmRef, client)
+	_, err = config.Update(ctx, false, vmRef, client)
 	if err != nil {
 		return err
 	}

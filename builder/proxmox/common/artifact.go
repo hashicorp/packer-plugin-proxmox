@@ -4,6 +4,7 @@
 package proxmox
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -47,6 +48,6 @@ func (a *Artifact) State(name string) interface{} {
 
 func (a *Artifact) Destroy() error {
 	log.Printf("Destroying template: %d", a.templateID)
-	_, err := a.proxmoxClient.DeleteVm(proxmox.NewVmRef(a.templateID))
+	_, err := a.proxmoxClient.DeleteVm(context.TODO(), proxmox.NewVmRef(a.templateID))
 	return err
 }

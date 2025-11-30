@@ -4,6 +4,7 @@
 package proxmox
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -95,7 +96,7 @@ func (p *proxmoxDriver) SendKey(key rune, action bootcommand.KeyAction) error {
 	switch action.String() {
 	case "Press":
 		if special, ok := p.runeMap[key]; ok {
-			return p.send(special)
+			return p.send(context.TODO(), special)
 		}
 		var keys string
 		if unicode.IsUpper(key) {
@@ -103,7 +104,7 @@ func (p *proxmoxDriver) SendKey(key rune, action bootcommand.KeyAction) error {
 		} else {
 			keys = fmt.Sprintf("%c", key)
 		}
-		return p.send(keys)
+		return p.send(context.TODO(), keys)
 	case "On":
 		key := fmt.Sprintf("%c", key)
 		p.normalBuffer = addKeyToBuffer(p.normalBuffer, key)
@@ -121,7 +122,7 @@ func (p *proxmoxDriver) SendSpecial(special string, action bootcommand.KeyAction
 	}
 	switch action.String() {
 	case "Press":
-		return p.send(keys)
+		return p.send(context.TODO(), keys)
 	case "On":
 		p.specialBuffer = addKeyToBuffer(p.specialBuffer, keys)
 	case "Off":
@@ -130,11 +131,11 @@ func (p *proxmoxDriver) SendSpecial(special string, action bootcommand.KeyAction
 	return nil
 }
 
-func (p *proxmoxDriver) send(key string) error {
+func (p *proxmoxDriver) send(ctx context.Context, key string) error {
 	keys := append(p.specialBuffer, p.normalBuffer...)
 	keys = append(keys, key)
 	keyEventString := bufferToKeyEvent(keys)
-	err := p.client.Sendkey(p.vmRef, keyEventString)
+	err := p.client.Sendkey(ctx, p.vmRef, keyEventString)
 	if err != nil {
 		return err
 	}

@@ -14,15 +14,15 @@ import (
 )
 
 type converterMock struct {
-	shutdownVm     func(*proxmox.VmRef) (string, error)
-	createTemplate func(*proxmox.VmRef) error
+	shutdownVm     func(context.Context, *proxmox.VmRef) (string, error)
+	createTemplate func(context.Context, *proxmox.VmRef) error
 }
 
-func (m converterMock) ShutdownVm(r *proxmox.VmRef) (string, error) {
-	return m.shutdownVm(r)
+func (m converterMock) ShutdownVm(ctx context.Context, r *proxmox.VmRef) (string, error) {
+	return m.shutdownVm(ctx, r)
 }
-func (m converterMock) CreateTemplate(r *proxmox.VmRef) error {
-	return m.createTemplate(r)
+func (m converterMock) CreateTemplate(ctx context.Context, r *proxmox.VmRef) error {
+	return m.createTemplate(ctx, r)
 }
 
 var _ templateConverter = converterMock{}
@@ -63,13 +63,13 @@ func TestConvertToTemplate(t *testing.T) {
 	for _, c := range cs {
 		t.Run(c.name, func(t *testing.T) {
 			converter := converterMock{
-				shutdownVm: func(r *proxmox.VmRef) (string, error) {
+				shutdownVm: func(ctx context.Context, r *proxmox.VmRef) (string, error) {
 					if r.VmId() != vmid {
 						t.Errorf("ShutdownVm called with unexpected id, expected %d, got %d", vmid, r.VmId())
 					}
 					return "", c.shutdownErr
 				},
-				createTemplate: func(r *proxmox.VmRef) error {
+				createTemplate: func(ctx context.Context, r *proxmox.VmRef) error {
 					if r.VmId() != vmid {
 						t.Errorf("CreateTemplate called with unexpected id, expected %d, got %d", vmid, r.VmId())
 					}

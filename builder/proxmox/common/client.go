@@ -4,6 +4,7 @@
 package proxmox
 
 import (
+	"context"
 	"crypto/tls"
 	"log"
 	"strings"
@@ -11,7 +12,7 @@ import (
 	"github.com/Telmate/proxmox-api-go/proxmox"
 )
 
-func newProxmoxClient(config Config) (*proxmox.Client, error) {
+func newProxmoxClient(ctx context.Context, config Config) (*proxmox.Client, error) {
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: config.SkipCertValidation,
 	}
@@ -30,7 +31,7 @@ func newProxmoxClient(config Config) (*proxmox.Client, error) {
 	} else {
 		// fallback to login if not using tokens
 		log.Print("using password auth")
-		err = client.Login(config.Username, config.Password, "")
+		err = client.Login(ctx, config.Username, config.Password, "")
 		if err != nil {
 			return nil, err
 		}

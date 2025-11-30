@@ -20,10 +20,10 @@ type startedVMCleanerMock struct {
 	deleteVm func() (string, error)
 }
 
-func (m startedVMCleanerMock) StopVm(*proxmox.VmRef) (string, error) {
+func (m startedVMCleanerMock) StopVm(context.Context, *proxmox.VmRef) (string, error) {
 	return m.stopVm()
 }
-func (m startedVMCleanerMock) DeleteVm(*proxmox.VmRef) (string, error) {
+func (m startedVMCleanerMock) DeleteVm(context.Context, *proxmox.VmRef) (string, error) {
 	return m.deleteVm()
 }
 
@@ -114,39 +114,39 @@ func TestCleanupStartVM(t *testing.T) {
 }
 
 type startVMMock struct {
-	create      func(*proxmox.VmRef, proxmox.ConfigQemu, multistep.StateBag) error
-	startVm     func(*proxmox.VmRef) (string, error)
-	setVmConfig func(*proxmox.VmRef, map[string]interface{}) (interface{}, error)
-	getNextID   func(id int) (int, error)
-	getVmConfig func(vmr *proxmox.VmRef) (vmConfig map[string]interface{}, err error)
-	checkVmRef  func(vmr *proxmox.VmRef) (err error)
-	getVmByName func(vmName string) (vmrs []*proxmox.VmRef, err error)
-	deleteVm    func(vmr *proxmox.VmRef) (exitStatus string, err error)
+	create      func(context.Context, *proxmox.VmRef, proxmox.ConfigQemu, multistep.StateBag) error
+	startVm     func(context.Context, *proxmox.VmRef) (string, error)
+	setVmConfig func(context.Context, *proxmox.VmRef, map[string]interface{}) (interface{}, error)
+	getNextID   func(ctx context.Context, id int) (int, error)
+	getVmConfig func(ctx context.Context, vmr *proxmox.VmRef) (vmConfig map[string]interface{}, err error)
+	checkVmRef  func(ctx context.Context, vmr *proxmox.VmRef) (err error)
+	getVmByName func(ctx context.Context, vmName string) (vmrs []*proxmox.VmRef, err error)
+	deleteVm    func(ctx context.Context, vmr *proxmox.VmRef) (exitStatus string, err error)
 }
 
-func (m *startVMMock) Create(vmRef *proxmox.VmRef, config proxmox.ConfigQemu, state multistep.StateBag) error {
-	return m.create(vmRef, config, state)
+func (m *startVMMock) Create(ctx context.Context, vmRef *proxmox.VmRef, config proxmox.ConfigQemu, state multistep.StateBag) error {
+	return m.create(ctx, vmRef, config, state)
 }
-func (m *startVMMock) StartVm(vmRef *proxmox.VmRef) (string, error) {
-	return m.startVm(vmRef)
+func (m *startVMMock) StartVm(ctx context.Context, vmRef *proxmox.VmRef) (string, error) {
+	return m.startVm(ctx, vmRef)
 }
-func (m *startVMMock) SetVmConfig(vmRef *proxmox.VmRef, config map[string]interface{}) (interface{}, error) {
-	return m.setVmConfig(vmRef, config)
+func (m *startVMMock) SetVmConfig(ctx context.Context, vmRef *proxmox.VmRef, config map[string]interface{}) (interface{}, error) {
+	return m.setVmConfig(ctx, vmRef, config)
 }
-func (m *startVMMock) GetNextID(id int) (int, error) {
-	return m.getNextID(id)
+func (m *startVMMock) GetNextID(ctx context.Context, id int) (int, error) {
+	return m.getNextID(ctx, id)
 }
-func (m *startVMMock) GetVmConfig(vmr *proxmox.VmRef) (map[string]interface{}, error) {
-	return m.getVmConfig(vmr)
+func (m *startVMMock) GetVmConfig(ctx context.Context, vmr *proxmox.VmRef) (map[string]interface{}, error) {
+	return m.getVmConfig(ctx, vmr)
 }
-func (m *startVMMock) CheckVmRef(vmr *proxmox.VmRef) (err error) {
-	return m.checkVmRef(vmr)
+func (m *startVMMock) CheckVmRef(ctx context.Context, vmr *proxmox.VmRef) (err error) {
+	return m.checkVmRef(ctx, vmr)
 }
-func (m *startVMMock) GetVmRefsByName(vmName string) (vmrs []*proxmox.VmRef, err error) {
-	return m.getVmByName(vmName)
+func (m *startVMMock) GetVmRefsByName(ctx context.Context, vmName string) (vmrs []*proxmox.VmRef, err error) {
+	return m.getVmByName(ctx, vmName)
 }
-func (m *startVMMock) DeleteVm(vmr *proxmox.VmRef) (exitStatus string, err error) {
-	return m.deleteVm(vmr)
+func (m *startVMMock) DeleteVm(ctx context.Context, vmr *proxmox.VmRef) (exitStatus string, err error) {
+	return m.deleteVm(ctx, vmr)
 }
 
 func TestStartVM(t *testing.T) {
@@ -183,16 +183,16 @@ func TestStartVM(t *testing.T) {
 	for _, c := range cs {
 		t.Run(c.name, func(t *testing.T) {
 			mock := &startVMMock{
-				create: func(vmRef *proxmox.VmRef, config proxmox.ConfigQemu, state multistep.StateBag) error {
+				create: func(ctx context.Context, vmRef *proxmox.VmRef, config proxmox.ConfigQemu, state multistep.StateBag) error {
 					return nil
 				},
-				startVm: func(*proxmox.VmRef) (string, error) {
+				startVm: func(context.Context, *proxmox.VmRef) (string, error) {
 					return "", nil
 				},
-				setVmConfig: func(*proxmox.VmRef, map[string]interface{}) (interface{}, error) {
+				setVmConfig: func(context.Context, *proxmox.VmRef, map[string]interface{}) (interface{}, error) {
 					return nil, nil
 				},
-				getNextID: func(id int) (int, error) {
+				getNextID: func(ctx context.Context, id int) (int, error) {
 					return 1, nil
 				},
 			}
@@ -269,17 +269,17 @@ func TestStartVMRetryOnDuplicateID(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			createCalls := 0
 			mock := &startVMMock{
-				create: func(vmRef *proxmox.VmRef, config proxmox.ConfigQemu, state multistep.StateBag) error {
+				create: func(ctx context.Context, vmRef *proxmox.VmRef, config proxmox.ConfigQemu, state multistep.StateBag) error {
 					createCalls++
 					return c.createErrorGenerator(vmRef.VmId())
 				},
-				startVm: func(*proxmox.VmRef) (string, error) {
+				startVm: func(context.Context, *proxmox.VmRef) (string, error) {
 					return "", nil
 				},
-				setVmConfig: func(*proxmox.VmRef, map[string]interface{}) (interface{}, error) {
+				setVmConfig: func(context.Context, *proxmox.VmRef, map[string]interface{}) (interface{}, error) {
 					return nil, nil
 				},
-				getNextID: func(id int) (int, error) {
+				getNextID: func(ctx context.Context, id int) (int, error) {
 					return createCalls + 1, nil
 				},
 			}
@@ -397,28 +397,28 @@ func TestStartVMWithForce(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			deleteWasCalled := false
 			mock := &startVMMock{
-				create: func(vmRef *proxmox.VmRef, config proxmox.ConfigQemu, state multistep.StateBag) error {
+				create: func(ctx context.Context, vmRef *proxmox.VmRef, config proxmox.ConfigQemu, state multistep.StateBag) error {
 					return nil
 				},
-				startVm: func(*proxmox.VmRef) (string, error) {
+				startVm: func(context.Context, *proxmox.VmRef) (string, error) {
 					return "", nil
 				},
-				setVmConfig: func(*proxmox.VmRef, map[string]interface{}) (interface{}, error) {
+				setVmConfig: func(context.Context, *proxmox.VmRef, map[string]interface{}) (interface{}, error) {
 					return nil, nil
 				},
-				getNextID: func(id int) (int, error) {
+				getNextID: func(ctx context.Context, id int) (int, error) {
 					return 101, nil
 				},
-				checkVmRef: func(vmr *proxmox.VmRef) (err error) {
+				checkVmRef: func(ctx context.Context, vmr *proxmox.VmRef) (err error) {
 					return nil
 				},
-				getVmByName: func(vmName string) (vmrs []*proxmox.VmRef, err error) {
+				getVmByName: func(ctx context.Context, vmName string) (vmrs []*proxmox.VmRef, err error) {
 					return c.mockGetVmRefsByName(vmName)
 				},
-				getVmConfig: func(vmr *proxmox.VmRef) (config map[string]interface{}, err error) {
+				getVmConfig: func(ctx context.Context, vmr *proxmox.VmRef) (config map[string]interface{}, err error) {
 					return c.mockGetVmConfig(vmr)
 				},
-				deleteVm: func(vmr *proxmox.VmRef) (exitStatus string, err error) {
+				deleteVm: func(ctx context.Context, vmr *proxmox.VmRef) (exitStatus string, err error) {
 					deleteWasCalled = true
 					return "", nil
 				},
@@ -469,15 +469,15 @@ func TestStartVM_AssertInitialQuemuConfig(t *testing.T) {
 			startVMWasCalled := false
 			qemuConfig := proxmox.ConfigQemu{}
 			mock := &startVMMock{
-				create: func(vmRef *proxmox.VmRef, config proxmox.ConfigQemu, state multistep.StateBag) error {
+				create: func(ctx context.Context, vmRef *proxmox.VmRef, config proxmox.ConfigQemu, state multistep.StateBag) error {
 					qemuConfig = config
 					return nil
 				},
-				startVm: func(*proxmox.VmRef) (string, error) {
+				startVm: func(context.Context, *proxmox.VmRef) (string, error) {
 					startVMWasCalled = true
 					return "", nil
 				},
-				getNextID: func(id int) (int, error) {
+				getNextID: func(ctx context.Context, id int) (int, error) {
 					return 101, nil
 				},
 			}

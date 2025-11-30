@@ -25,7 +25,7 @@ type stepDownloadISOOnPVE struct {
 
 func (s *stepDownloadISOOnPVE) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	var isoStoragePath string
-	isoStoragePath, err := DownloadISOOnPVE(state, s.ISO.ISOUrls, s.ISO.ISOChecksum, s.ISO.ISOStoragePool)
+	isoStoragePath, err := DownloadISOOnPVE(ctx, state, s.ISO.ISOUrls, s.ISO.ISOChecksum, s.ISO.ISOStoragePool)
 
 	// Abort if no ISO can be downloaded
 	if err != nil {
@@ -44,7 +44,7 @@ func (s *stepDownloadISOOnPVE) Run(ctx context.Context, state multistep.StateBag
 // If a download was successful it skips the additonal downlaod mirrors and returns the path to the iso on the node.
 //
 // Returns: When successful, the path to the iso on the node, else an empty string.
-func DownloadISOOnPVE(state multistep.StateBag, ISOUrls []string, ISOChecksum string, ISOStoragePool string) (string, error) {
+func DownloadISOOnPVE(ctx context.Context, state multistep.StateBag, ISOUrls []string, ISOChecksum string, ISOStoragePool string) (string, error) {
 	ui := state.Get("ui").(packersdk.Ui)
 	client := state.Get("proxmoxClient").(*proxmox.Client)
 	c := state.Get("config").(*Config)
@@ -80,7 +80,7 @@ func DownloadISOOnPVE(state multistep.StateBag, ISOUrls []string, ISOChecksum st
 		}
 
 		log.Printf("[INFO] - beginning download of %s to node %s", isoConfig.DownloadUrl, isoConfig.Node)
-		err := proxmox.DownloadIsoFromUrl(client, isoConfig)
+		err := proxmox.DownloadIsoFromUrl(ctx, client, isoConfig)
 		// On error continues with the next URL and logs the error
 		if err != nil {
 			log.Printf("[ERROR] - failed to download iso from %s: %s", isoConfig.DownloadUrl, err)
