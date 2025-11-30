@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"reflect"
 	"slices"
 	"strconv"
@@ -144,7 +145,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		RNGDrive:       generateProxmoxRng0(c.Rng0),
 		TPM:            generateProxmoxTpm(c.TPMConfig),
 		QemuVga:        generateProxmoxVga(c.VGA),
-		QemuNetworks:   generateProxmoxNetworkAdapters(c.NICs),
+		Networks:       generateProxmoxNetworkAdapters(c.NICs),
 		Disks:          disks,
 		QemuPCIDevices: generateProxmoxPCIDeviceMap(c.PCIDevices),
 		Serials:        generateProxmoxSerials(c.Serials),
@@ -280,25 +281,45 @@ func generateTags(rawTags string) *[]proxmox.Tag {
 	return &tags
 }
 
-func generateProxmoxNetworkAdapters(nics []NICConfig) proxmox.QemuDevices {
-	devs := make(proxmox.QemuDevices)
-	for idx := range nics {
-		devs[idx] = make(proxmox.QemuDevice)
-		setDeviceParamIfDefined(devs[idx], "model", nics[idx].Model)
-		setDeviceParamIfDefined(devs[idx], "macaddr", nics[idx].MACAddress)
-		setDeviceParamIfDefined(devs[idx], "bridge", nics[idx].Bridge)
-		setDeviceParamIfDefined(devs[idx], "tag", nics[idx].VLANTag)
-
-		if nics[idx].Firewall {
-			devs[idx]["firewall"] = nics[idx].Firewall
+func generateProxmoxNetworkAdapters(nics []NICConfig) proxmox.QemuNetworkInterfaces {
+	devs := make(proxmox.QemuNetworkInterfaces, len(nics))
+	for i := range nics {
+		var dev proxmox.QemuNetworkInterface
+		if v := proxmox.QemuNetworkModel(nics[i].Model); v != "" {
+			dev.Model = &v
 		}
-
-		if nics[idx].MTU > 0 {
-			devs[idx]["mtu"] = nics[idx].MTU
+		if v := nics[i].MACAddress; v != "" {
+			if vv, err := net.ParseMAC(v); err == nil {
+				dev.MAC = &vv
+			}
 		}
-		if nics[idx].PacketQueues > 0 {
-			devs[idx]["queues"] = nics[idx].PacketQueues
+		if v := nics[i].Bridge; v != "" {
+			dev.Bridge = &v
 		}
+		if v := nics[i].VLANTag; v != "" {
+			if vv, err := strconv.Atoi(v); err == nil {
+				vvv := proxmox.Vlan(vv)
+				dev.NativeVlan = &vvv
+			}
+		}
+		if v := nics[i].Firewall; v {
+			dev.Firewall = &v
+		}
+		if v := nics[i].MTU; v > 0 {
+			var mtu proxmox.QemuMTU
+			const mtuInherit = 1
+			if v == mtuInherit {
+				mtu.Inherit = true
+			} else {
+				mtu.Value = proxmox.MTU(v)
+			}
+			dev.MTU = &mtu
+		}
+		if v := nics[i].PacketQueues; v > 0 {
+			vv := proxmox.QemuNetworkQueue(v)
+			dev.MultiQueue = &vv
+		}
+		devs[proxmox.QemuNetworkInterfaceID(i)] = dev
 	}
 	return devs
 }
