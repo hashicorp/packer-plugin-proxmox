@@ -138,21 +138,21 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		Memory: &proxmox.QemuMemory{
 			CapacityMiB: (*proxmox.QemuMemoryCapacity)(&c.Memory),
 		},
-		QemuOs:         c.OS,
-		Bios:           c.BIOS,
-		EFIDisk:        generateProxmoxEfi(c.EFIConfig),
-		Machine:        c.Machine,
-		RNGDrive:       generateProxmoxRng0(c.Rng0),
-		TPM:            generateProxmoxTpm(c.TPMConfig),
-		QemuVga:        generateProxmoxVga(c.VGA),
-		Networks:       generateProxmoxNetworkAdapters(c.NICs),
-		Disks:          disks,
-		QemuPCIDevices: generateProxmoxPCIDeviceMap(c.PCIDevices),
-		Serials:        generateProxmoxSerials(c.Serials),
-		Scsihw:         c.SCSIController,
-		Onboot:         &c.Onboot,
-		Args:           c.AdditionalArgs,
-		Pool:           (*proxmox.PoolName)(&c.Pool),
+		QemuOs:     c.OS,
+		Bios:       c.BIOS,
+		EFIDisk:    generateProxmoxEfi(c.EFIConfig),
+		Machine:    c.Machine,
+		RNGDrive:   generateProxmoxRng0(c.Rng0),
+		TPM:        generateProxmoxTpm(c.TPMConfig),
+		QemuVga:    generateProxmoxVga(c.VGA),
+		Networks:   generateProxmoxNetworkAdapters(c.NICs),
+		Disks:      disks,
+		PciDevices: generateProxmoxPCIDeviceMap(c.PCIDevices),
+		Serials:    generateProxmoxSerials(c.Serials),
+		Scsihw:     c.SCSIController,
+		Onboot:     &c.Onboot,
+		Args:       c.AdditionalArgs,
+		Pool:       (*proxmox.PoolName)(&c.Pool),
 	}
 
 	// 0 disables the ballooning device, which is useful for all VMs
@@ -701,23 +701,61 @@ func generateProxmoxDisks(disks []diskConfig, isos []ISOsConfig, cloneSourceDisk
 	return errs, warnings, &qemuStorages
 }
 
-func generateProxmoxPCIDeviceMap(devices []pciDeviceConfig) proxmox.QemuDevices {
-	devs := make(proxmox.QemuDevices)
-	for idx := range devices {
-		devs[idx] = make(proxmox.QemuDevice)
-		setDeviceParamIfDefined(devs[idx], "host", devices[idx].Host)
-		setDeviceParamIfDefined(devs[idx], "device-id", devices[idx].DeviceID)
-		setDeviceParamIfDefined(devs[idx], "mapping", devices[idx].Mapping)
-		setDeviceParamIfDefined(devs[idx], "mdev", devices[idx].MDEV)
-		setDeviceParamIfDefined(devs[idx], "romfile", devices[idx].ROMFile)
-		setDeviceParamIfDefined(devs[idx], "sub-device-id", devices[idx].SubDeviceID)
-		setDeviceParamIfDefined(devs[idx], "sub-vendor-id", devices[idx].SubVendorID)
-		setDeviceParamIfDefined(devs[idx], "vendor-id", devices[idx].VendorID)
+func generateProxmoxPCIDeviceMap(devices []pciDeviceConfig) proxmox.QemuPciDevices {
+	devs := make(proxmox.QemuPciDevices, len(devices))
+	for i := range devices {
+		var deviceID *proxmox.PciDeviceID
+		if v := devices[i].DeviceID; v != "" {
+			deviceID = (*proxmox.PciDeviceID)(&v)
+		}
+		var subDeviceID *proxmox.PciSubDeviceID
+		if v := devices[i].SubDeviceID; v != "" {
+			subDeviceID = (*proxmox.PciSubDeviceID)(&v)
+		}
+		var vendorID *proxmox.PciVendorID
+		if v := devices[i].VendorID; v != "" {
+			vendorID = (*proxmox.PciVendorID)(&v)
+		}
+		var subVendorID *proxmox.PciSubVendorID
+		if v := devices[i].SubVendorID; v != "" {
+			subVendorID = (*proxmox.PciSubVendorID)(&v)
+		}
+		romBar := !devices[i].HideROMBAR
+		primaryGPU := devices[i].XVGA
+		pCIE := devices[i].PCIe
 
-		devs[idx]["pcie"] = strconv.FormatBool(devices[idx].PCIe)
-		devs[idx]["rombar"] = strconv.FormatBool(!devices[idx].HideROMBAR)
-		devs[idx]["x-vga"] = strconv.FormatBool(devices[idx].XVGA)
-		devs[idx]["legacy-igd"] = strconv.FormatBool(devices[idx].LegacyIGD)
+		if v := devices[i].Host; v != "" {
+			vv := proxmox.PciID(v)
+			devs[proxmox.QemuPciID(i)] = proxmox.QemuPci{
+				Raw: &proxmox.QemuPciRaw{
+					DeviceID:    deviceID,
+					ID:          &vv,
+					PCIe:        &pCIE,
+					PrimaryGPU:  &primaryGPU,
+					ROMbar:      &romBar,
+					SubDeviceID: subDeviceID,
+					SubVendorID: subVendorID,
+					VendorID:    vendorID}}
+			continue
+		}
+		if v := devices[i].Mapping; v != "" {
+			vv := proxmox.ResourceMappingPciID(v)
+			devs[proxmox.QemuPciID(i)] = proxmox.QemuPci{
+				Mapping: &proxmox.QemuPciMapping{
+					DeviceID:    deviceID,
+					ID:          &vv,
+					PCIe:        &pCIE,
+					PrimaryGPU:  &primaryGPU,
+					ROMbar:      &romBar,
+					SubDeviceID: subDeviceID,
+					SubVendorID: subVendorID,
+					VendorID:    vendorID}}
+			continue
+		}
+		// TODO implement upstream
+		// setDeviceParamIfDefined(devs[i], "mdev", devices[i].MDEV)
+		// setDeviceParamIfDefined(devs[i], "romfile", devices[i].ROMFile)
+		// devs[i]["legacy-igd"] = strconv.FormatBool(devices[i].LegacyIGD)
 	}
 	return devs
 }

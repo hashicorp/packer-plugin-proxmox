@@ -454,12 +454,14 @@ func TestStartVM_AssertInitialQuemuConfig(t *testing.T) {
 			config: &Config{
 				PCIDevices: []pciDeviceConfig{
 					{
+						Host:       "0000:00:1f.0",
 						HideROMBAR: false,
 					},
 				},
 			},
 			assertQemuConfig: func(t *testing.T, config proxmox.ConfigQemu) {
-				assert.Equal(t, "true", config.QemuPCIDevices[0]["rombar"])
+				assert.Equal(t, "0000:00:1f.0", config.PciDevices[0].Raw.ID.String())
+				assert.Equal(t, true, *config.PciDevices[0].Raw.ROMbar)
 			},
 		},
 	}
