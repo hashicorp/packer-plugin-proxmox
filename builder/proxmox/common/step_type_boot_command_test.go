@@ -16,11 +16,11 @@ import (
 )
 
 type commandTyperMock struct {
-	sendkey func(*proxmox.VmRef, string) error
+	sendkey func(context.Context, *proxmox.VmRef, string) error
 }
 
-func (m commandTyperMock) Sendkey(ref *proxmox.VmRef, cmd string) error {
-	return m.sendkey(ref, cmd)
+func (m commandTyperMock) Sendkey(ctx context.Context, ref *proxmox.VmRef, cmd string) error {
+	return m.sendkey(ctx, ref, cmd)
 }
 
 var _ commandTyper = commandTyperMock{}
@@ -119,7 +119,7 @@ func TestTypeBootCommand(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			accumulator := strings.Builder{}
 			typer := commandTyperMock{
-				sendkey: func(ref *proxmox.VmRef, cmd string) error {
+				sendkey: func(ctx context.Context, ref *proxmox.VmRef, cmd string) error {
 					if !c.expectCallSendkey {
 						t.Error("Did not expect sendkey to be called")
 					}

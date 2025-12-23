@@ -20,7 +20,7 @@ import (
 type stepFinalizeTemplateConfig struct{}
 
 type templateFinalizer interface {
-	GetVmConfig(*proxmox.VmRef) (map[string]interface{}, error)
+	GetVmConfig(context.Context, *proxmox.VmRef) (map[string]interface{}, error)
 	SetVmConfig(*proxmox.VmRef, map[string]interface{}) (interface{}, error)
 }
 
@@ -43,7 +43,7 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 	// set, we need to clear it
 	changes["description"] = c.TemplateDescription
 
-	vmParams, err := client.GetVmConfig(vmRef)
+	vmParams, err := client.GetVmConfig(ctx, vmRef)
 	if err != nil {
 		err := fmt.Errorf("error fetching template config: %s", err)
 		state.Put("error", err)

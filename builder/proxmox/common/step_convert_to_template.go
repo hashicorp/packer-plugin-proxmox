@@ -20,8 +20,8 @@ import (
 type stepConvertToTemplate struct{}
 
 type templateConverter interface {
-	ShutdownVm(*proxmox.VmRef) (string, error)
-	CreateTemplate(*proxmox.VmRef) error
+	ShutdownVm(context.Context, *proxmox.VmRef) (string, error)
+	CreateTemplate(context.Context, *proxmox.VmRef) error
 }
 
 var _ templateConverter = &proxmox.Client{}
@@ -32,7 +32,7 @@ func (s *stepConvertToTemplate) Run(ctx context.Context, state multistep.StateBa
 	vmRef := state.Get("vmRef").(*proxmox.VmRef)
 
 	ui.Say("Stopping VM")
-	_, err := client.ShutdownVm(vmRef)
+	_, err := client.ShutdownVm(ctx, vmRef)
 	if err != nil {
 		err := fmt.Errorf("Error converting VM to template, could not stop: %s", err)
 		state.Put("error", err)
@@ -41,7 +41,7 @@ func (s *stepConvertToTemplate) Run(ctx context.Context, state multistep.StateBa
 	}
 
 	ui.Say("Converting VM to template")
-	err = client.CreateTemplate(vmRef)
+	err = client.CreateTemplate(ctx, vmRef)
 	if err != nil {
 		err := fmt.Errorf("Error converting VM to template: %s", err)
 		state.Put("error", err)

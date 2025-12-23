@@ -557,16 +557,19 @@ type pciDeviceConfig struct {
 	Host string `mapstructure:"host"`
 	// Override PCI device ID visible to guest.
 	DeviceID string `mapstructure:"device_id"`
+	// FIXME: not supported upstream
 	// Pass this device in legacy IGD mode, making it the primary and exclusive graphics device in the VM. Requires `pc-i440fx` machine type and VGA set to `none`. Defaults to `false`.
 	LegacyIGD bool `mapstructure:"legacy_igd"`
 	// The ID of a cluster wide mapping. Either this or the `host` key must be set.
 	Mapping string `mapstructure:"mapping"`
 	// Present the device as a PCIe device (needs `q35` machine model). Defaults to `false`.
 	PCIe bool `mapstructure:"pcie"`
+	// FIXME: not supported upstream
 	// The type of mediated device to use. An instance of this type will be created on startup of the VM and will be cleaned up when the VM stops.
 	MDEV string `mapstructure:"mdev"`
 	// Specify whether or not the device’s ROM BAR will be visible in the guest’s memory map. Defaults to `false`.
 	HideROMBAR bool `mapstructure:"hide_rombar"`
+	// FIXME: not supported upstream
 	// Custom PCI device rom filename (must be located in `/usr/share/kvm/`).
 	ROMFile string `mapstructure:"romfile"`
 	//Override PCI subsystem device ID visible to guest.
