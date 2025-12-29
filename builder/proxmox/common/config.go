@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //go:generate packer-sdc struct-markdown
-//go:generate packer-sdc mapstructure-to-hcl2 -type Config,NICConfig,diskConfig,rng0Config,pciDeviceConfig,vgaConfig,ISOsConfig,efiConfig,tpmConfig
+//go:generate packer-sdc mapstructure-to-hcl2 -type Config,NICConfig,diskConfig,rng0Config,pciDeviceConfig,vgaConfig,ISOsConfig,efiConfig,tpmConfig,agentConfig
 
 package proxmox
 
@@ -158,10 +158,13 @@ type Config struct {
 	//   ]
 	//   ```
 	Serials []string `mapstructure:"serials"`
+	// DEPRECATED. Define QEMU Guest Agent settings in a `qemu_guest_agent` block instead.
 	// Enables QEMU Agent option for this VM. When enabled,
 	// then `qemu-guest-agent` must be installed on the guest. When disabled, then
 	// `ssh_host` should be used. Defaults to `true`.
 	Agent config.Trilean `mapstructure:"qemu_agent"`
+	// QEMU Guest Agent configuration. See [QEMU Guest Agent](#qemu-guest-agent)
+	GuestAgent agentConfig `mapstructure:"qemu_guest_agent"`
 	// The SCSI controller model to emulate. Can be `lsi`,
 	// `lsi53c810`, `virtio-scsi-pci`, `virtio-scsi-single`, `megasas`, or `pvscsi`.
 	// Defaults to `lsi`.
@@ -205,6 +208,45 @@ type Config struct {
 	CloneSourceDisks []string `mapstructure-to-hcl2:",skip"`
 
 	Ctx interpolate.Context `mapstructure-to-hcl2:",skip"`
+}
+
+// Set the QEMU Guest Agent options.
+//
+// JSON Example:
+//
+// ```json
+//
+//	"qemu_guest_agent": {
+//			  "enabled": true,
+//			  "type": "isa",
+//			  "freeze": false,
+//			  "fstrim": false
+//	}
+//
+// ```
+// HCL2 example:
+//
+// ```hcl
+//
+//	qemu_guest_agent {
+//	  enabled = true
+//	  type = "isa"
+//	  freeze = false
+//	  fstrim = false
+//	}
+//
+// ```
+type agentConfig struct {
+	// Enable QEMU Agent option for this VM. When enabled
+	// `qemu-guest-agent` must be installed on the guest. When disabled
+	// `ssh_host` should be used. Defaults to `true`.
+	Enabled config.Trilean `mapstructure:"enabled"`
+	// Sets the Agent Type. Must be `isa` or `virtio`. Defaults to `virtio`
+	Type string `mapstructure:"type"`
+	// Disable freeze/thaw of guest filesystem on backup. Defaults to `false`
+	DisableFreeze bool `mapstructure:"disable_freeze"`
+	// Run guest-trim after a disk move or VM migration. Defaults to `false`
+	FsTrim bool `mapstructure:"fstrim"`
 }
 
 // ISO files attached to the virtual machine.
@@ -604,9 +646,24 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		warnings = append(warnings, "proxmox is deprecated, please use proxmox-iso instead")
 	}
 
-	// Default qemu_agent to true
-	if c.Agent != config.TriFalse {
-		c.Agent = config.TriTrue
+	if c.Agent != config.TriUnset {
+		warnings = append(warnings, "qemu_agent is deprecated and will be removed in a future release. define QEMU agent settings in a qemu_guest_agent block instead")
+		// convert to qemu_guest_agent block value
+		c.GuestAgent.Enabled = c.Agent
+	}
+
+	// Default qemu_guest_agent.enable to true
+	if c.GuestAgent.Enabled != config.TriFalse {
+		c.GuestAgent.Enabled = config.TriTrue
+	}
+
+	switch c.GuestAgent.Type {
+	case "virtio", "isa":
+	case "":
+		log.Printf("qemu_guest_agent type not specified, defaulting to `virtio`")
+		c.GuestAgent.Type = "virtio"
+	default:
+		errs = packersdk.MultiErrorAppend(errs, errors.New("qemu_guest_agent type field must be `virtio` or `isa`"))
 	}
 
 	packersdk.LogSecretFilter.Set(c.Password)

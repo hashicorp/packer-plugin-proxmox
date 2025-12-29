@@ -63,6 +63,22 @@ func TestAgentSetToFalse(t *testing.T) {
 	}
 }
 
+func TestQemuAgentInvalidType(t *testing.T) {
+	cfg := mandatoryConfig(t)
+
+	agentCfg := make(map[string]interface{})
+	agentCfg["type"] = "qwerty"
+
+	cfg["qemu_guest_agent"] = agentCfg
+
+	var c Config
+	_, _, err := c.Prepare(&c, cfg)
+	// expect error, if none returned fail test
+	if err == nil {
+		t.Error("expected config preparation to fail, but no error occured")
+	}
+}
+
 func TestPacketQueueSupportForNetworkAdapters(t *testing.T) {
 	drivertests := []struct {
 		expectedToFail bool
