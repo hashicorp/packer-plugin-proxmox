@@ -6,6 +6,7 @@ package proxmox
 import (
 	"crypto/tls"
 	"log"
+	"net/http"
 	"strings"
 
 	"github.com/Telmate/proxmox-api-go/proxmox"
@@ -16,7 +17,20 @@ func newProxmoxClient(config Config) (*proxmox.Client, error) {
 		InsecureSkipVerify: config.SkipCertValidation,
 	}
 
-	client, err := proxmox.NewClient(strings.TrimSuffix(config.proxmoxURL.String(), "/"), nil, "", tlsConfig, "", int(config.TaskTimeout.Seconds()))
+	// Create an HTTP client that respects standard proxy environment variables
+	// (HTTPS_PROXY, HTTP_PROXY, NO_PROXY). The upstream Telmate library sets
+	// Proxy: nil when no explicit proxy string is provided, which disables
+	// proxy support entirely. By passing our own http.Client, we ensure
+	// proxy env vars are honored.
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig:    tlsConfig,
+			DisableCompression: true,
+			Proxy:              http.ProxyFromEnvironment,
+		},
+	}
+
+	client, err := proxmox.NewClient(strings.TrimSuffix(config.proxmoxURL.String(), "/"), httpClient, "", tlsConfig, "", int(config.TaskTimeout.Seconds()))
 	if err != nil {
 		return nil, err
 	}
