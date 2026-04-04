@@ -391,6 +391,29 @@ func TestStartVMWithForce(t *testing.T) {
 				return map[string]interface{}{"template": 1.0}, nil
 			},
 		},
+		{
+			name: "delete VM when template_name is empty, falls back to vm_name",
+			config: &Config{
+				PackerConfig: common.PackerConfig{
+					PackerForce: true,
+				},
+				VMName: "mockVM",
+				// TemplateName deliberately left empty
+			},
+			expectedCallToDelete: true,
+			expectedAction:       multistep.ActionContinue,
+			mockGetVmRefsByName: func(vmName string) (vmrs []*proxmox.VmRef, err error) {
+				if vmName != "mockVM" {
+					return nil, fmt.Errorf("expected lookup by VMName 'mockVM', got '%s'", vmName)
+				}
+				return []*proxmox.VmRef{
+					proxmox.NewVmRef(100),
+				}, nil
+			},
+			mockGetVmConfig: func(vmr *proxmox.VmRef) (map[string]interface{}, error) {
+				return map[string]interface{}{"template": 1.0}, nil
+			},
+		},
 	}
 
 	for _, c := range cs {
