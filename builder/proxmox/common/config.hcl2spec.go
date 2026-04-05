@@ -78,12 +78,12 @@ type FlatConfig struct {
 	WinRMUseSSL               *bool                 `mapstructure:"winrm_use_ssl" cty:"winrm_use_ssl" hcl:"winrm_use_ssl"`
 	WinRMInsecure             *bool                 `mapstructure:"winrm_insecure" cty:"winrm_insecure" hcl:"winrm_insecure"`
 	WinRMUseNTLM              *bool                 `mapstructure:"winrm_use_ntlm" cty:"winrm_use_ntlm" hcl:"winrm_use_ntlm"`
-	ProxmoxURLRaw             *string               `mapstructure:"proxmox_url" cty:"proxmox_url" hcl:"proxmox_url"`
+	ProxmoxURLRaw             *string               `mapstructure:"proxmox_url" required:"true" cty:"proxmox_url" hcl:"proxmox_url"`
 	SkipCertValidation        *bool                 `mapstructure:"insecure_skip_tls_verify" cty:"insecure_skip_tls_verify" hcl:"insecure_skip_tls_verify"`
-	Username                  *string               `mapstructure:"username" cty:"username" hcl:"username"`
+	Username                  *string               `mapstructure:"username" required:"true" cty:"username" hcl:"username"`
 	Password                  *string               `mapstructure:"password" cty:"password" hcl:"password"`
 	Token                     *string               `mapstructure:"token" cty:"token" hcl:"token"`
-	Node                      *string               `mapstructure:"node" cty:"node" hcl:"node"`
+	Node                      *string               `mapstructure:"node" required:"true" cty:"node" hcl:"node"`
 	Pool                      *string               `mapstructure:"pool" cty:"pool" hcl:"pool"`
 	TaskTimeout               *string               `mapstructure:"task_timeout" cty:"task_timeout" hcl:"task_timeout"`
 	VMName                    *string               `mapstructure:"vm_name" cty:"vm_name" hcl:"vm_name"`
