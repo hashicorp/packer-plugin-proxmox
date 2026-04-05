@@ -39,6 +39,24 @@ in the image's Cloud-Init settings for provisioning.
 
 ### Required:
 
+<!-- Code generated from the comments of the Config struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
+
+- `proxmox_url` (string) - URL to the Proxmox API, including the full path,
+  so `https://<server>:<port>/api2/json` for example.
+  Can also be set via the `PROXMOX_URL` environment variable.
+
+- `username` (string) - Username when authenticating to Proxmox, including
+  the realm. For example `user@pve` to use the local Proxmox realm. When using
+  token authentication, the username must include the token id after an exclamation
+  mark. For example, `user@pve!tokenid`.
+  Can also be set via the `PROXMOX_USERNAME` environment variable.
+
+- `node` (string) - Which node in the Proxmox cluster to start the virtual
+  machine on during creation.
+
+<!-- End of code generated from the comments of the Config struct in builder/proxmox/common/config.go; -->
+
+
 <!-- Code generated from the comments of the Config struct in builder/proxmox/clone/config.go; DO NOT EDIT MANUALLY -->
 
 - `clone_vm` (string) - The name of the VM Packer should clone and build from.
@@ -139,17 +157,7 @@ boot time.
 
 - `boot_key_interval` (duration string | ex: "1h5m2s") - Boot Key Interval
 
-- `proxmox_url` (string) - URL to the Proxmox API, including the full path,
-  so `https://<server>:<port>/api2/json` for example.
-  Can also be set via the `PROXMOX_URL` environment variable.
-
 - `insecure_skip_tls_verify` (bool) - Skip validating the certificate.
-
-- `username` (string) - Username when authenticating to Proxmox, including
-  the realm. For example `user@pve` to use the local Proxmox realm. When using
-  token authentication, the username must include the token id after an exclamation
-  mark. For example, `user@pve!tokenid`.
-  Can also be set via the `PROXMOX_USERNAME` environment variable.
 
 - `password` (string) - Password for the user.
   For API tokens please use `token`.
@@ -162,9 +170,6 @@ boot time.
   Can also be set via the `PROXMOX_TOKEN` environment variable.
   Either `password` or `token` must be specifed. If both are set,
   `token` takes precedence.
-
-- `node` (string) - Which node in the Proxmox cluster to start the virtual
-  machine on during creation.
 
 - `pool` (string) - Name of resource pool to create virtual machine in.
 
@@ -830,6 +835,47 @@ Usage example (JSON):
   Defaults to `4m`.
 
 <!-- End of code generated from the comments of the efiConfig struct in builder/proxmox/common/config.go; -->
+
+
+### TPM Config
+
+<!-- Code generated from the comments of the tpmConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
+
+Set the tpmstate storage options.
+
+HCL2 example:
+
+```hcl
+
+	tpm_config {
+	  tpm_storage_pool = "local"
+	  tpm_version      = "v1.2"
+	}
+
+```
+Usage example (JSON):
+
+```json
+
+	"tpm_config": {
+	  "tpm_storage_pool": "local",
+	  "tpm_version": "v1.2"
+	}
+
+```
+
+<!-- End of code generated from the comments of the tpmConfig struct in builder/proxmox/common/config.go; -->
+
+
+#### Optional:
+
+<!-- Code generated from the comments of the tpmConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
+
+- `tpm_storage_pool` (string) - Name of the Proxmox storage pool to store the TPM state on.
+
+- `tpm_version` (string) - Version of TPM spec. Can be `v1.2` or `v2.0` Defaults to `v2.0`.
+
+<!-- End of code generated from the comments of the tpmConfig struct in builder/proxmox/common/config.go; -->
 
 
 ### VirtIO RNG device
