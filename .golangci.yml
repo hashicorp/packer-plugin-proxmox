@@ -23,7 +23,6 @@ issues:
 
   max-issues-per-linter: 0
   max-same-issues: 0
-
   exclude-files:
     - ".*\\.hcl2spec\\.go$"
 
@@ -42,18 +41,3 @@ linters:
 run:
   concurrency: 4
   timeout: 10m
-  issues-exit-code: 1
-  tests: true
-
-output:
-  formats:
-    - format: colored-line-number
-  print-issued-lines: true
-  print-linter-name: true
-  uniq-by-line: true
-
-linters-settings:
-  errcheck:
-    check-type-assertions: false
-    check-blank: false
-    exclude-functions: fmt:.*,io/ioutil:^Read.*,io:Close
