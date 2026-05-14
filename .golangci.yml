@@ -7,8 +7,6 @@ linters:
   default: none
   enable:
     - errcheck
-    - goimports
-    - gosimple
     - govet
     - ineffassign
     - staticcheck
@@ -18,9 +16,9 @@ linters:
     paths:
       - ".*\\.hcl2spec\\.go$"
     rules:
-      # Exclude gosimple bool check
+      # Exclude gosimple bool checks (now part of staticcheck in v2)
       - linters:
-          - gosimple
+          - staticcheck
         text: "S(1002|1008|1021)"
       # Exclude failing staticchecks for now
       - linters:
@@ -33,6 +31,13 @@ linters:
       - linters:
           - errcheck
         path: ".*_test\\.go"
+
+formatters:
+  enable:
+    - goimports
+  exclusions:
+    paths:
+      - ".*\\.hcl2spec\\.go$"
 
 issues:
   max-issues-per-linter: 0
