@@ -293,3 +293,50 @@ func mandatoryConfig(t *testing.T) map[string]interface{} {
 		},
 	}
 }
+
+// validAarch64IsoConfig is the iso-package counterpart to common's
+// validAarch64Config: it returns a Packer config map that satisfies every
+// hard requirement for arch="aarch64" iso builds, so individual tests can
+// tweak one field in isolation.
+func validAarch64IsoConfig(t *testing.T) map[string]interface{} {
+	cfg := mandatoryConfig(t)
+	cfg["arch"] = "aarch64"
+	cfg["bios"] = "ovmf"
+	cfg["efi_config"] = map[string]interface{}{
+		"efi_storage_pool":  "local-lvm",
+		"efi_type":          "4m",
+		"pre_enrolled_keys": true,
+	}
+	cfg["vga"] = map[string]interface{}{"type": "serial0"}
+	cfg["serials"] = []string{"socket"}
+	return cfg
+}
+
+func TestArch_Aarch64_BootISO_IDE_Rejected(t *testing.T) {
+	cases := []struct {
+		bus           string
+		expectedError string
+	}{
+		{bus: "ide", expectedError: `arch=aarch64 does not support boot_iso.type="ide"; use "scsi" or "sata"`},
+		{bus: "scsi", expectedError: ""},
+		{bus: "sata", expectedError: ""},
+	}
+	for _, tc := range cases {
+		t.Run("bus="+tc.bus, func(t *testing.T) {
+			cfg := validAarch64IsoConfig(t)
+			boot := cfg["boot_iso"].(map[string]interface{})
+			boot["type"] = tc.bus
+			var c Config
+			_, _, err := c.Prepare(cfg)
+			if tc.expectedError == "" {
+				if err != nil && strings.Contains(err.Error(), `does not support boot_iso.type="ide"`) {
+					t.Errorf("expected bus=%s to be accepted on aarch64, got %s", tc.bus, err.Error())
+				}
+				return
+			}
+			if err == nil || !strings.Contains(err.Error(), tc.expectedError) {
+				t.Errorf("expected error containing %q, got %v", tc.expectedError, err)
+			}
+		})
+	}
+}

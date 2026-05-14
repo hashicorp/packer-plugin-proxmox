@@ -137,6 +137,11 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, []string, error) {
 	// For backwards compatibility <= v1.8, set ide2 as default if not configured
 	switch c.BootISO.Type {
 	case "ide", "sata", "scsi":
+		// FR-012 — aarch64 has no IDE bus.
+		if c.Arch == "aarch64" && c.BootISO.Type == "ide" {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf(
+				`arch=aarch64 does not support boot_iso.type="ide"; use "scsi" or "sata"`))
+		}
 	case "":
 		log.Print("boot_iso device type not set, using default type 'ide' and index '2'")
 		c.BootISO.Type = "ide"

@@ -945,6 +945,39 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 			"", "x86_64", "aarch64", c.Arch))
 	}
 
+	// arch=aarch64 imposes hard requirements on companion settings. Position
+	// is load-bearing: FR-009 reads the post-normalize c.EFIConfig.EFIStoragePool,
+	// so this block must run after the EFI normalization above.
+	if c.Arch == "aarch64" {
+		// FR-004 — aarch64 + seabios. EqualFold because bios is treated
+		// case-insensitively elsewhere in the plugin.
+		if strings.EqualFold(c.BIOS, "seabios") {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf(
+				"arch=aarch64 requires bios=ovmf"))
+		}
+		// FR-009 — aarch64 without efi_config.
+		if c.EFIConfig.EFIStoragePool == "" {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf(
+				"arch=aarch64 requires efi_config to be set"))
+		}
+		// FR-010 — aarch64 with a non-serial vga.type. boot_command keystrokes
+		// only reach an aarch64 guest through a serial console.
+		validSerialVGA := map[string]struct{}{
+			"serial0": {}, "serial1": {}, "serial2": {}, "serial3": {},
+		}
+		_, vgaIsSerial := validSerialVGA[c.VGA.Type]
+		if !vgaIsSerial {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf(
+				"arch=aarch64 requires vga.type to be one of serial0, serial1, serial2, serial3, got %q",
+				c.VGA.Type))
+		}
+		// FR-011 — a serial vga.type requires at least one declared serial device.
+		if vgaIsSerial && len(c.Serials) == 0 {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf(
+				"arch=aarch64 with a serial vga.type requires at least one entry in serials"))
+		}
+	}
+
 	if c.TPMConfig != (tpmConfig{}) {
 		if c.TPMConfig.TPMStoragePool == "" {
 			errs = packersdk.MultiErrorAppend(errs, errors.New("tpm_storage_pool not set for tpm_config"))

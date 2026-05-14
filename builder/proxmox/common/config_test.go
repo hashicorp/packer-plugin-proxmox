@@ -730,6 +730,70 @@ func validAarch64Config(t *testing.T) map[string]interface{} {
 	return cfg
 }
 
+func TestArch_Aarch64_Validation(t *testing.T) {
+	cases := []struct {
+		name          string
+		mutate        func(cfg map[string]interface{})
+		expectedError string
+	}{
+		{
+			name:          "happy path — all companion fields set correctly",
+			mutate:        func(cfg map[string]interface{}) {},
+			expectedError: "",
+		},
+		{
+			name:          "FR-004: bios=seabios rejected (lowercase)",
+			mutate:        func(cfg map[string]interface{}) { cfg["bios"] = "seabios" },
+			expectedError: "arch=aarch64 requires bios=ovmf",
+		},
+		{
+			name:          "FR-004: bios=SeaBIOS rejected (EqualFold)",
+			mutate:        func(cfg map[string]interface{}) { cfg["bios"] = "SeaBIOS" },
+			expectedError: "arch=aarch64 requires bios=ovmf",
+		},
+		{
+			name:          "FR-009: missing efi_config rejected",
+			mutate:        func(cfg map[string]interface{}) { delete(cfg, "efi_config") },
+			expectedError: "arch=aarch64 requires efi_config to be set",
+		},
+		{
+			name:          "FR-010: vga.type=std rejected",
+			mutate:        func(cfg map[string]interface{}) { cfg["vga"] = map[string]interface{}{"type": "std"} },
+			expectedError: "arch=aarch64 requires vga.type to be one of serial0, serial1, serial2, serial3",
+		},
+		{
+			name:          "FR-010: vga.type unset rejected",
+			mutate:        func(cfg map[string]interface{}) { delete(cfg, "vga") },
+			expectedError: "arch=aarch64 requires vga.type to be one of serial0, serial1, serial2, serial3",
+		},
+		{
+			name:          "FR-011: serial vga.type with empty serials rejected",
+			mutate:        func(cfg map[string]interface{}) { cfg["serials"] = []string{} },
+			expectedError: "arch=aarch64 with a serial vga.type requires at least one entry in serials",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := validAarch64Config(t)
+			tc.mutate(cfg)
+			var c Config
+			_, _, err := c.Prepare(&c, cfg)
+			if tc.expectedError == "" {
+				if err != nil && strings.Contains(err.Error(), "arch=aarch64") {
+					t.Errorf("expected happy-path config to pass aarch64 validation, got: %s", err.Error())
+				}
+				return
+			}
+			if err == nil {
+				t.Fatalf("expected error containing %q, got nil", tc.expectedError)
+			}
+			if !strings.Contains(err.Error(), tc.expectedError) {
+				t.Errorf("expected error containing %q, got %q", tc.expectedError, err.Error())
+			}
+		})
+	}
+}
+
 func TestArch_Whitelist(t *testing.T) {
 	cases := []struct {
 		arch          string
