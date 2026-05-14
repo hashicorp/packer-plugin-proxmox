@@ -22,7 +22,7 @@ type uploaderMock struct {
 	deleteWasCalled bool
 }
 
-func (m *uploaderMock) Upload(node string, storage string, contentType string, filename string, file io.Reader) error {
+func (m *uploaderMock) Upload(_ context.Context, node string, storage string, contentType string, filename string, file io.Reader) error {
 	m.uploadWasCalled = true
 	if m.uploadFail {
 		return fmt.Errorf("Testing induced Upload failure")
@@ -30,7 +30,7 @@ func (m *uploaderMock) Upload(node string, storage string, contentType string, f
 	return nil
 }
 
-func (m *uploaderMock) DeleteVolume(vmr *proxmox.VmRef, storageName string, volumeName string) (exitStatus interface{}, err error) {
+func (m *uploaderMock) DeleteVolume(_ context.Context, vmr *proxmox.VmRef, storageName string, volumeName string) (exitStatus interface{}, err error) {
 	m.deleteWasCalled = true
 	if m.deleteFail {
 		return nil, fmt.Errorf("Testing induced DeleteVolume failure")

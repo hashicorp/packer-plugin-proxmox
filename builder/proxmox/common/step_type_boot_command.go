@@ -31,7 +31,7 @@ type bootCommandTemplateData struct {
 }
 
 type commandTyper interface {
-	Sendkey(*proxmox.VmRef, string) error
+	Sendkey(context.Context, *proxmox.VmRef, string) error
 }
 
 var _ commandTyper = &proxmox.Client{}
@@ -77,7 +77,7 @@ func (s *stepTypeBootCommand) Run(ctx context.Context, state multistep.StateBag)
 	}
 
 	ui.Say("Typing the boot command")
-	d := NewProxmoxDriver(client, vmRef, c.BootKeyInterval)
+	d := NewProxmoxDriver(ctx, client, vmRef, c.BootKeyInterval)
 	command, err := interpolate.Render(s.FlatBootCommand(), &s.Ctx)
 	if err != nil {
 		err := fmt.Errorf("Error preparing boot command: %s", err)

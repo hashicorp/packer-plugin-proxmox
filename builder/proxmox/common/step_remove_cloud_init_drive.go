@@ -18,7 +18,7 @@ import (
 type stepRemoveCloudInitDrive struct{}
 
 type CloudInitDriveRemover interface {
-	GetVmConfig(*proxmox.VmRef) (map[string]interface{}, error)
+	GetVmConfig(context.Context, *proxmox.VmRef) (map[string]interface{}, error)
 	SetVmConfig(*proxmox.VmRef, map[string]interface{}) (interface{}, error)
 }
 
@@ -32,7 +32,7 @@ func (s *stepRemoveCloudInitDrive) Run(ctx context.Context, state multistep.Stat
 	changes := make(map[string]interface{})
 	delete := []string{}
 
-	vmParams, err := client.GetVmConfig(vmRef)
+	vmParams, err := client.GetVmConfig(ctx, vmRef)
 	if err != nil {
 		err := fmt.Errorf("error fetching template config: %s", err)
 		state.Put("error", err)

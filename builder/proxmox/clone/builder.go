@@ -4,7 +4,8 @@
 package proxmoxclone
 
 import (
-	"crypto"
+	"context"
+	"fmt"
 	"net/netip"
 	"strings"
 
@@ -13,9 +14,6 @@ import (
 	proxmox "github.com/hashicorp/packer-plugin-proxmox/builder/proxmox/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
-
-	"context"
-	"fmt"
 )
 
 // The unique id for the builder
@@ -53,7 +51,7 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 
 type cloneVMCreator struct{}
 
-func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQemu, state multistep.StateBag) error {
+func (*cloneVMCreator) Create(ctx context.Context, config proxmoxapi.ConfigQemu, state multistep.StateBag) (*proxmoxapi.VmRef, error) {
 	client := state.Get("proxmoxClient").(*proxmoxapi.Client)
 	c := state.Get("clone-config").(*Config)
 	comm := state.Get("config").(*proxmox.Config).Comm
@@ -122,15 +120,17 @@ func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQ
 		}
 	}
 
-	var publicKey []crypto.PublicKey
-
-	if comm.SSHPublicKey != nil {
-		publicKey = append(publicKey, crypto.PublicKey(string(comm.SSHPublicKey)))
+	var publicKeys []proxmoxapi.AuthorizedKey
+	if len(comm.SSHPublicKey) > 0 {
+		var key proxmoxapi.AuthorizedKey
+		if err := key.Parse(comm.SSHPublicKey); err == nil {
+			publicKeys = append(publicKeys, key)
+		}
 	}
 
 	config.CloudInit = &proxmoxapi.CloudInit{
 		Username:      &comm.SSHUsername,
-		PublicSSHkeys: &publicKey,
+		PublicSSHkeys: &publicKeys,
 		DNS: &proxmoxapi.GuestDNS{
 			NameServers:  &nameServers,
 			SearchDomain: &c.Searchdomain,
@@ -140,33 +140,37 @@ func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQ
 
 	var sourceVmr *proxmoxapi.VmRef
 	if c.CloneVM != "" {
-		sourceVmrs, err := client.GetVmRefsByName(c.CloneVM)
+		sourceVmrs, err := client.GetVmRefsByName(ctx, proxmoxapi.GuestName(c.CloneVM))
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		// prefer source Vm located on same node
 		sourceVmr = sourceVmrs[0]
 		for _, candVmr := range sourceVmrs {
-			if candVmr.Node() == vmRef.Node() {
+			if config.Node != nil && candVmr.Node() == *config.Node {
 				sourceVmr = candVmr
 			}
 		}
 	} else if c.CloneVMID != 0 {
-		sourceVmr = proxmoxapi.NewVmRef(c.CloneVMID)
-		err := client.CheckVmRef(sourceVmr)
-		if err != nil {
-			return err
+		sourceVmr = proxmoxapi.NewVmRef(proxmoxapi.GuestID(c.CloneVMID))
+		if err := client.CheckVmRef(ctx, sourceVmr); err != nil {
+			return nil, err
 		}
 	}
 
-	err := config.CloneVm(sourceVmr, vmRef, client)
-	if err != nil {
-		return err
+	vmRef := proxmoxapi.NewVmRef(0)
+	if config.ID != nil {
+		vmRef = proxmoxapi.NewVmRef(*config.ID)
 	}
-	_, err = config.Update(false, vmRef, client)
-	if err != nil {
-		return err
+	if config.Node != nil {
+		vmRef.SetNode(string(*config.Node))
 	}
-	return nil
+	if err := config.CloneVm(ctx, sourceVmr, vmRef, client); err != nil {
+		return nil, err
+	}
+	if _, err := config.Update(ctx, false, vmRef, client); err != nil {
+		return nil, err
+	}
+	return vmRef, nil
 }

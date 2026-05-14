@@ -18,10 +18,10 @@ type converterMock struct {
 	createTemplate func(*proxmox.VmRef) error
 }
 
-func (m converterMock) ShutdownVm(r *proxmox.VmRef) (string, error) {
+func (m converterMock) ShutdownVm(_ context.Context, r *proxmox.VmRef) (string, error) {
 	return m.shutdownVm(r)
 }
-func (m converterMock) CreateTemplate(r *proxmox.VmRef) error {
+func (m converterMock) CreateTemplate(_ context.Context, r *proxmox.VmRef) error {
 	return m.createTemplate(r)
 }
 
