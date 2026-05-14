@@ -98,6 +98,7 @@ type FlatConfig struct {
 	Numa                      *bool                 `mapstructure:"numa" cty:"numa" hcl:"numa"`
 	OS                        *string               `mapstructure:"os" cty:"os" hcl:"os"`
 	BIOS                      *string               `mapstructure:"bios" cty:"bios" hcl:"bios"`
+	Arch                      *string               `mapstructure:"arch" cty:"arch" hcl:"arch"`
 	EFIConfig                 *FlatefiConfig        `mapstructure:"efi_config" cty:"efi_config" hcl:"efi_config"`
 	EFIDisk                   *string               `mapstructure:"efidisk" cty:"efidisk" hcl:"efidisk"`
 	Machine                   *string               `mapstructure:"machine" cty:"machine" hcl:"machine"`
@@ -222,6 +223,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"numa":                         &hcldec.AttrSpec{Name: "numa", Type: cty.Bool, Required: false},
 		"os":                           &hcldec.AttrSpec{Name: "os", Type: cty.String, Required: false},
 		"bios":                         &hcldec.AttrSpec{Name: "bios", Type: cty.String, Required: false},
+		"arch":                         &hcldec.AttrSpec{Name: "arch", Type: cty.String, Required: false},
 		"efi_config":                   &hcldec.BlockSpec{TypeName: "efi_config", Nested: hcldec.ObjectSpec((*FlatefiConfig)(nil).HCL2Spec())},
 		"efidisk":                      &hcldec.AttrSpec{Name: "efidisk", Type: cty.String, Required: false},
 		"machine":                      &hcldec.AttrSpec{Name: "machine", Type: cty.String, Required: false},

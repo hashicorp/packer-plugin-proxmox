@@ -712,3 +712,51 @@ func TestPCIDeviceMapping(t *testing.T) {
 		})
 	}
 }
+
+// validAarch64Config returns a config map satisfying every hard requirement
+// for arch="aarch64" so each arch-aarch64 test can tweak one field in
+// isolation.
+func validAarch64Config(t *testing.T) map[string]interface{} {
+	cfg := mandatoryConfig(t)
+	cfg["arch"] = "aarch64"
+	cfg["bios"] = "ovmf"
+	cfg["efi_config"] = map[string]interface{}{
+		"efi_storage_pool":  "local-lvm",
+		"efi_type":          "4m",
+		"pre_enrolled_keys": true,
+	}
+	cfg["vga"] = map[string]interface{}{"type": "serial0"}
+	cfg["serials"] = []string{"socket"}
+	return cfg
+}
+
+func TestArch_Whitelist(t *testing.T) {
+	cases := []struct {
+		arch          string
+		expectedError string
+	}{
+		{arch: "", expectedError: ""},
+		{arch: "x86_64", expectedError: ""},
+		{arch: "aarch64", expectedError: ""},
+		{arch: "riscv64", expectedError: `arch must be one of "", "x86_64", "aarch64", got "riscv64"`},
+		{arch: "ARM64", expectedError: `arch must be one of "", "x86_64", "aarch64", got "ARM64"`},
+		{arch: "amd64", expectedError: `arch must be one of "", "x86_64", "aarch64", got "amd64"`},
+	}
+	for _, tc := range cases {
+		t.Run(fmt.Sprintf("arch=%q", tc.arch), func(t *testing.T) {
+			cfg := validAarch64Config(t)
+			cfg["arch"] = tc.arch
+			var c Config
+			_, _, err := c.Prepare(&c, cfg)
+			if tc.expectedError == "" {
+				if err != nil && strings.Contains(err.Error(), "arch must be one of") {
+					t.Errorf("expected arch %q to be accepted, got %s", tc.arch, err.Error())
+				}
+				return
+			}
+			if err == nil || !strings.Contains(err.Error(), tc.expectedError) {
+				t.Errorf("expected error %q, got %v", tc.expectedError, err)
+			}
+		})
+	}
+}

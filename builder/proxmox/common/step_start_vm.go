@@ -142,6 +142,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 			CapacityMiB: (*proxmox.QemuMemoryCapacity)(&c.Memory),
 		},
 		QemuOs:           c.OS,
+		CreateOptions:    generateProxmoxCreateOptions(c.Arch),
 		Bios:             c.BIOS,
 		EfiDisk:          generateProxmoxEfi(c.EFIConfig),
 		Machine:          c.Machine,
@@ -798,6 +799,15 @@ func generateProxmoxVga(vga vgaConfig) proxmox.QemuDevice {
 		dev["memory"] = vga.Memory
 	}
 	return dev
+}
+
+// arch is a create-only Proxmox setting; a post-create PUT silently fails and leaves the VM unbootable.
+func generateProxmoxCreateOptions(arch string) *proxmox.QemuCreateOptions {
+	if arch == "" {
+		return nil
+	}
+	cpuArch := proxmox.CpuArchitecture(arch)
+	return &proxmox.QemuCreateOptions{Architecture: &cpuArch}
 }
 
 func generateProxmoxEfi(efi efiConfig) *proxmox.EfiDisk {
