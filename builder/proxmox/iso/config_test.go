@@ -312,6 +312,60 @@ func validAarch64IsoConfig(t *testing.T) map[string]interface{} {
 	return cfg
 }
 
+func TestArch_Aarch64_BootISO_DefaultBus(t *testing.T) {
+	t.Run("aarch64 + unset boot_iso.type → scsi (no index)", func(t *testing.T) {
+		cfg := validAarch64IsoConfig(t)
+		boot := cfg["boot_iso"].(map[string]interface{})
+		delete(boot, "type")
+		var c Config
+		if _, _, err := c.Prepare(cfg); err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if c.BootISO.Type != "scsi" {
+			t.Errorf("expected BootISO.Type=scsi for aarch64, got %q", c.BootISO.Type)
+		}
+		if c.BootISO.Index != "" {
+			t.Errorf("expected BootISO.Index unset for aarch64 (auto-assignment), got %q", c.BootISO.Index)
+		}
+	})
+	t.Run("x86_64 + unset boot_iso.type → ide index 2", func(t *testing.T) {
+		cfg := mandatoryConfig(t)
+		boot := cfg["boot_iso"].(map[string]interface{})
+		delete(boot, "type")
+		var c Config
+		if _, _, err := c.Prepare(cfg); err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if c.BootISO.Type != "ide" || c.BootISO.Index != "2" {
+			t.Errorf("expected BootISO ide/2 for x86_64, got type=%q index=%q", c.BootISO.Type, c.BootISO.Index)
+		}
+	})
+	t.Run("aarch64 + explicit boot_iso.type=scsi → unchanged, no index", func(t *testing.T) {
+		cfg := validAarch64IsoConfig(t)
+		boot := cfg["boot_iso"].(map[string]interface{})
+		boot["type"] = "scsi"
+		var c Config
+		if _, _, err := c.Prepare(cfg); err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if c.BootISO.Type != "scsi" {
+			t.Errorf("expected scsi, got %q", c.BootISO.Type)
+		}
+	})
+	t.Run("aarch64 + explicit boot_iso.type=sata → unchanged", func(t *testing.T) {
+		cfg := validAarch64IsoConfig(t)
+		boot := cfg["boot_iso"].(map[string]interface{})
+		boot["type"] = "sata"
+		var c Config
+		if _, _, err := c.Prepare(cfg); err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if c.BootISO.Type != "sata" {
+			t.Errorf("expected sata, got %q", c.BootISO.Type)
+		}
+	})
+}
+
 func TestArch_Aarch64_BootISO_IDE_Rejected(t *testing.T) {
 	cases := []struct {
 		bus           string

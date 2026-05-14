@@ -685,8 +685,16 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		c.Sockets = 1
 	}
 	if c.CPUType == "" {
-		log.Printf("CPU type not set, using default 'kvm64'")
-		c.CPUType = "kvm64"
+		// FR-015 — aarch64 picks a cortex-a57 default; PVE rejects kvm64 on
+		// the virt machine type. cortex-a57 is the broadest-compatibility
+		// aarch64 CPU model accepted by PVE 8 and 9.
+		if c.Arch == "aarch64" {
+			log.Printf("CPU type not set, using default 'cortex-a57' for arch=aarch64")
+			c.CPUType = "cortex-a57"
+		} else {
+			log.Printf("CPU type not set, using default 'kvm64'")
+			c.CPUType = "kvm64"
+		}
 	}
 	if c.OS == "" {
 		log.Printf("OS not set, using default 'other'")
@@ -763,12 +771,18 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 				}
 			}
 		}
-		// validate device type, assign if unset
+		// validate device type, assign if unset. FR-006: aarch64 picks scsi
+		// rather than ide because the virt machine type has no IDE bus.
 		switch c.ISOs[idx].Type {
 		case "ide", "sata", "scsi":
 		case "":
-			log.Printf("additional_iso %d device type not set, using default 'ide'", idx)
-			c.ISOs[idx].Type = "ide"
+			if c.Arch == "aarch64" {
+				log.Printf("additional_iso %d device type not set, using default 'scsi' for arch=aarch64", idx)
+				c.ISOs[idx].Type = "scsi"
+			} else {
+				log.Printf("additional_iso %d device type not set, using default 'ide'", idx)
+				c.ISOs[idx].Type = "ide"
+			}
 		default:
 			errs = packersdk.MultiErrorAppend(errs, errors.New("ISOs must be of type ide, sata or scsi. VirtIO not supported by Proxmox for ISO devices"))
 		}
@@ -975,6 +989,14 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		if vgaIsSerial && len(c.Serials) == 0 {
 			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf(
 				"arch=aarch64 with a serial vga.type requires at least one entry in serials"))
+		}
+		// FR-013 — keyboard hardware default. virt ships without a keyboard;
+		// QMP send-key is a silent no-op without one. Detection is strict
+		// empty-string equality — any user-supplied args fully disable the
+		// auto-inject. Device order is load-bearing: qemu-xhci controller
+		// must come before the usb-kbd device that binds to it.
+		if c.AdditionalArgs == "" {
+			c.AdditionalArgs = "-device qemu-xhci -device usb-kbd"
 		}
 	}
 

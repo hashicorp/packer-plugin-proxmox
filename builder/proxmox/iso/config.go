@@ -143,9 +143,18 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, []string, error) {
 				`arch=aarch64 does not support boot_iso.type="ide"; use "scsi" or "sata"`))
 		}
 	case "":
-		log.Print("boot_iso device type not set, using default type 'ide' and index '2'")
-		c.BootISO.Type = "ide"
-		c.BootISO.Index = "2"
+		// FR-006 — aarch64 defaults to scsi (the virt machine type has no
+		// IDE bus). Index is intentionally left unset: SCSI auto-assignment
+		// finds a free slot at runtime, so a fixed index risks colliding
+		// with a disk allocation.
+		if c.Arch == "aarch64" {
+			log.Print("boot_iso device type not set, using default type 'scsi' for arch=aarch64")
+			c.BootISO.Type = "scsi"
+		} else {
+			log.Print("boot_iso device type not set, using default type 'ide' and index '2'")
+			c.BootISO.Type = "ide"
+			c.BootISO.Index = "2"
+		}
 	default:
 		errs = packersdk.MultiErrorAppend(errs, errors.New("ISOs must be of type ide, sata or scsi. VirtIO not supported by Proxmox for ISO devices"))
 	}
