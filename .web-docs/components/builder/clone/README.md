@@ -213,6 +213,27 @@ boot time.
 
 - `bios` (string) - Set the machine bios. This can be set to ovmf or seabios. The default value is seabios.
 
+- `arch` (string) - The CPU architecture for the VM. Allowed values: `""` (host default),
+  `"x86_64"`, `"aarch64"`. Default: `""`.
+  
+  When set to `"aarch64"`, four arch-aware defaults activate (each is
+  overridden by setting the corresponding field explicitly):
+  
+    - The default `boot_iso.type` changes from `"ide"` (which the QEMU
+      `virt` machine type does not expose) to `"scsi"`.
+    - The default `additional_iso_files[*].type` changes from `"ide"` to
+      `"scsi"`.
+    - The default `cpu_type` changes from `"kvm64"` (x86-only) to
+      `"cortex-a57"`.
+    - When `qemu_additional_args` is empty, the plugin injects
+      `-device qemu-xhci -device usb-kbd` so that `boot_command`
+      keystrokes reach the guest. The `virt` machine type ships without
+      a keyboard; QMP `send-key` is a silent no-op without one.
+      Supplying *any* `qemu_additional_args` disables this auto-inject.
+  
+  See [Building aarch64 templates](#building-aarch64-arm64-templates)
+  for the full set of companion fields required and a worked example.
+
 - `efi_config` (efiConfig) - Set the efidisk storage options. See [EFI Config](#efi-config).
 
 - `efidisk` (string) - This option is deprecated, please use `efi_config` instead.
