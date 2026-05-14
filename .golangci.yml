@@ -3,29 +3,6 @@
 
 version: "2"
 
-issues:
-  exclude-rules:
-    # Exclude gosimple bool check
-    - linters:
-        - gosimple
-      text: "S(1002|1008|1021)"
-    # Exclude failing staticchecks for now
-    - linters:
-        - staticcheck
-      text: "SA(1006|1019|4006|4010|4017|5007|6005|9004):"
-    # Exclude lll issues for long lines with go:generate
-    - linters:
-        - lll
-      source: "^//go:generate "
-    - linters:
-        - errcheck
-      path: ".*_test.go"
-
-  max-issues-per-linter: 0
-  max-same-issues: 0
-  exclude-files:
-    - ".*\\.hcl2spec\\.go$"
-
 linters:
   default: none
   enable:
@@ -37,6 +14,29 @@ linters:
     - staticcheck
     - unconvert
     - unused
+  exclusions:
+    paths:
+      - ".*\\.hcl2spec\\.go$"
+    rules:
+      # Exclude gosimple bool check
+      - linters:
+          - gosimple
+        text: "S(1002|1008|1021)"
+      # Exclude failing staticchecks for now
+      - linters:
+          - staticcheck
+        text: "SA(1006|1019|4006|4010|4017|5007|6005|9004):"
+      # Exclude lll issues for long lines with go:generate
+      - linters:
+          - lll
+        source: "^//go:generate "
+      - linters:
+          - errcheck
+        path: ".*_test\\.go"
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
 
 run:
   concurrency: 4
