@@ -4,6 +4,7 @@
 package proxmox
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -14,6 +15,7 @@ import (
 )
 
 type proxmoxDriver struct {
+	ctx           context.Context
 	client        commandTyper
 	vmRef         *proxmox.VmRef
 	specialMap    map[string]string
@@ -23,7 +25,7 @@ type proxmoxDriver struct {
 	normalBuffer  []string
 }
 
-func NewProxmoxDriver(c commandTyper, vmRef *proxmox.VmRef, interval time.Duration) *proxmoxDriver {
+func NewProxmoxDriver(ctx context.Context, c commandTyper, vmRef *proxmox.VmRef, interval time.Duration) *proxmoxDriver {
 	// Mappings for packer shorthand to qemu qkeycodes
 	sMap := map[string]string{
 		"spacebar":   "spc",
@@ -83,6 +85,7 @@ func NewProxmoxDriver(c commandTyper, vmRef *proxmox.VmRef, interval time.Durati
 	}
 
 	return &proxmoxDriver{
+		ctx:        ctx,
 		client:     c,
 		vmRef:      vmRef,
 		specialMap: sMap,
@@ -134,7 +137,7 @@ func (p *proxmoxDriver) send(key string) error {
 	keys := append(p.specialBuffer, p.normalBuffer...)
 	keys = append(keys, key)
 	keyEventString := bufferToKeyEvent(keys)
-	err := p.client.Sendkey(p.vmRef, keyEventString)
+	err := p.client.Sendkey(p.ctx, p.vmRef, keyEventString)
 	if err != nil {
 		return err
 	}

@@ -49,7 +49,7 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 
 type isoVMCreator struct{}
 
-func (*isoVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQemu, state multistep.StateBag) error {
+func (*isoVMCreator) Create(ctx context.Context, config proxmoxapi.ConfigQemu, state multistep.StateBag) (*proxmoxapi.VmRef, error) {
 	client := state.Get("proxmoxClient").(*proxmoxapi.Client)
-	return config.Create(vmRef, client)
+	return config.Create(ctx, client)
 }

@@ -4,6 +4,7 @@
 package proxmox
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -33,13 +34,14 @@ func TestTokenAuth(t *testing.T) {
 		Token:              "ac5293bf-15e2-477f-b04c-a6dfa7a46b80",
 	}
 
-	client, err := newProxmoxClient(config)
+	ctx := context.Background()
+	client, err := newProxmoxClient(ctx, config)
 	require.NoError(t, err)
 
 	ref := proxmox.NewVmRef(110)
 	ref.SetNode("node1")
-	ref.SetVmType("qemu")
-	err = client.Sendkey(ref, "ping")
+	ref.SetVmType(proxmox.GuestQemu)
+	err = client.Sendkey(ctx, ref, "ping")
 	require.NoError(t, err)
 }
 
@@ -83,12 +85,13 @@ func TestLogin(t *testing.T) {
 		Token:              "",
 	}
 
-	client, err := newProxmoxClient(config)
+	ctx := context.Background()
+	client, err := newProxmoxClient(ctx, config)
 	require.NoError(t, err)
 
 	ref := proxmox.NewVmRef(110)
 	ref.SetNode("node1")
-	ref.SetVmType("qemu")
-	err = client.Sendkey(ref, "ping")
+	ref.SetVmType(proxmox.GuestQemu)
+	err = client.Sendkey(ctx, ref, "ping")
 	require.NoError(t, err)
 }

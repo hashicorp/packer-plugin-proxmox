@@ -148,6 +148,27 @@ in the image's Cloud-Init settings for provisioning.
 
 - `bios` (string) - Set the machine bios. This can be set to ovmf or seabios. The default value is seabios.
 
+- `arch` (string) - The CPU architecture for the VM. Allowed values: `""` (host default),
+  `"x86_64"`, `"aarch64"`. Default: `""`.
+  
+  When set to `"aarch64"`, four arch-aware defaults activate (each is
+  overridden by setting the corresponding field explicitly):
+  
+    - The default `boot_iso.type` changes from `"ide"` (which the QEMU
+      `virt` machine type does not expose) to `"scsi"`.
+    - The default `additional_iso_files[*].type` changes from `"ide"` to
+      `"scsi"`.
+    - The default `cpu_type` changes from `"kvm64"` (x86-only) to
+      `"cortex-a57"`.
+    - When `qemu_additional_args` is empty, the plugin injects
+      `-device qemu-xhci -device usb-kbd` so that `boot_command`
+      keystrokes reach the guest. The `virt` machine type ships without
+      a keyboard; QMP `send-key` is a silent no-op without one.
+      Supplying *any* `qemu_additional_args` disables this auto-inject.
+  
+  See [Building aarch64 templates](#building-aarch64-arm64-templates)
+  for the full set of companion fields required and a worked example.
+
 - `efi_config` (efiConfig) - Set the efidisk storage options. See [EFI Config](#efi-config).
 
 - `efidisk` (string) - This option is deprecated, please use `efi_config` instead.
@@ -1160,3 +1181,150 @@ build {
   ]
 }
 ```
+
+## Building aarch64 (ARM64) templates
+
+Setting `arch = "aarch64"` turns the proxmox-iso builder into an ARM64
+template factory. This section documents the prerequisites, the
+companion fields the plugin enforces, the arch-aware defaults it
+substitutes, and a worked example. The rest of the builder documentation
+continues to apply unchanged.
+
+### Prerequisites
+
+- A **Proxmox VE 9.1.9 or newer** cluster. Earlier 9.x point releases
+  ship a `qemu-server` that rejects `cortex-a57` as an unknown built-in
+  CPU model, even though the package vendor advertises support.
+- The AAVMF firmware available on the PVE node:
+  - **PVE 9**: included in the base `pve-edk2-firmware` package.
+  - **PVE 8**: install `pve-edk2-firmware-aarch64` from
+    `pve-no-subscription`.
+- **API-token credentials.** Long-running aarch64 builds — typical of
+  preseed-driven Debian installs over a serial console — frequently
+  outlive a password ticket (~2 hours). Use a token instead.
+
+### Required companion fields
+
+When `arch = "aarch64"`, the plugin enforces four hard requirements at
+validate time. Missing any of them aborts the build before any API call
+is made.
+
+| Field        | Required value                                  | Why                                                                                                                                |
+|--------------|-------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| `bios`       | `"ovmf"`                                        | aarch64 boots via UEFI; SeaBIOS is x86-only.                                                                                       |
+| `efi_config` | Block present with `efi_storage_pool` non-empty | OVMF needs the EFI variable store.                                                                                                 |
+| `vga.type`   | One of `serial0`–`serial3`                      | `boot_command` keystrokes only reach the guest through a serial console — there is no emulated graphics path on the `virt` machine. |
+| `serials`    | At least one entry (typically `["socket"]`)     | Backs the serial console that `vga.type` selects.                                                                                  |
+
+In addition, explicitly setting `boot_iso.type = "ide"` is rejected:
+the QEMU `virt` machine type has no IDE bus.
+
+### Arch-aware defaults
+
+When the corresponding field is unset, the plugin substitutes the value
+that works for the QEMU `virt` machine type. Explicit user values are
+honored verbatim.
+
+| Field                          | aarch64 default                       | Rationale                                                                                                                                              |
+|--------------------------------|---------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `boot_iso.type`                | `"scsi"` (index auto-assigned)        | `virt` has no IDE bus.                                                                                                                                 |
+| `additional_iso_files[*].type` | `"scsi"`                              | Same reason.                                                                                                                                           |
+| `cpu_type`                     | `"cortex-a57"`                        | PVE rejects `kvm64` (the x86 default) on `virt`. `cortex-a72` is also accepted if you set it explicitly.                                               |
+| `qemu_additional_args`         | `"-device qemu-xhci -device usb-kbd"` | `virt` ships without a keyboard; without one, QMP `send-key` for `boot_command` is a silent no-op and the build hangs at the bootloader's first prompt. |
+
+> **Gotcha — keyboard injection is all-or-nothing.** The
+> `qemu_additional_args` auto-inject only fires when the field is the
+> empty string. If you set *any* value for it, the auto-inject is
+> disabled — even unrelated additions like `-cpu host` will leave the
+> guest without a keyboard, and your `boot_command` will type into the
+> void. Symptom: the build hangs at the GRUB or kernel prompt until
+> `ssh_timeout` expires. If you need extra QEMU args **and** the
+> keyboard, include `-device qemu-xhci -device usb-kbd` in your own
+> value.
+
+### Worked example
+
+A minimum-viable aarch64 build that produces a Debian 13 template on
+PVE 9. Inline comments mark each required companion field.
+
+```hcl
+source "proxmox-iso" "debian-arm64" {
+  node = "monpxmx04"
+  arch = "aarch64"
+
+  # Required companion: aarch64 boots UEFI.
+  bios = "ovmf"
+  efi_config {
+    efi_storage_pool  = "local-lvm"
+    efi_type          = "4m"
+    pre_enrolled_keys = false
+  }
+
+  # Required companion: boot_command keystrokes need a serial console.
+  vga {
+    type = "serial0"
+  }
+  serials = ["socket"]
+
+  # Boot order is load-bearing on aarch64: PVE re-asserts the EFI
+  # BootOrder entry on every VM start, and a disk-last order makes the
+  # post-install reboot fall back to the CD-ROM (or PXE), looping the
+  # installer. Putting the installed disks first matches what the
+  # guest's bootloader writes into NVRAM at the end of the install.
+  boot = "order=scsi0;scsi1"
+
+  boot_iso {
+    iso_file = "local:iso/debian-13.1.0-arm64-netinst.iso"
+    unmount  = true
+    # type defaults to "scsi" (no IDE on virt); index is auto-assigned.
+  }
+
+  disks {
+    type         = "scsi"
+    storage_pool = "local-lvm"
+    disk_size    = "20G"
+    format       = "qcow2"
+  }
+
+  network_adapters {
+    bridge = "vmbr0"
+    model  = "virtio"
+  }
+
+  http_directory = "http"
+
+  boot_wait = "10s"
+  # Debian arm64 netinst uses GRUB EFI (not ISOLINUX). Press 'e' to enter
+  # edit mode, navigate to the linux line, append preseed args, boot with F10.
+  # Three <down>s land on the linux line of the Install entry — verified
+  # empirically against Debian 13 arm64 netinst on PVE 9.
+  boot_command = [
+    "e<wait>",
+    "<down><down><down><end>",
+    " auto=true priority=critical url=http://{{.HTTPIP}}:{{.HTTPPort}}/preseed.cfg interface=auto<wait>",
+    "<f10>"
+  ]
+
+  # API-token credentials outlive long aarch64 builds.
+  proxmox_url              = "https://monpxmx04.example.invalid:8006/api2/json"
+  username                 = "packer@pve!build"
+  token                    = "00000000-0000-0000-0000-000000000000"
+  insecure_skip_tls_verify = true
+
+  ssh_username = "packer"
+  ssh_password = "packer"
+  ssh_timeout  = "60m"
+
+  template_name        = "debian-13-arm64"
+  template_description = "Debian 13 ARM64, built {{ isotime \"2006-01-02T15:04:05Z\" }}"
+}
+
+build {
+  sources = ["source.proxmox-iso.debian-arm64"]
+}
+```
+
+`cpu_type` is intentionally omitted; the plugin defaults it to
+`cortex-a57`, which PVE accepts on every aarch64-capable release. Set
+it explicitly to `cortex-a72` for newer host hardware. `cpu_type =
+"host"` also works if your build node is itself an aarch64 host.

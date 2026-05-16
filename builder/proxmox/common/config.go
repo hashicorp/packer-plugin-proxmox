@@ -128,6 +128,27 @@ type Config struct {
 	OS string `mapstructure:"os"`
 	// Set the machine bios. This can be set to ovmf or seabios. The default value is seabios.
 	BIOS string `mapstructure:"bios"`
+	// The CPU architecture for the VM. Allowed values: `""` (host default),
+	// `"x86_64"`, `"aarch64"`. Default: `""`.
+	//
+	// When set to `"aarch64"`, four arch-aware defaults activate (each is
+	// overridden by setting the corresponding field explicitly):
+	//
+	//   - The default `boot_iso.type` changes from `"ide"` (which the QEMU
+	//     `virt` machine type does not expose) to `"scsi"`.
+	//   - The default `additional_iso_files[*].type` changes from `"ide"` to
+	//     `"scsi"`.
+	//   - The default `cpu_type` changes from `"kvm64"` (x86-only) to
+	//     `"cortex-a57"`.
+	//   - When `qemu_additional_args` is empty, the plugin injects
+	//     `-device qemu-xhci -device usb-kbd` so that `boot_command`
+	//     keystrokes reach the guest. The `virt` machine type ships without
+	//     a keyboard; QMP `send-key` is a silent no-op without one.
+	//     Supplying *any* `qemu_additional_args` disables this auto-inject.
+	//
+	// See [Building aarch64 templates](#building-aarch64-arm64-templates)
+	// for the full set of companion fields required and a worked example.
+	Arch string `mapstructure:"arch"`
 	// Set the efidisk storage options. See [EFI Config](#efi-config).
 	EFIConfig efiConfig `mapstructure:"efi_config"`
 	// This option is deprecated, please use `efi_config` instead.
@@ -664,8 +685,16 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		c.Sockets = 1
 	}
 	if c.CPUType == "" {
-		log.Printf("CPU type not set, using default 'kvm64'")
-		c.CPUType = "kvm64"
+		// FR-015 — aarch64 picks a cortex-a57 default; PVE rejects kvm64 on
+		// the virt machine type. cortex-a57 is the broadest-compatibility
+		// aarch64 CPU model accepted by PVE 8 and 9.
+		if c.Arch == "aarch64" {
+			log.Printf("CPU type not set, using default 'cortex-a57' for arch=aarch64")
+			c.CPUType = "cortex-a57"
+		} else {
+			log.Printf("CPU type not set, using default 'kvm64'")
+			c.CPUType = "kvm64"
+		}
 	}
 	if c.OS == "" {
 		log.Printf("OS not set, using default 'other'")
@@ -742,12 +771,18 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 				}
 			}
 		}
-		// validate device type, assign if unset
+		// validate device type, assign if unset. FR-006: aarch64 picks scsi
+		// rather than ide because the virt machine type has no IDE bus.
 		switch c.ISOs[idx].Type {
 		case "ide", "sata", "scsi":
 		case "":
-			log.Printf("additional_iso %d device type not set, using default 'ide'", idx)
-			c.ISOs[idx].Type = "ide"
+			if c.Arch == "aarch64" {
+				log.Printf("additional_iso %d device type not set, using default 'scsi' for arch=aarch64", idx)
+				c.ISOs[idx].Type = "scsi"
+			} else {
+				log.Printf("additional_iso %d device type not set, using default 'ide'", idx)
+				c.ISOs[idx].Type = "ide"
+			}
 		default:
 			errs = packersdk.MultiErrorAppend(errs, errors.New("ISOs must be of type ide, sata or scsi. VirtIO not supported by Proxmox for ISO devices"))
 		}
@@ -914,6 +949,57 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 			errs = packersdk.MultiErrorAppend(errs, errors.New("efi_storage_pool not set for efi_config"))
 		}
 	}
+
+	// FR-005 — arch whitelist.
+	switch c.Arch {
+	case "", "x86_64", "aarch64":
+	default:
+		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf(
+			"arch must be one of %q, %q, %q, got %q",
+			"", "x86_64", "aarch64", c.Arch))
+	}
+
+	// arch=aarch64 imposes hard requirements on companion settings. Position
+	// is load-bearing: FR-009 reads the post-normalize c.EFIConfig.EFIStoragePool,
+	// so this block must run after the EFI normalization above.
+	if c.Arch == "aarch64" {
+		// FR-004 — aarch64 + seabios. EqualFold because bios is treated
+		// case-insensitively elsewhere in the plugin.
+		if strings.EqualFold(c.BIOS, "seabios") {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf(
+				"arch=aarch64 requires bios=ovmf"))
+		}
+		// FR-009 — aarch64 without efi_config.
+		if c.EFIConfig.EFIStoragePool == "" {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf(
+				"arch=aarch64 requires efi_config to be set"))
+		}
+		// FR-010 — aarch64 with a non-serial vga.type. boot_command keystrokes
+		// only reach an aarch64 guest through a serial console.
+		validSerialVGA := map[string]struct{}{
+			"serial0": {}, "serial1": {}, "serial2": {}, "serial3": {},
+		}
+		_, vgaIsSerial := validSerialVGA[c.VGA.Type]
+		if !vgaIsSerial {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf(
+				"arch=aarch64 requires vga.type to be one of serial0, serial1, serial2, serial3, got %q",
+				c.VGA.Type))
+		}
+		// FR-011 — a serial vga.type requires at least one declared serial device.
+		if vgaIsSerial && len(c.Serials) == 0 {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf(
+				"arch=aarch64 with a serial vga.type requires at least one entry in serials"))
+		}
+		// FR-013 — keyboard hardware default. virt ships without a keyboard;
+		// QMP send-key is a silent no-op without one. Detection is strict
+		// empty-string equality — any user-supplied args fully disable the
+		// auto-inject. Device order is load-bearing: qemu-xhci controller
+		// must come before the usb-kbd device that binds to it.
+		if c.AdditionalArgs == "" {
+			c.AdditionalArgs = "-device qemu-xhci -device usb-kbd"
+		}
+	}
+
 	if c.TPMConfig != (tpmConfig{}) {
 		if c.TPMConfig.TPMStoragePool == "" {
 			errs = packersdk.MultiErrorAppend(errs, errors.New("tpm_storage_pool not set for tpm_config"))

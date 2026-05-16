@@ -20,10 +20,10 @@ type startedVMCleanerMock struct {
 	deleteVm func() (string, error)
 }
 
-func (m startedVMCleanerMock) StopVm(*proxmox.VmRef) (string, error) {
+func (m startedVMCleanerMock) StopVm(context.Context, *proxmox.VmRef) (string, error) {
 	return m.stopVm()
 }
-func (m startedVMCleanerMock) DeleteVm(*proxmox.VmRef) (string, error) {
+func (m startedVMCleanerMock) DeleteVm(context.Context, *proxmox.VmRef) (string, error) {
 	return m.deleteVm()
 }
 
@@ -114,38 +114,42 @@ func TestCleanupStartVM(t *testing.T) {
 }
 
 type startVMMock struct {
-	create      func(*proxmox.VmRef, proxmox.ConfigQemu, multistep.StateBag) error
+	create      func(proxmox.ConfigQemu, multistep.StateBag) (*proxmox.VmRef, error)
 	startVm     func(*proxmox.VmRef) (string, error)
 	setVmConfig func(*proxmox.VmRef, map[string]interface{}) (interface{}, error)
-	getNextID   func(id int) (int, error)
+	getNextID   func(id proxmox.GuestID) (proxmox.GuestID, error)
 	getVmConfig func(vmr *proxmox.VmRef) (vmConfig map[string]interface{}, err error)
 	checkVmRef  func(vmr *proxmox.VmRef) (err error)
-	getVmByName func(vmName string) (vmrs []*proxmox.VmRef, err error)
+	getVmByName func(vmName proxmox.GuestName) (vmrs []*proxmox.VmRef, err error)
 	deleteVm    func(vmr *proxmox.VmRef) (exitStatus string, err error)
 }
 
-func (m *startVMMock) Create(vmRef *proxmox.VmRef, config proxmox.ConfigQemu, state multistep.StateBag) error {
-	return m.create(vmRef, config, state)
+func (m *startVMMock) Create(_ context.Context, config proxmox.ConfigQemu, state multistep.StateBag) (*proxmox.VmRef, error) {
+	return m.create(config, state)
 }
-func (m *startVMMock) StartVm(vmRef *proxmox.VmRef) (string, error) {
+func (m *startVMMock) StartVm(_ context.Context, vmRef *proxmox.VmRef) (string, error) {
 	return m.startVm(vmRef)
 }
 func (m *startVMMock) SetVmConfig(vmRef *proxmox.VmRef, config map[string]interface{}) (interface{}, error) {
 	return m.setVmConfig(vmRef, config)
 }
-func (m *startVMMock) GetNextID(id int) (int, error) {
+func (m *startVMMock) GetNextID(_ context.Context, startID *proxmox.GuestID) (proxmox.GuestID, error) {
+	var id proxmox.GuestID
+	if startID != nil {
+		id = *startID
+	}
 	return m.getNextID(id)
 }
-func (m *startVMMock) GetVmConfig(vmr *proxmox.VmRef) (map[string]interface{}, error) {
+func (m *startVMMock) GetVmConfig(_ context.Context, vmr *proxmox.VmRef) (map[string]interface{}, error) {
 	return m.getVmConfig(vmr)
 }
-func (m *startVMMock) CheckVmRef(vmr *proxmox.VmRef) (err error) {
+func (m *startVMMock) CheckVmRef(_ context.Context, vmr *proxmox.VmRef) (err error) {
 	return m.checkVmRef(vmr)
 }
-func (m *startVMMock) GetVmRefsByName(vmName string) (vmrs []*proxmox.VmRef, err error) {
+func (m *startVMMock) GetVmRefsByName(_ context.Context, vmName proxmox.GuestName) (vmrs []*proxmox.VmRef, err error) {
 	return m.getVmByName(vmName)
 }
-func (m *startVMMock) DeleteVm(vmr *proxmox.VmRef) (exitStatus string, err error) {
+func (m *startVMMock) DeleteVm(_ context.Context, vmr *proxmox.VmRef) (exitStatus string, err error) {
 	return m.deleteVm(vmr)
 }
 
@@ -183,8 +187,8 @@ func TestStartVM(t *testing.T) {
 	for _, c := range cs {
 		t.Run(c.name, func(t *testing.T) {
 			mock := &startVMMock{
-				create: func(vmRef *proxmox.VmRef, config proxmox.ConfigQemu, state multistep.StateBag) error {
-					return nil
+				create: func(config proxmox.ConfigQemu, state multistep.StateBag) (*proxmox.VmRef, error) {
+					return proxmox.NewVmRef(1), nil
 				},
 				startVm: func(*proxmox.VmRef) (string, error) {
 					return "", nil
@@ -192,7 +196,7 @@ func TestStartVM(t *testing.T) {
 				setVmConfig: func(*proxmox.VmRef, map[string]interface{}) (interface{}, error) {
 					return nil, nil
 				},
-				getNextID: func(id int) (int, error) {
+				getNextID: func(id proxmox.GuestID) (proxmox.GuestID, error) {
 					return 1, nil
 				},
 			}
@@ -211,41 +215,41 @@ func TestStartVM(t *testing.T) {
 }
 
 func TestStartVMRetryOnDuplicateID(t *testing.T) {
-	newDuplicateError := func(id int) error {
+	newDuplicateError := func(id proxmox.GuestID) error {
 		return fmt.Errorf("unable to create VM %d - VM %d already exists on node 'test'", id, id)
 	}
 	cs := []struct {
 		name                  string
 		config                *Config
-		createErrorGenerator  func(id int) error
+		createErrorGenerator  func(id proxmox.GuestID) error
 		expectedCallsToCreate int
 		expectedAction        multistep.StepAction
 	}{
 		{
 			name:                  "Succeed immediately if non-duplicate",
 			config:                &Config{},
-			createErrorGenerator:  func(id int) error { return nil },
+			createErrorGenerator:  func(id proxmox.GuestID) error { return nil },
 			expectedCallsToCreate: 1,
 			expectedAction:        multistep.ActionContinue,
 		},
 		{
 			name:                  "Fail immediately if duplicate and VMID explicitly configured",
 			config:                &Config{VMID: 1},
-			createErrorGenerator:  func(id int) error { return newDuplicateError(id) },
+			createErrorGenerator:  func(id proxmox.GuestID) error { return newDuplicateError(id) },
 			expectedCallsToCreate: 1,
 			expectedAction:        multistep.ActionHalt,
 		},
 		{
 			name:                  "Fail immediately if error not caused by duplicate ID",
 			config:                &Config{},
-			createErrorGenerator:  func(id int) error { return fmt.Errorf("Something else went wrong") },
+			createErrorGenerator:  func(id proxmox.GuestID) error { return fmt.Errorf("Something else went wrong") },
 			expectedCallsToCreate: 1,
 			expectedAction:        multistep.ActionHalt,
 		},
 		{
 			name:   "Retry if error caused by duplicate ID",
 			config: &Config{},
-			createErrorGenerator: func(id int) error {
+			createErrorGenerator: func(id proxmox.GuestID) error {
 				if id < 2 {
 					return newDuplicateError(id)
 				}
@@ -257,7 +261,7 @@ func TestStartVMRetryOnDuplicateID(t *testing.T) {
 		{
 			name:   "Retry only up to maxDuplicateIDRetries times",
 			config: &Config{},
-			createErrorGenerator: func(id int) error {
+			createErrorGenerator: func(id proxmox.GuestID) error {
 				return newDuplicateError(id)
 			},
 			expectedCallsToCreate: maxDuplicateIDRetries,
@@ -269,9 +273,16 @@ func TestStartVMRetryOnDuplicateID(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			createCalls := 0
 			mock := &startVMMock{
-				create: func(vmRef *proxmox.VmRef, config proxmox.ConfigQemu, state multistep.StateBag) error {
+				create: func(config proxmox.ConfigQemu, state multistep.StateBag) (*proxmox.VmRef, error) {
 					createCalls++
-					return c.createErrorGenerator(vmRef.VmId())
+					var id proxmox.GuestID
+					if config.ID != nil {
+						id = *config.ID
+					}
+					if err := c.createErrorGenerator(id); err != nil {
+						return nil, err
+					}
+					return proxmox.NewVmRef(id), nil
 				},
 				startVm: func(*proxmox.VmRef) (string, error) {
 					return "", nil
@@ -279,8 +290,8 @@ func TestStartVMRetryOnDuplicateID(t *testing.T) {
 				setVmConfig: func(*proxmox.VmRef, map[string]interface{}) (interface{}, error) {
 					return nil, nil
 				},
-				getNextID: func(id int) (int, error) {
-					return createCalls + 1, nil
+				getNextID: func(id proxmox.GuestID) (proxmox.GuestID, error) {
+					return proxmox.GuestID(createCalls + 1), nil
 				},
 			}
 			state := new(multistep.BasicStateBag)
@@ -306,7 +317,7 @@ func TestStartVMWithForce(t *testing.T) {
 		config               *Config
 		expectedCallToDelete bool
 		expectedAction       multistep.StepAction
-		mockGetVmRefsByName  func(vmName string) (vmrs []*proxmox.VmRef, err error)
+		mockGetVmRefsByName  func(vmName proxmox.GuestName) (vmrs []*proxmox.VmRef, err error)
 		mockGetVmConfig      func(vmr *proxmox.VmRef) (map[string]interface{}, error)
 	}{
 		{
@@ -362,7 +373,7 @@ func TestStartVMWithForce(t *testing.T) {
 			},
 			expectedCallToDelete: false,
 			expectedAction:       multistep.ActionHalt,
-			mockGetVmRefsByName: func(vmName string) (vmrs []*proxmox.VmRef, err error) {
+			mockGetVmRefsByName: func(vmName proxmox.GuestName) (vmrs []*proxmox.VmRef, err error) {
 				return []*proxmox.VmRef{
 					proxmox.NewVmRef(100),
 					proxmox.NewVmRef(101),
@@ -382,7 +393,7 @@ func TestStartVMWithForce(t *testing.T) {
 			},
 			expectedCallToDelete: true,
 			expectedAction:       multistep.ActionContinue,
-			mockGetVmRefsByName: func(vmName string) (vmrs []*proxmox.VmRef, err error) {
+			mockGetVmRefsByName: func(vmName proxmox.GuestName) (vmrs []*proxmox.VmRef, err error) {
 				return []*proxmox.VmRef{
 					proxmox.NewVmRef(100),
 				}, nil
@@ -397,8 +408,8 @@ func TestStartVMWithForce(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			deleteWasCalled := false
 			mock := &startVMMock{
-				create: func(vmRef *proxmox.VmRef, config proxmox.ConfigQemu, state multistep.StateBag) error {
-					return nil
+				create: func(config proxmox.ConfigQemu, state multistep.StateBag) (*proxmox.VmRef, error) {
+					return proxmox.NewVmRef(101), nil
 				},
 				startVm: func(*proxmox.VmRef) (string, error) {
 					return "", nil
@@ -406,13 +417,13 @@ func TestStartVMWithForce(t *testing.T) {
 				setVmConfig: func(*proxmox.VmRef, map[string]interface{}) (interface{}, error) {
 					return nil, nil
 				},
-				getNextID: func(id int) (int, error) {
+				getNextID: func(id proxmox.GuestID) (proxmox.GuestID, error) {
 					return 101, nil
 				},
 				checkVmRef: func(vmr *proxmox.VmRef) (err error) {
 					return nil
 				},
-				getVmByName: func(vmName string) (vmrs []*proxmox.VmRef, err error) {
+				getVmByName: func(vmName proxmox.GuestName) (vmrs []*proxmox.VmRef, err error) {
 					return c.mockGetVmRefsByName(vmName)
 				},
 				getVmConfig: func(vmr *proxmox.VmRef) (config map[string]interface{}, err error) {
@@ -459,7 +470,10 @@ func TestStartVM_AssertInitialQuemuConfig(t *testing.T) {
 				},
 			},
 			assertQemuConfig: func(t *testing.T, config proxmox.ConfigQemu) {
-				assert.Equal(t, "true", config.QemuPCIDevices[0]["rombar"])
+				dev := config.PciDevices[proxmox.QemuPciID(0)]
+				if dev.Raw == nil || dev.Raw.ROMbar == nil || !*dev.Raw.ROMbar {
+					t.Errorf("expected ROMbar to be true (HideROMBAR=false inverted), got %#v", dev)
+				}
 			},
 		},
 	}
@@ -469,15 +483,15 @@ func TestStartVM_AssertInitialQuemuConfig(t *testing.T) {
 			startVMWasCalled := false
 			qemuConfig := proxmox.ConfigQemu{}
 			mock := &startVMMock{
-				create: func(vmRef *proxmox.VmRef, config proxmox.ConfigQemu, state multistep.StateBag) error {
+				create: func(config proxmox.ConfigQemu, state multistep.StateBag) (*proxmox.VmRef, error) {
 					qemuConfig = config
-					return nil
+					return proxmox.NewVmRef(101), nil
 				},
 				startVm: func(*proxmox.VmRef) (string, error) {
 					startVMWasCalled = true
 					return "", nil
 				},
-				getNextID: func(id int) (int, error) {
+				getNextID: func(id proxmox.GuestID) (proxmox.GuestID, error) {
 					return 101, nil
 				},
 			}

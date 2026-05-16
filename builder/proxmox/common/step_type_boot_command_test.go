@@ -19,7 +19,7 @@ type commandTyperMock struct {
 	sendkey func(*proxmox.VmRef, string) error
 }
 
-func (m commandTyperMock) Sendkey(ref *proxmox.VmRef, cmd string) error {
+func (m commandTyperMock) Sendkey(_ context.Context, ref *proxmox.VmRef, cmd string) error {
 	return m.sendkey(ref, cmd)
 }
 

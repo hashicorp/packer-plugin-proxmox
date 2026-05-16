@@ -4,6 +4,7 @@
 package proxmox
 
 import (
+	"context"
 	"crypto/tls"
 	"log"
 	"strings"
@@ -11,26 +12,26 @@ import (
 	"github.com/Telmate/proxmox-api-go/proxmox"
 )
 
-func newProxmoxClient(config Config) (*proxmox.Client, error) {
+func newProxmoxClient(ctx context.Context, config Config) (*proxmox.Client, error) {
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: config.SkipCertValidation,
 	}
 
-	client, err := proxmox.NewClient(strings.TrimSuffix(config.proxmoxURL.String(), "/"), nil, "", tlsConfig, "", int(config.TaskTimeout.Seconds()))
+	client, err := proxmox.NewClient(strings.TrimSuffix(config.proxmoxURL.String(), "/"), nil, "", tlsConfig, "", int(config.TaskTimeout.Seconds()), config.PackerDebug)
 	if err != nil {
 		return nil, err
 	}
 
-	*proxmox.Debug = config.PackerDebug
-
 	if config.Token != "" {
-		// configure token auth
 		log.Print("using token auth")
-		client.SetAPIToken(config.Username, config.Token)
+		var tokenID proxmox.ApiTokenID
+		if err := tokenID.Parse(config.Username); err != nil {
+			return nil, err
+		}
+		client.SetAPIToken(tokenID, proxmox.ApiTokenSecret(config.Token))
 	} else {
-		// fallback to login if not using tokens
 		log.Print("using password auth")
-		err = client.Login(config.Username, config.Password, "")
+		err = client.Login(ctx, config.Username, config.Password, "")
 		if err != nil {
 			return nil, err
 		}

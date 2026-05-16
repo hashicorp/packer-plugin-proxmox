@@ -20,7 +20,7 @@ type finalizerMock struct {
 	setConfig func(map[string]interface{}) (string, error)
 }
 
-func (m finalizerMock) GetVmConfig(*proxmox.VmRef) (map[string]interface{}, error) {
+func (m finalizerMock) GetVmConfig(context.Context, *proxmox.VmRef) (map[string]interface{}, error) {
 	return m.getConfig()
 }
 func (m finalizerMock) SetVmConfig(vmref *proxmox.VmRef, c map[string]interface{}) (interface{}, error) {

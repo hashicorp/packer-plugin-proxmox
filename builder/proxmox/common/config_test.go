@@ -712,3 +712,208 @@ func TestPCIDeviceMapping(t *testing.T) {
 		})
 	}
 }
+
+// validAarch64Config returns a config map satisfying every hard requirement
+// for arch="aarch64" so each arch-aarch64 test can tweak one field in
+// isolation.
+func validAarch64Config(t *testing.T) map[string]interface{} {
+	cfg := mandatoryConfig(t)
+	cfg["arch"] = "aarch64"
+	cfg["bios"] = "ovmf"
+	cfg["efi_config"] = map[string]interface{}{
+		"efi_storage_pool":  "local-lvm",
+		"efi_type":          "4m",
+		"pre_enrolled_keys": true,
+	}
+	cfg["vga"] = map[string]interface{}{"type": "serial0"}
+	cfg["serials"] = []string{"socket"}
+	return cfg
+}
+
+func TestArch_Aarch64_Defaults(t *testing.T) {
+	t.Run("cpu_type defaults to cortex-a57", func(t *testing.T) {
+		cfg := validAarch64Config(t)
+		var c Config
+		if _, _, err := c.Prepare(&c, cfg); err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if c.CPUType != "cortex-a57" {
+			t.Errorf("expected default cpu_type cortex-a57, got %q", c.CPUType)
+		}
+	})
+	t.Run("cpu_type explicit value is honored", func(t *testing.T) {
+		cfg := validAarch64Config(t)
+		cfg["cpu_type"] = "cortex-a72"
+		var c Config
+		if _, _, err := c.Prepare(&c, cfg); err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if c.CPUType != "cortex-a72" {
+			t.Errorf("expected cpu_type cortex-a72, got %q", c.CPUType)
+		}
+	})
+	t.Run("cpu_type default stays kvm64 on x86_64", func(t *testing.T) {
+		cfg := mandatoryConfig(t)
+		cfg["arch"] = "x86_64"
+		var c Config
+		if _, _, err := c.Prepare(&c, cfg); err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if c.CPUType != "kvm64" {
+			t.Errorf("expected cpu_type kvm64 on x86_64, got %q", c.CPUType)
+		}
+	})
+	t.Run("qemu_additional_args auto-injects keyboard devices on aarch64", func(t *testing.T) {
+		cfg := validAarch64Config(t)
+		var c Config
+		if _, _, err := c.Prepare(&c, cfg); err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		want := "-device qemu-xhci -device usb-kbd"
+		if c.AdditionalArgs != want {
+			t.Errorf("expected qemu_additional_args %q, got %q", want, c.AdditionalArgs)
+		}
+	})
+	t.Run("qemu_additional_args opt-out: any user value disables auto-inject", func(t *testing.T) {
+		cfg := validAarch64Config(t)
+		cfg["qemu_additional_args"] = "-cpu foo"
+		var c Config
+		if _, _, err := c.Prepare(&c, cfg); err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if c.AdditionalArgs != "-cpu foo" {
+			t.Errorf("expected user-supplied args preserved verbatim, got %q", c.AdditionalArgs)
+		}
+	})
+	t.Run("qemu_additional_args stays empty on x86_64", func(t *testing.T) {
+		cfg := mandatoryConfig(t)
+		var c Config
+		if _, _, err := c.Prepare(&c, cfg); err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if c.AdditionalArgs != "" {
+			t.Errorf("expected qemu_additional_args empty on x86_64, got %q", c.AdditionalArgs)
+		}
+	})
+	t.Run("additional_iso_files type defaults to scsi on aarch64", func(t *testing.T) {
+		cfg := validAarch64Config(t)
+		cfg["additional_iso_files"] = []map[string]interface{}{
+			{"iso_file": "local:iso/cloud-init.iso"},
+		}
+		var c Config
+		if _, _, err := c.Prepare(&c, cfg); err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if len(c.ISOs) != 1 || c.ISOs[0].Type != "scsi" {
+			t.Errorf("expected ISOs[0].Type=scsi for aarch64, got %+v", c.ISOs)
+		}
+	})
+	t.Run("additional_iso_files type stays ide for non-aarch64", func(t *testing.T) {
+		cfg := mandatoryConfig(t)
+		cfg["additional_iso_files"] = []map[string]interface{}{
+			{"iso_file": "local:iso/cloud-init.iso"},
+		}
+		var c Config
+		if _, _, err := c.Prepare(&c, cfg); err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if len(c.ISOs) != 1 || c.ISOs[0].Type != "ide" {
+			t.Errorf("expected ISOs[0].Type=ide for x86_64, got %+v", c.ISOs)
+		}
+	})
+}
+
+func TestArch_Aarch64_Validation(t *testing.T) {
+	cases := []struct {
+		name          string
+		mutate        func(cfg map[string]interface{})
+		expectedError string
+	}{
+		{
+			name:          "happy path — all companion fields set correctly",
+			mutate:        func(cfg map[string]interface{}) {},
+			expectedError: "",
+		},
+		{
+			name:          "FR-004: bios=seabios rejected (lowercase)",
+			mutate:        func(cfg map[string]interface{}) { cfg["bios"] = "seabios" },
+			expectedError: "arch=aarch64 requires bios=ovmf",
+		},
+		{
+			name:          "FR-004: bios=SeaBIOS rejected (EqualFold)",
+			mutate:        func(cfg map[string]interface{}) { cfg["bios"] = "SeaBIOS" },
+			expectedError: "arch=aarch64 requires bios=ovmf",
+		},
+		{
+			name:          "FR-009: missing efi_config rejected",
+			mutate:        func(cfg map[string]interface{}) { delete(cfg, "efi_config") },
+			expectedError: "arch=aarch64 requires efi_config to be set",
+		},
+		{
+			name:          "FR-010: vga.type=std rejected",
+			mutate:        func(cfg map[string]interface{}) { cfg["vga"] = map[string]interface{}{"type": "std"} },
+			expectedError: "arch=aarch64 requires vga.type to be one of serial0, serial1, serial2, serial3",
+		},
+		{
+			name:          "FR-010: vga.type unset rejected",
+			mutate:        func(cfg map[string]interface{}) { delete(cfg, "vga") },
+			expectedError: "arch=aarch64 requires vga.type to be one of serial0, serial1, serial2, serial3",
+		},
+		{
+			name:          "FR-011: serial vga.type with empty serials rejected",
+			mutate:        func(cfg map[string]interface{}) { cfg["serials"] = []string{} },
+			expectedError: "arch=aarch64 with a serial vga.type requires at least one entry in serials",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := validAarch64Config(t)
+			tc.mutate(cfg)
+			var c Config
+			_, _, err := c.Prepare(&c, cfg)
+			if tc.expectedError == "" {
+				if err != nil && strings.Contains(err.Error(), "arch=aarch64") {
+					t.Errorf("expected happy-path config to pass aarch64 validation, got: %s", err.Error())
+				}
+				return
+			}
+			if err == nil {
+				t.Fatalf("expected error containing %q, got nil", tc.expectedError)
+			}
+			if !strings.Contains(err.Error(), tc.expectedError) {
+				t.Errorf("expected error containing %q, got %q", tc.expectedError, err.Error())
+			}
+		})
+	}
+}
+
+func TestArch_Whitelist(t *testing.T) {
+	cases := []struct {
+		arch          string
+		expectedError string
+	}{
+		{arch: "", expectedError: ""},
+		{arch: "x86_64", expectedError: ""},
+		{arch: "aarch64", expectedError: ""},
+		{arch: "riscv64", expectedError: `arch must be one of "", "x86_64", "aarch64", got "riscv64"`},
+		{arch: "ARM64", expectedError: `arch must be one of "", "x86_64", "aarch64", got "ARM64"`},
+		{arch: "amd64", expectedError: `arch must be one of "", "x86_64", "aarch64", got "amd64"`},
+	}
+	for _, tc := range cases {
+		t.Run(fmt.Sprintf("arch=%q", tc.arch), func(t *testing.T) {
+			cfg := validAarch64Config(t)
+			cfg["arch"] = tc.arch
+			var c Config
+			_, _, err := c.Prepare(&c, cfg)
+			if tc.expectedError == "" {
+				if err != nil && strings.Contains(err.Error(), "arch must be one of") {
+					t.Errorf("expected arch %q to be accepted, got %s", tc.arch, err.Error())
+				}
+				return
+			}
+			if err == nil || !strings.Contains(err.Error(), tc.expectedError) {
+				t.Errorf("expected error %q, got %v", tc.expectedError, err)
+			}
+		})
+	}
+}
