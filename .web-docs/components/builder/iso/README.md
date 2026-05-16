@@ -1257,7 +1257,7 @@ source "proxmox-iso" "debian-arm64" {
   efi_config {
     efi_storage_pool  = "local-lvm"
     efi_type          = "4m"
-    pre_enrolled_keys = true
+    pre_enrolled_keys = false
   }
 
   # Required companion: boot_command keystrokes need a serial console.
@@ -1274,9 +1274,8 @@ source "proxmox-iso" "debian-arm64" {
   boot = "order=scsi0;scsi1"
 
   boot_iso {
-    iso_file         = "local:iso/debian-13.1.0-arm64-netinst.iso"
-    iso_storage_pool = "local"
-    unmount          = true
+    iso_file = "local:iso/debian-13.1.0-arm64-netinst.iso"
+    unmount  = true
     # type defaults to "scsi" (no IDE on virt); index is auto-assigned.
   }
 
@@ -1294,12 +1293,16 @@ source "proxmox-iso" "debian-arm64" {
 
   http_directory = "http"
 
-  boot_wait = "5s"
+  boot_wait = "10s"
+  # Debian arm64 netinst uses GRUB EFI (not ISOLINUX). Press 'e' to enter
+  # edit mode, navigate to the linux line, append preseed args, boot with F10.
+  # Three <down>s land on the linux line of the Install entry — verified
+  # empirically against Debian 13 arm64 netinst on PVE 9.
   boot_command = [
-    "<wait>",
-    "auto url=http://{{.HTTPIP}}:{{.HTTPPort}}/preseed.cfg ",
-    "console=ttyAMA0,115200 ",
-    "auto=true priority=critical interface=auto<enter>"
+    "e<wait>",
+    "<down><down><down><end>",
+    " auto=true priority=critical url=http://{{.HTTPIP}}:{{.HTTPPort}}/preseed.cfg interface=auto<wait>",
+    "<f10>"
   ]
 
   # API-token credentials outlive long aarch64 builds.
