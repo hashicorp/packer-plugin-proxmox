@@ -24,6 +24,8 @@ type finalizer interface {
 	GetVmConfig(*proxmox.VmRef) (map[string]interface{}, error)
 	SetVmConfig(*proxmox.VmRef, map[string]interface{}) (interface{}, error)
 	Version() (proxmox.Version, error)
+	StartVm(*proxmox.VmRef) (string, error)
+	ShutdownVm(*proxmox.VmRef) (string, error)
 }
 
 var _ finalizer = &proxmox.Client{}
