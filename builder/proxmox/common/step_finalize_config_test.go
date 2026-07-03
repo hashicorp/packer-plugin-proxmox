@@ -13,6 +13,7 @@ import (
 	"github.com/Telmate/proxmox-api-go/proxmox"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/hashicorp/packer-plugin-sdk/template/config"
 )
 
 type finalizerMock struct {
@@ -125,7 +126,7 @@ func TestTemplateFinalize(t *testing.T) {
 				TemplateDescription:             "some-description",
 				CloudInit:                       true,
 				CloudInitDiskType:               "ide",
-				CloudInitDisableUpgradePackages: true,
+				CloudInitDisableUpgradePackages: config.TriTrue,
 			},
 			initialVMConfig: map[string]interface{}{
 				"name":        "dummy",
@@ -150,7 +151,7 @@ func TestTemplateFinalize(t *testing.T) {
 				TemplateDescription:             "some-description",
 				CloudInit:                       true,
 				CloudInitDiskType:               "ide",
-				CloudInitDisableUpgradePackages: true,
+				CloudInitDisableUpgradePackages: config.TriTrue,
 			},
 			initialVMConfig: map[string]interface{}{
 				"name":        "dummy",

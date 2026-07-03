@@ -159,6 +159,10 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"http_port_max":                       &hcldec.AttrSpec{Name: "http_port_max", Type: cty.Number, Required: false},
 		"http_bind_address":                   &hcldec.AttrSpec{Name: "http_bind_address", Type: cty.String, Required: false},
 		"http_interface":                      &hcldec.AttrSpec{Name: "http_interface", Type: cty.String, Required: false},
+<<<<<<< HEAD
+=======
+		"http_network_protocol":               &hcldec.AttrSpec{Name: "http_network_protocol", Type: cty.String, Required: false},
+>>>>>>> b68311c (reconfigure cloud_init_disable_upgrade_packages as trilean, add functionality for clone builder, move proxmox version check to occur only if trilean is set)
 		"boot_keygroup_interval":              &hcldec.AttrSpec{Name: "boot_keygroup_interval", Type: cty.String, Required: false},
 		"boot_wait":                           &hcldec.AttrSpec{Name: "boot_wait", Type: cty.String, Required: false},
 		"boot_command":                        &hcldec.AttrSpec{Name: "boot_command", Type: cty.List(cty.String), Required: false},
@@ -248,6 +252,10 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"disable_kvm":                         &hcldec.AttrSpec{Name: "disable_kvm", Type: cty.Bool, Required: false},
 		"template_name":                       &hcldec.AttrSpec{Name: "template_name", Type: cty.String, Required: false},
 		"template_description":                &hcldec.AttrSpec{Name: "template_description", Type: cty.String, Required: false},
+<<<<<<< HEAD
+=======
+		"skip_convert_to_template":            &hcldec.AttrSpec{Name: "skip_convert_to_template", Type: cty.Bool, Required: false},
+>>>>>>> b68311c (reconfigure cloud_init_disable_upgrade_packages as trilean, add functionality for clone builder, move proxmox version check to occur only if trilean is set)
 		"cloud_init":                          &hcldec.AttrSpec{Name: "cloud_init", Type: cty.Bool, Required: false},
 		"cloud_init_storage_pool":             &hcldec.AttrSpec{Name: "cloud_init_storage_pool", Type: cty.String, Required: false},
 		"cloud_init_disk_type":                &hcldec.AttrSpec{Name: "cloud_init_disk_type", Type: cty.String, Required: false},

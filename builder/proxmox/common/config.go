@@ -192,8 +192,9 @@ type Config struct {
 	// Defaults to `ide`.
 	CloudInitDiskType string `mapstructure:"cloud_init_disk_type"`
 	// Disable Upgrade Packages behaviour for Cloud-Init.
-	// Defaults to `false`.
-	CloudInitDisableUpgradePackages bool `mapstructure:"cloud_init_disable_upgrade_packages"`
+	// If unset and a Cloud-Init drive is configured for an ISO build, the Proxmox backend will default 'Upgrade Packages' to Yes for template builds.
+	// If unset for a clone build, configuration for 'Upgrade Packages' will be preserved if a Cloud-Init drive was present on the source VM.
+	CloudInitDisableUpgradePackages config.Trilean `mapstructure:"cloud_init_disable_upgrade_packages"`
 
 	// ISO files attached to the virtual machine.
 	// See [ISOs](#isos).

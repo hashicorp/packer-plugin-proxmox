@@ -13,6 +13,7 @@ import (
 	proxmox "github.com/hashicorp/packer-plugin-proxmox/builder/proxmox/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/hashicorp/packer-plugin-sdk/template/config"
 
 	"context"
 	"fmt"
@@ -53,16 +54,17 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 
 type cloneVMCreator struct{}
 
-func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQemu, state multistep.StateBag) error {
+func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, vmConfig proxmoxapi.ConfigQemu, state multistep.StateBag) error {
 	client := state.Get("proxmoxClient").(*proxmoxapi.Client)
 	c := state.Get("clone-config").(*Config)
 	comm := state.Get("config").(*proxmox.Config).Comm
+	ui := state.Get("ui").(packersdk.Ui)
 
 	fullClone := 1
 	if c.FullClone.False() {
 		fullClone = 0
 	}
-	config.FullClone = &fullClone
+	vmConfig.FullClone = &fullClone
 
 	// cloud-init options
 
@@ -128,7 +130,7 @@ func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQ
 		publicKey = append(publicKey, crypto.PublicKey(string(comm.SSHPublicKey)))
 	}
 
-	config.CloudInit = &proxmoxapi.CloudInit{
+	vmConfig.CloudInit = &proxmoxapi.CloudInit{
 		Username:      &comm.SSHUsername,
 		PublicSSHkeys: &publicKey,
 		DNS: &proxmoxapi.GuestDNS{
@@ -136,6 +138,32 @@ func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQ
 			SearchDomain: &c.Searchdomain,
 		},
 		NetworkInterfaces: IpconfigMap,
+	}
+
+	if c.CloudInitDisableUpgradePackages != config.TriUnset {
+		// Cloud-Init `Upgrade Packages` not available in versions lower than 8
+		proxmoxVersion, err := client.Version()
+		if err != nil {
+			err := fmt.Errorf("error fetching backend version: %s", err)
+			state.Put("error", err)
+			ui.Error(err.Error())
+			return err
+		}
+		if proxmoxVersion.Major >= 8 {
+			switch c.CloudInitDisableUpgradePackages {
+			case config.TriTrue:
+				value := false
+				vmConfig.CloudInit.UpgradePackages = &value
+			case config.TriFalse:
+				value := true
+				vmConfig.CloudInit.UpgradePackages = &value
+			}
+		} else {
+			// only write to UI if the cloud_init_disable_upgrade_packages is configured but the backend is an incompatible version
+			if c.CloudInitDisableUpgradePackages == config.TriTrue {
+				ui.Say("cloud_init_disable_upgrade_packages is set to true, but not supported in Proxmox versions lower than 8. No changes made.")
+			}
+		}
 	}
 
 	var sourceVmr *proxmoxapi.VmRef
@@ -160,11 +188,11 @@ func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQ
 		}
 	}
 
-	err := config.CloneVm(sourceVmr, vmRef, client)
+	err := vmConfig.CloneVm(sourceVmr, vmRef, client)
 	if err != nil {
 		return err
 	}
-	_, err = config.Update(false, vmRef, client)
+	_, err = vmConfig.Update(false, vmRef, client)
 	if err != nil {
 		return err
 	}

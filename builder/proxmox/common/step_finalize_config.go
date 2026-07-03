@@ -12,6 +12,7 @@ import (
 	"github.com/Telmate/proxmox-api-go/proxmox"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/hashicorp/packer-plugin-sdk/template/config"
 )
 
 // stepFinalizeConfig does any required modifications to the configuration _after_
@@ -32,14 +33,6 @@ func (s *stepFinalizeConfig) Run(ctx context.Context, state multistep.StateBag) 
 	client := state.Get("proxmoxClient").(finalizer)
 	c := state.Get("config").(*Config)
 	vmRef := state.Get("vmRef").(*proxmox.VmRef)
-
-	proxmoxVersion, err := client.Version()
-	if err != nil {
-		err := fmt.Errorf("error fetching backend version: %s", err)
-		state.Put("error", err)
-		ui.Error(err.Error())
-		return multistep.ActionHalt
-	}
 
 	changes := make(map[string]interface{})
 
@@ -96,18 +89,28 @@ func (s *stepFinalizeConfig) Run(ctx context.Context, state multistep.StateBag) 
 				if vmParams[controller] == nil {
 					ui.Say("Adding a cloud-init cdrom in storage pool " + cloudInitStoragePool)
 					changes[controller] = cloudInitStoragePool + ":cloudinit"
-					// Cloud-Init `Upgrade Packages` not available in versions lower than 8
-					if proxmoxVersion.Major >= 8 {
-						switch c.CloudInitDisableUpgradePackages {
-						case true:
-							changes["ciupgrade"] = false
-						case false:
-							changes["ciupgrade"] = true
+					// Cloud-Init `Upgrade Packages`
+					if c.CloudInitDisableUpgradePackages != config.TriUnset {
+						// Cloud-Init `Upgrade Packages` not available in versions lower than 8
+						proxmoxVersion, err := client.Version()
+						if err != nil {
+							err := fmt.Errorf("error fetching backend version: %s", err)
+							state.Put("error", err)
+							ui.Error(err.Error())
+							return multistep.ActionHalt
 						}
-					} else {
-						// only write to UI if the cloud_init_disable_upgrade_packages is configured but the backend is an incompatible version
-						if c.CloudInitDisableUpgradePackages {
-							ui.Say("cloud_init_disable_upgrade_packages is set to true, but not supported in Proxmox versions lower than 8. No changes made.")
+						if proxmoxVersion.Major >= 8 {
+							switch c.CloudInitDisableUpgradePackages {
+							case config.TriTrue:
+								changes["ciupgrade"] = false
+							case config.TriFalse:
+								changes["ciupgrade"] = true
+							}
+						} else {
+							// only write to UI if the cloud_init_disable_upgrade_packages is configured but the backend is an incompatible version
+							if c.CloudInitDisableUpgradePackages == config.TriTrue {
+								ui.Say("cloud_init_disable_upgrade_packages is set to true, but not supported in Proxmox versions lower than 8. No changes made.")
+							}
 						}
 					}
 					cloudInitAttached = true
