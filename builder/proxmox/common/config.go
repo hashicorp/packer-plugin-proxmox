@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2019, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 //go:generate packer-sdc struct-markdown
@@ -53,7 +53,7 @@ type Config struct {
 	// URL to the Proxmox API, including the full path,
 	// so `https://<server>:<port>/api2/json` for example.
 	// Can also be set via the `PROXMOX_URL` environment variable.
-	ProxmoxURLRaw string `mapstructure:"proxmox_url"`
+	ProxmoxURLRaw string `mapstructure:"proxmox_url" required:"true"`
 	proxmoxURL    *url.URL
 	// Skip validating the certificate.
 	SkipCertValidation bool `mapstructure:"insecure_skip_tls_verify"`
@@ -62,7 +62,7 @@ type Config struct {
 	// token authentication, the username must include the token id after an exclamation
 	// mark. For example, `user@pve!tokenid`.
 	// Can also be set via the `PROXMOX_USERNAME` environment variable.
-	Username string `mapstructure:"username"`
+	Username string `mapstructure:"username" required:"true"`
 	// Password for the user.
 	// For API tokens please use `token`.
 	// Can also be set via the `PROXMOX_PASSWORD` environment variable.
@@ -77,7 +77,7 @@ type Config struct {
 	Token string `mapstructure:"token"`
 	// Which node in the Proxmox cluster to start the virtual
 	// machine on during creation.
-	Node string `mapstructure:"node"`
+	Node string `mapstructure:"node" required:"true"`
 	// Name of resource pool to create virtual machine in.
 	Pool string `mapstructure:"pool"`
 	// `task_timeout` (duration string | ex: "10m") - The timeout for
@@ -437,7 +437,7 @@ type efiConfig struct {
 //
 // ```
 type tpmConfig struct {
-	// Name of the Proxmox storage pool to store the EFI disk on.
+	// Name of the Proxmox storage pool to store the TPM state on.
 	TPMStoragePool string `mapstructure:"tpm_storage_pool"`
 	// Version of TPM spec. Can be `v1.2` or `v2.0` Defaults to `v2.0`.
 	Version string `mapstructure:"tpm_version"`

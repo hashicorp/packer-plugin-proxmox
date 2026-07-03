@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2019, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package proxmox
@@ -53,7 +53,7 @@ func (s *stepRemoveCloudInitDrive) Run(ctx context.Context, state multistep.Stat
 	}
 
 	for _, controller := range diskControllers {
-		if vmParams[controller] != nil && strings.Contains(vmParams[controller].(string), "-cloudinit,media=cdrom") {
+		if vmParams[controller] != nil && strings.Contains(vmParams[controller].(string), "-cloudinit") && strings.Contains(vmParams[controller].(string), ",media=cdrom") {
 			delete = append(delete, controller)
 		}
 	}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2019, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package proxmox
@@ -65,12 +65,19 @@ func getExistingTemplate(c *Config, client vmStarter) (*proxmox.VmRef, error) {
 		}
 		log.Printf("found VM with ID %d", vmRef.VmId())
 	} else {
-		log.Printf("looking up VMs with name '%s'", c.TemplateName)
-		vmRefs, err := client.GetVmRefsByName(c.TemplateName)
+		// Fall back to VMName when TemplateName is not set, matching the
+		// behaviour in stepFinalizeTemplateConfig where VMName is used as
+		// the default template name.
+		templateName := c.TemplateName
+		if templateName == "" {
+			templateName = c.VMName
+		}
+		log.Printf("looking up VMs with name '%s'", templateName)
+		vmRefs, err := client.GetVmRefsByName(templateName)
 		if err != nil {
 			// expect an error if no VMs are found
 			// the error string is defined in GetVmRefsByName() of proxmox-api-go
-			notFoundError := fmt.Sprintf("vm '%s' not found", c.TemplateName)
+			notFoundError := fmt.Sprintf("vm '%s' not found", templateName)
 			if err.Error() == notFoundError {
 				log.Println(err.Error())
 				return &proxmox.VmRef{}, nil
@@ -82,10 +89,10 @@ func getExistingTemplate(c *Config, client vmStarter) (*proxmox.VmRef, error) {
 			for _, vmr := range vmRefs {
 				vmIDs = append(vmIDs, vmr.VmId())
 			}
-			return &proxmox.VmRef{}, fmt.Errorf("found multiple VMs with name '%s', IDs: %v", c.TemplateName, vmIDs)
+			return &proxmox.VmRef{}, fmt.Errorf("found multiple VMs with name '%s', IDs: %v", templateName, vmIDs)
 		}
 		vmRef = vmRefs[0]
-		log.Printf("found VM with name '%s' (ID: %d)", c.TemplateName, vmRef.VmId())
+		log.Printf("found VM with name '%s' (ID: %d)", templateName, vmRef.VmId())
 	}
 	if c.SkipConvertToTemplate {
 		return vmRef, nil
@@ -136,6 +143,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 			Cores:   (*proxmox.QemuCpuCores)(&c.Cores),
 			Sockets: (*proxmox.QemuCpuSockets)(&c.Sockets),
 			Numa:    &c.Numa,
+			Type:    (*proxmox.CpuType)(&c.CPUType),
 		},
 		Description: &description,
 		Memory: &proxmox.QemuMemory{
@@ -800,7 +808,7 @@ func setDeviceParamIfDefined(dev proxmox.QemuDevice, key, value string) {
 }
 
 func isDuplicateIDError(err error) bool {
-	return strings.Contains(err.Error(), "already exists on node")
+	return strings.Contains(err.Error(), "already exists")
 }
 
 type startedVMCleaner interface {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2019, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package proxmox
@@ -90,6 +90,11 @@ func (s *stepUploadISO) Cleanup(state multistep.StateBag) {
 	c := state.Get("config").(*Config)
 	ui := state.Get("ui").(packersdk.Ui)
 	client := state.Get("proxmoxClient").(uploader)
+
+	// If everything finished successfully and we want to keep the ISO mounted, don't cleanup generated ISO
+	if _, ok := state.GetOk("success"); ok && !s.ISO.Unmount {
+		return
+	}
 
 	if (len(s.ISO.CDFiles) > 0 || len(s.ISO.CDContent) > 0) && s.ISO.DownloadPathKey != "" {
 		// Fake a VM reference, DeleteVolume just needs the node to be valid

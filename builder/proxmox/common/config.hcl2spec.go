@@ -24,6 +24,7 @@ type FlatConfig struct {
 	HTTPPortMax               *int                  `mapstructure:"http_port_max" cty:"http_port_max" hcl:"http_port_max"`
 	HTTPAddress               *string               `mapstructure:"http_bind_address" cty:"http_bind_address" hcl:"http_bind_address"`
 	HTTPInterface             *string               `mapstructure:"http_interface" undocumented:"true" cty:"http_interface" hcl:"http_interface"`
+	HTTPNetworkProtocol       *string               `mapstructure:"http_network_protocol" cty:"http_network_protocol" hcl:"http_network_protocol"`
 	BootGroupInterval         *string               `mapstructure:"boot_keygroup_interval" cty:"boot_keygroup_interval" hcl:"boot_keygroup_interval"`
 	BootWait                  *string               `mapstructure:"boot_wait" cty:"boot_wait" hcl:"boot_wait"`
 	BootCommand               []string              `mapstructure:"boot_command" cty:"boot_command" hcl:"boot_command"`
@@ -77,12 +78,12 @@ type FlatConfig struct {
 	WinRMUseSSL               *bool                 `mapstructure:"winrm_use_ssl" cty:"winrm_use_ssl" hcl:"winrm_use_ssl"`
 	WinRMInsecure             *bool                 `mapstructure:"winrm_insecure" cty:"winrm_insecure" hcl:"winrm_insecure"`
 	WinRMUseNTLM              *bool                 `mapstructure:"winrm_use_ntlm" cty:"winrm_use_ntlm" hcl:"winrm_use_ntlm"`
-	ProxmoxURLRaw             *string               `mapstructure:"proxmox_url" cty:"proxmox_url" hcl:"proxmox_url"`
+	ProxmoxURLRaw             *string               `mapstructure:"proxmox_url" required:"true" cty:"proxmox_url" hcl:"proxmox_url"`
 	SkipCertValidation        *bool                 `mapstructure:"insecure_skip_tls_verify" cty:"insecure_skip_tls_verify" hcl:"insecure_skip_tls_verify"`
-	Username                  *string               `mapstructure:"username" cty:"username" hcl:"username"`
+	Username                  *string               `mapstructure:"username" required:"true" cty:"username" hcl:"username"`
 	Password                  *string               `mapstructure:"password" cty:"password" hcl:"password"`
 	Token                     *string               `mapstructure:"token" cty:"token" hcl:"token"`
-	Node                      *string               `mapstructure:"node" cty:"node" hcl:"node"`
+	Node                      *string               `mapstructure:"node" required:"true" cty:"node" hcl:"node"`
 	Pool                      *string               `mapstructure:"pool" cty:"pool" hcl:"pool"`
 	TaskTimeout               *string               `mapstructure:"task_timeout" cty:"task_timeout" hcl:"task_timeout"`
 	VMName                    *string               `mapstructure:"vm_name" cty:"vm_name" hcl:"vm_name"`
@@ -148,6 +149,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"http_port_max":                &hcldec.AttrSpec{Name: "http_port_max", Type: cty.Number, Required: false},
 		"http_bind_address":            &hcldec.AttrSpec{Name: "http_bind_address", Type: cty.String, Required: false},
 		"http_interface":               &hcldec.AttrSpec{Name: "http_interface", Type: cty.String, Required: false},
+		"http_network_protocol":        &hcldec.AttrSpec{Name: "http_network_protocol", Type: cty.String, Required: false},
 		"boot_keygroup_interval":       &hcldec.AttrSpec{Name: "boot_keygroup_interval", Type: cty.String, Required: false},
 		"boot_wait":                    &hcldec.AttrSpec{Name: "boot_wait", Type: cty.String, Required: false},
 		"boot_command":                 &hcldec.AttrSpec{Name: "boot_command", Type: cty.List(cty.String), Required: false},
