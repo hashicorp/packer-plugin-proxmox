@@ -69,7 +69,10 @@ func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, config proxmoxapi.ConfigQ
 	var nameServers []netip.Addr
 	if c.Nameserver != "" {
 		for _, nameserver := range strings.Split(c.Nameserver, " ") {
-			ip, _ := netip.ParseAddr(nameserver)
+			ip, err := netip.ParseAddr(nameserver)
+			if err != nil {
+				continue
+			}
 			nameServers = append(nameServers, ip)
 		}
 	}
