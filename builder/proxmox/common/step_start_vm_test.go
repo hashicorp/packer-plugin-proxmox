@@ -434,6 +434,9 @@ func TestStartVMWithForce(t *testing.T) {
 			mockGetVmConfig: func(vmr *proxmox.VmRef) (map[string]interface{}, error) {
 				return map[string]interface{}{"template": 1.0}, nil
 			},
+			mockGetVmState: func(vmr *proxmox.VmRef) (map[string]interface{}, error) {
+				return map[string]interface{}{"status": "stopped"}, nil
+			},
 		},
 	}
 
