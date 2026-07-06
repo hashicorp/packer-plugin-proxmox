@@ -12,6 +12,7 @@ import (
 	"github.com/Telmate/proxmox-api-go/proxmox"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/hashicorp/packer-plugin-sdk/template/config"
 )
 
 // stepFinalizeConfig does any required modifications to the configuration _after_
@@ -22,6 +23,7 @@ type stepFinalizeConfig struct{}
 type finalizer interface {
 	GetVmConfig(*proxmox.VmRef) (map[string]interface{}, error)
 	SetVmConfig(*proxmox.VmRef, map[string]interface{}) (interface{}, error)
+	Version() (proxmox.Version, error)
 	StartVm(*proxmox.VmRef) (string, error)
 	ShutdownVm(*proxmox.VmRef) (string, error)
 }
@@ -89,11 +91,35 @@ func (s *stepFinalizeConfig) Run(ctx context.Context, state multistep.StateBag) 
 				if vmParams[controller] == nil {
 					ui.Say("Adding a cloud-init cdrom in storage pool " + cloudInitStoragePool)
 					changes[controller] = cloudInitStoragePool + ":cloudinit"
+					// Cloud-Init `Upgrade Packages`
+					if c.CloudInitDisableUpgradePackages != config.TriUnset {
+						// Cloud-Init `Upgrade Packages` not available in versions lower than 8
+						proxmoxVersion, err := client.Version()
+						if err != nil {
+							err := fmt.Errorf("error fetching backend version: %s", err)
+							state.Put("error", err)
+							ui.Error(err.Error())
+							return multistep.ActionHalt
+						}
+						if proxmoxVersion.Major >= 8 {
+							switch c.CloudInitDisableUpgradePackages {
+							case config.TriTrue:
+								changes["ciupgrade"] = false
+							case config.TriFalse:
+								changes["ciupgrade"] = true
+							}
+						} else {
+							// only write to UI if the cloud_init_disable_upgrade_packages is configured but the backend is an incompatible version
+							if c.CloudInitDisableUpgradePackages == config.TriTrue {
+								ui.Say("cloud_init_disable_upgrade_packages is set to true, but not supported in Proxmox versions lower than 8. No changes made.")
+							}
+						}
+					}
 					cloudInitAttached = true
 					break
 				}
 			}
-			if cloudInitAttached == false {
+			if !cloudInitAttached {
 				err := fmt.Errorf("Found no free controller of type %s for a cloud-init cdrom", c.CloudInitDiskType)
 				state.Put("error", err)
 				ui.Error(err.Error())

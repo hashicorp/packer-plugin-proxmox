@@ -279,6 +279,10 @@ boot time.
 - `cloud_init_disk_type` (string) - The type of Cloud-Init disk. Can be `scsi`, `sata`, or `ide`
   Defaults to `ide`.
 
+- `cloud_init_disable_upgrade_packages` (boolean) - Disable Upgrade Packages behaviour for Cloud-Init.
+  If unset and a Cloud-Init drive is configured for an ISO build, the Proxmox backend will default 'Upgrade Packages' to Yes for template builds.
+  If unset for a clone build, configuration for 'Upgrade Packages' will be preserved if a Cloud-Init drive was present on the source VM.
+
 - `additional_iso_files` ([]ISOsConfig) - ISO files attached to the virtual machine.
   See [ISOs](#isos).
 
