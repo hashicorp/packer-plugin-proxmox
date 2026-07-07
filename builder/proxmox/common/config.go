@@ -900,7 +900,7 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("network_adapters[%d].packet_queues can only be set for 'virtio' driver", idx))
 		}
 		if (nic.MTU < 0) || (nic.MTU > 65520) {
-			errs = packersdk.MultiErrorAppend(errs, errors.New("network_adapters[%d].mtu only positive values up to 65520 are supported"))
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("network_adapters[%d].mtu only positive values up to 65520 are supported", idx))
 		}
 	}
 	if c.EFIDisk != "" {
