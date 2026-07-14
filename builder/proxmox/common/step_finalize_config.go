@@ -12,23 +12,27 @@ import (
 	"github.com/Telmate/proxmox-api-go/proxmox"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/hashicorp/packer-plugin-sdk/template/config"
 )
 
-// stepFinalizeTemplateConfig does any required modifications to the configuration _after_
+// stepFinalizeConfig does any required modifications to the configuration _after_
 // the VM has been converted into a template, such as updating name and description, or
 // unmounting the installation ISO.
-type stepFinalizeTemplateConfig struct{}
+type stepFinalizeConfig struct{}
 
-type templateFinalizer interface {
+type finalizer interface {
 	GetVmConfig(*proxmox.VmRef) (map[string]interface{}, error)
 	SetVmConfig(*proxmox.VmRef, map[string]interface{}) (interface{}, error)
+	Version() (proxmox.Version, error)
+	StartVm(*proxmox.VmRef) (string, error)
+	ShutdownVm(*proxmox.VmRef) (string, error)
 }
 
-var _ templateFinalizer = &proxmox.Client{}
+var _ finalizer = &proxmox.Client{}
 
-func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
+func (s *stepFinalizeConfig) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packersdk.Ui)
-	client := state.Get("proxmoxClient").(templateFinalizer)
+	client := state.Get("proxmoxClient").(finalizer)
 	c := state.Get("config").(*Config)
 	vmRef := state.Get("vmRef").(*proxmox.VmRef)
 
@@ -45,7 +49,7 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 
 	vmParams, err := client.GetVmConfig(vmRef)
 	if err != nil {
-		err := fmt.Errorf("error fetching template config: %s", err)
+		err := fmt.Errorf("error fetching config: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
 		return multistep.ActionHalt
@@ -87,11 +91,35 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 				if vmParams[controller] == nil {
 					ui.Say("Adding a cloud-init cdrom in storage pool " + cloudInitStoragePool)
 					changes[controller] = cloudInitStoragePool + ":cloudinit"
+					// Cloud-Init `Upgrade Packages`
+					if c.CloudInitDisableUpgradePackages != config.TriUnset {
+						// Cloud-Init `Upgrade Packages` not available in versions lower than 8
+						proxmoxVersion, err := client.Version()
+						if err != nil {
+							err := fmt.Errorf("error fetching backend version: %s", err)
+							state.Put("error", err)
+							ui.Error(err.Error())
+							return multistep.ActionHalt
+						}
+						if proxmoxVersion.Major >= 8 {
+							switch c.CloudInitDisableUpgradePackages {
+							case config.TriTrue:
+								changes["ciupgrade"] = false
+							case config.TriFalse:
+								changes["ciupgrade"] = true
+							}
+						} else {
+							// only write to UI if the cloud_init_disable_upgrade_packages is configured but the backend is an incompatible version
+							if c.CloudInitDisableUpgradePackages == config.TriTrue {
+								ui.Say("cloud_init_disable_upgrade_packages is set to true, but not supported in Proxmox versions lower than 8. No changes made.")
+							}
+						}
+					}
 					cloudInitAttached = true
 					break
 				}
 			}
-			if cloudInitAttached == false {
+			if !cloudInitAttached {
 				err := fmt.Errorf("Found no free controller of type %s for a cloud-init cdrom", c.CloudInitDiskType)
 				state.Put("error", err)
 				ui.Error(err.Error())
@@ -139,6 +167,17 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 	changes["delete"] = strings.Join(deleteItems, ",")
 
 	if len(changes) > 0 {
+		// Adding a Cloud-Init drive or removing CD-ROM devices won't take effect without a power off and on of the QEMU VM
+		if c.SkipConvertToTemplate {
+			ui.Say("Hardware changes pending for VM, stopping VM")
+			_, err := client.ShutdownVm(vmRef)
+			if err != nil {
+				err := fmt.Errorf("Error stopping VM: %s", err)
+				state.Put("error", err)
+				ui.Error(err.Error())
+				return multistep.ActionHalt
+			}
+		}
 		_, err := client.SetVmConfig(vmRef, changes)
 		if err != nil {
 			err := fmt.Errorf("Error updating template: %s", err)
@@ -148,7 +187,19 @@ func (s *stepFinalizeTemplateConfig) Run(ctx context.Context, state multistep.St
 		}
 	}
 
+	// When build artifact is to be a VM, return a running VM
+	if c.SkipConvertToTemplate {
+		ui.Say("Resuming VM")
+		_, err := client.StartVm(vmRef)
+		if err != nil {
+			err := fmt.Errorf("Error starting VM: %s", err)
+			state.Put("error", err)
+			ui.Error(err.Error())
+			return multistep.ActionHalt
+		}
+	}
+
 	return multistep.ActionContinue
 }
 
-func (s *stepFinalizeTemplateConfig) Cleanup(state multistep.StateBag) {}
+func (s *stepFinalizeConfig) Cleanup(state multistep.StateBag) {}

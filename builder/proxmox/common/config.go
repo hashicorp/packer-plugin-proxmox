@@ -53,7 +53,7 @@ type Config struct {
 	// URL to the Proxmox API, including the full path,
 	// so `https://<server>:<port>/api2/json` for example.
 	// Can also be set via the `PROXMOX_URL` environment variable.
-	ProxmoxURLRaw string `mapstructure:"proxmox_url"`
+	ProxmoxURLRaw string `mapstructure:"proxmox_url" required:"true"`
 	proxmoxURL    *url.URL
 	// Skip validating the certificate.
 	SkipCertValidation bool `mapstructure:"insecure_skip_tls_verify"`
@@ -62,7 +62,7 @@ type Config struct {
 	// token authentication, the username must include the token id after an exclamation
 	// mark. For example, `user@pve!tokenid`.
 	// Can also be set via the `PROXMOX_USERNAME` environment variable.
-	Username string `mapstructure:"username"`
+	Username string `mapstructure:"username" required:"true"`
 	// Password for the user.
 	// For API tokens please use `token`.
 	// Can also be set via the `PROXMOX_PASSWORD` environment variable.
@@ -77,7 +77,7 @@ type Config struct {
 	Token string `mapstructure:"token"`
 	// Which node in the Proxmox cluster to start the virtual
 	// machine on during creation.
-	Node string `mapstructure:"node"`
+	Node string `mapstructure:"node" required:"true"`
 	// Name of resource pool to create virtual machine in.
 	Pool string `mapstructure:"pool"`
 	// `task_timeout` (duration string | ex: "10m") - The timeout for
@@ -178,6 +178,9 @@ type Config struct {
 	// Description of the template, visible in
 	// the Proxmox interface.
 	TemplateDescription string `mapstructure:"template_description"`
+	// Skip converting the VM to a template on completion of build.
+	// Defaults to `false`
+	SkipConvertToTemplate bool `mapstructure:"skip_convert_to_template"`
 
 	// If true, add an empty Cloud-Init CDROM drive after the virtual
 	// machine has been converted to a template. Defaults to `false`.
@@ -188,6 +191,10 @@ type Config struct {
 	// The type of Cloud-Init disk. Can be `scsi`, `sata`, or `ide`
 	// Defaults to `ide`.
 	CloudInitDiskType string `mapstructure:"cloud_init_disk_type"`
+	// Disable Upgrade Packages behaviour for Cloud-Init.
+	// If unset and a Cloud-Init drive is configured for an ISO build, the Proxmox backend will default 'Upgrade Packages' to Yes for template builds.
+	// If unset for a clone build, configuration for 'Upgrade Packages' will be preserved if a Cloud-Init drive was present on the source VM.
+	CloudInitDisableUpgradePackages config.Trilean `mapstructure:"cloud_init_disable_upgrade_packages"`
 
 	// ISO files attached to the virtual machine.
 	// See [ISOs](#isos).
@@ -434,7 +441,7 @@ type efiConfig struct {
 //
 // ```
 type tpmConfig struct {
-	// Name of the Proxmox storage pool to store the EFI disk on.
+	// Name of the Proxmox storage pool to store the TPM state on.
 	TPMStoragePool string `mapstructure:"tpm_storage_pool"`
 	// Version of TPM spec. Can be `v1.2` or `v2.0` Defaults to `v2.0`.
 	Version string `mapstructure:"tpm_version"`
@@ -893,7 +900,7 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("network_adapters[%d].packet_queues can only be set for 'virtio' driver", idx))
 		}
 		if (nic.MTU < 0) || (nic.MTU > 65520) {
-			errs = packersdk.MultiErrorAppend(errs, errors.New("network_adapters[%d].mtu only positive values up to 65520 are supported"))
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("network_adapters[%d].mtu only positive values up to 65520 are supported", idx))
 		}
 	}
 	if c.EFIDisk != "" {

@@ -1,0 +1,16 @@
+<!-- Code generated from the comments of the Config struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
+
+- `proxmox_url` (string) - URL to the Proxmox API, including the full path,
+  so `https://<server>:<port>/api2/json` for example.
+  Can also be set via the `PROXMOX_URL` environment variable.
+
+- `username` (string) - Username when authenticating to Proxmox, including
+  the realm. For example `user@pve` to use the local Proxmox realm. When using
+  token authentication, the username must include the token id after an exclamation
+  mark. For example, `user@pve!tokenid`.
+  Can also be set via the `PROXMOX_USERNAME` environment variable.
+
+- `node` (string) - Which node in the Proxmox cluster to start the virtual
+  machine on during creation.
+
+<!-- End of code generated from the comments of the Config struct in builder/proxmox/common/config.go; -->

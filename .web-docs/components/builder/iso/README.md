@@ -35,6 +35,24 @@ in the image's Cloud-Init settings for provisioning.
 
 ### Required:
 
+<!-- Code generated from the comments of the Config struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
+
+- `proxmox_url` (string) - URL to the Proxmox API, including the full path,
+  so `https://<server>:<port>/api2/json` for example.
+  Can also be set via the `PROXMOX_URL` environment variable.
+
+- `username` (string) - Username when authenticating to Proxmox, including
+  the realm. For example `user@pve` to use the local Proxmox realm. When using
+  token authentication, the username must include the token id after an exclamation
+  mark. For example, `user@pve!tokenid`.
+  Can also be set via the `PROXMOX_USERNAME` environment variable.
+
+- `node` (string) - Which node in the Proxmox cluster to start the virtual
+  machine on during creation.
+
+<!-- End of code generated from the comments of the Config struct in builder/proxmox/common/config.go; -->
+
+
 <!-- Code generated from the comments of the Config struct in builder/proxmox/iso/config.go; DO NOT EDIT MANUALLY -->
 
 - `boot_iso` (common.ISOsConfig) - Boot ISO attached to the virtual machine.
@@ -74,17 +92,7 @@ in the image's Cloud-Init settings for provisioning.
 
 - `boot_key_interval` (duration string | ex: "1h5m2s") - Boot Key Interval
 
-- `proxmox_url` (string) - URL to the Proxmox API, including the full path,
-  so `https://<server>:<port>/api2/json` for example.
-  Can also be set via the `PROXMOX_URL` environment variable.
-
 - `insecure_skip_tls_verify` (bool) - Skip validating the certificate.
-
-- `username` (string) - Username when authenticating to Proxmox, including
-  the realm. For example `user@pve` to use the local Proxmox realm. When using
-  token authentication, the username must include the token id after an exclamation
-  mark. For example, `user@pve!tokenid`.
-  Can also be set via the `PROXMOX_USERNAME` environment variable.
 
 - `password` (string) - Password for the user.
   For API tokens please use `token`.
@@ -97,9 +105,6 @@ in the image's Cloud-Init settings for provisioning.
   Can also be set via the `PROXMOX_TOKEN` environment variable.
   Either `password` or `token` must be specifed. If both are set,
   `token` takes precedence.
-
-- `node` (string) - Which node in the Proxmox cluster to start the virtual
-  machine on during creation.
 
 - `pool` (string) - Name of resource pool to create virtual machine in.
 
@@ -197,6 +202,9 @@ in the image's Cloud-Init settings for provisioning.
 - `template_description` (string) - Description of the template, visible in
   the Proxmox interface.
 
+- `skip_convert_to_template` (bool) - Skip converting the VM to a template on completion of build.
+  Defaults to `false`
+
 - `cloud_init` (bool) - If true, add an empty Cloud-Init CDROM drive after the virtual
   machine has been converted to a template. Defaults to `false`.
 
@@ -205,6 +213,10 @@ in the image's Cloud-Init settings for provisioning.
 
 - `cloud_init_disk_type` (string) - The type of Cloud-Init disk. Can be `scsi`, `sata`, or `ide`
   Defaults to `ide`.
+
+- `cloud_init_disable_upgrade_packages` (boolean) - Disable Upgrade Packages behaviour for Cloud-Init.
+  If unset and a Cloud-Init drive is configured for an ISO build, the Proxmox backend will default 'Upgrade Packages' to Yes for template builds.
+  If unset for a clone build, configuration for 'Upgrade Packages' will be preserved if a Cloud-Init drive was present on the source VM.
 
 - `additional_iso_files` ([]ISOsConfig) - ISO files attached to the virtual machine.
   See [ISOs](#isos).
@@ -667,6 +679,47 @@ Usage example (JSON):
 <!-- End of code generated from the comments of the efiConfig struct in builder/proxmox/common/config.go; -->
 
 
+### TPM Config
+
+<!-- Code generated from the comments of the tpmConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
+
+Set the tpmstate storage options.
+
+HCL2 example:
+
+```hcl
+
+	tpm_config {
+	  tpm_storage_pool = "local"
+	  tpm_version      = "v1.2"
+	}
+
+```
+Usage example (JSON):
+
+```json
+
+	"tpm_config": {
+	  "tpm_storage_pool": "local",
+	  "tpm_version": "v1.2"
+	}
+
+```
+
+<!-- End of code generated from the comments of the tpmConfig struct in builder/proxmox/common/config.go; -->
+
+
+#### Optional:
+
+<!-- Code generated from the comments of the tpmConfig struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
+
+- `tpm_storage_pool` (string) - Name of the Proxmox storage pool to store the TPM state on.
+
+- `tpm_version` (string) - Version of TPM spec. Can be `v1.2` or `v2.0` Defaults to `v2.0`.
+
+<!-- End of code generated from the comments of the tpmConfig struct in builder/proxmox/common/config.go; -->
+
+
 ### VirtIO RNG device
 
 <!-- Code generated from the comments of the rng0Config struct in builder/proxmox/common/config.go; DO NOT EDIT MANUALLY -->
@@ -866,7 +919,11 @@ command, they will be replaced by the proper key:
 
 -   `<leftShift> <rightShift>` - Simulates pressing the shift key.
 
--   `<leftSuper> <rightSuper>` - Simulates pressing the ⌘ or Windows key.
+-   `<leftSuper> <rightSuper>` - Simulates pressing the super key.
+
+-   `<leftCommand> <rightCommand>` - Simulates pressing the ⌘ key.
+
+-   `<leftOption> <rightOption>` - Simulates pressing the ⌥ key.
 
   - `<wait> <wait5> <wait10>` - Adds a 1, 5 or 10 second pause before
     sending any additional keys. This is useful if you have to generally

@@ -2,17 +2,7 @@
 
 - `boot_key_interval` (duration string | ex: "1h5m2s") - Boot Key Interval
 
-- `proxmox_url` (string) - URL to the Proxmox API, including the full path,
-  so `https://<server>:<port>/api2/json` for example.
-  Can also be set via the `PROXMOX_URL` environment variable.
-
 - `insecure_skip_tls_verify` (bool) - Skip validating the certificate.
-
-- `username` (string) - Username when authenticating to Proxmox, including
-  the realm. For example `user@pve` to use the local Proxmox realm. When using
-  token authentication, the username must include the token id after an exclamation
-  mark. For example, `user@pve!tokenid`.
-  Can also be set via the `PROXMOX_USERNAME` environment variable.
 
 - `password` (string) - Password for the user.
   For API tokens please use `token`.
@@ -25,9 +15,6 @@
   Can also be set via the `PROXMOX_TOKEN` environment variable.
   Either `password` or `token` must be specifed. If both are set,
   `token` takes precedence.
-
-- `node` (string) - Which node in the Proxmox cluster to start the virtual
-  machine on during creation.
 
 - `pool` (string) - Name of resource pool to create virtual machine in.
 
@@ -125,6 +112,9 @@
 - `template_description` (string) - Description of the template, visible in
   the Proxmox interface.
 
+- `skip_convert_to_template` (bool) - Skip converting the VM to a template on completion of build.
+  Defaults to `false`
+
 - `cloud_init` (bool) - If true, add an empty Cloud-Init CDROM drive after the virtual
   machine has been converted to a template. Defaults to `false`.
 
@@ -133,6 +123,10 @@
 
 - `cloud_init_disk_type` (string) - The type of Cloud-Init disk. Can be `scsi`, `sata`, or `ide`
   Defaults to `ide`.
+
+- `cloud_init_disable_upgrade_packages` (boolean) - Disable Upgrade Packages behaviour for Cloud-Init.
+  If unset and a Cloud-Init drive is configured for an ISO build, the Proxmox backend will default 'Upgrade Packages' to Yes for template builds.
+  If unset for a clone build, configuration for 'Upgrade Packages' will be preserved if a Cloud-Init drive was present on the source VM.
 
 - `additional_iso_files` ([]ISOsConfig) - ISO files attached to the virtual machine.
   See [ISOs](#isos).
