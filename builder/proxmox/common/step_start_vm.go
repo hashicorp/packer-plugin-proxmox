@@ -280,6 +280,8 @@ func generateProxmoxNetworkAdapters(nics []NICConfig) proxmox.QemuNetworkInterfa
 		if n.MACAddress != "" {
 			if hw, err := net.ParseMAC(n.MACAddress); err == nil {
 				iface.MAC = &hw
+			} else {
+				log.Printf("invalid network_adapters[%d].mac_address %q: %v", idx, n.MACAddress, err)
 			}
 		}
 		if n.Bridge != "" {
