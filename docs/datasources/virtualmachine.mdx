@@ -1,0 +1,78 @@
+---
+description: |
+  The proxmox virtual machine datasource retrieves information about existing virtual machines
+  from Proxmox cluster and returns VM ID of one virtual machine that matches all
+  specified filters. This ID can be used in the clone builder to select a template.
+page_title: Proxmox Clone - Datasources
+sidebar_title: proxmox-template
+nav_title: Template
+---
+
+# Proxmox Template Datasource
+
+Type: `proxmox-virtualmachine`
+Artifact BuilderId: `proxmox.virtualmachine`
+
+The `proxmox-virtualmachine` datasource retrieves information about existing virtual machines
+from [Proxmox](https://www.proxmox.com/en/proxmox-ve) cluster and returns VM ID of one virtual machine
+that matches all specified filters. This ID can be used in the `proxmox-clone` builder to select a template.
+
+## Configuration Reference
+
+@include 'datasource/virtualmachine/Config.mdx'
+
+## Optional:
+
+@include 'datasource/virtualmachine/Config-not-required.mdx'
+
+## Output:
+
+@include 'datasource/virtualmachine/DatasourceOutput.mdx'
+
+## Example Usage
+
+This is a very basic example which connects to local PVE host, finds the latest
+guest which name matches the regex `image-.*` and which type is `template`. The
+ID of the virtual machine is printed to console as output variable.
+
+```hcl
+variable "password" {
+  type    = string
+  default = "supersecret"
+}
+
+variable "username" {
+  type    = string
+  default = "apiuser@pve"
+}
+
+data "proxmox-virtualmachine" "default" {
+    proxmox_url = "https://my-proxmox.my-domain:8006/api2/json"
+    insecure_skip_tls_verify = true
+    username = "${var.username}"
+    password = "${var.password}"
+    name_regex = "image-.*"
+    template = true
+    latest   = true
+}
+
+locals {
+  vm_id = data.proxmox-virtualmachine.default.vm_id
+}
+
+source "null" "basic-example" {
+    communicator = "none"
+}
+
+build {
+  sources = [
+    "source.null.basic-example"
+  ]
+
+  provisioner "shell-local" {
+    inline = [
+      "echo vm_id: ${local.vm_id}",
+    ]
+  }
+}
+```
