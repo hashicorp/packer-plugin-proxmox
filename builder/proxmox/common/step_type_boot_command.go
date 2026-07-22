@@ -58,7 +58,10 @@ func (s *stepTypeBootCommand) Run(ctx context.Context, state multistep.StateBag)
 	}
 	var httpIP string
 	var err error
-	if c.HTTPAddress != "0.0.0.0" {
+	if c.HTTPCallbackAddress != "" {
+		// HTTPCallbackAddress is useful when running within a kubernetes environment using an exposed LoadBalancer ip
+		httpIP = c.HTTPCallbackAddress
+	} else if c.HTTPAddress != "0.0.0.0" {
 		httpIP = c.HTTPAddress
 	} else {
 		httpIP, err = hostIP(c.HTTPInterface)
