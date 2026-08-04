@@ -58,8 +58,8 @@ func TestAgentSetToDisabled(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if c.Agent() != "disabled" {
-		t.Errorf("Expected Agent to be disabled, got %s", c.Agent)
+	if c.Agent != "disabled" {
+		t.Errorf("Expected Agent to be 'disabled', got %s", c.Agent)
 	}
 }
 
