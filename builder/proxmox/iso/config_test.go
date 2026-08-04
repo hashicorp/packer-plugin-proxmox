@@ -103,8 +103,8 @@ func TestBasicExampleFromDocsIsValid(t *testing.T) {
 	if b.config.Disks[0].CacheMode != "none" {
 		t.Errorf("Expected disk cache mode to be 'none', got %s", b.config.Disks[0].CacheMode)
 	}
-	if b.config.Agent.True() != true {
-		t.Errorf("Expected Agent to be true, got %t", b.config.Agent.True())
+	if b.config.Agent != "virtio" {
+		t.Errorf("Expected Agent to be 'virtio', got %s", b.config.Agent)
 	}
 	if b.config.DisableKVM != false {
 		t.Errorf("Expected Disable KVM toggle to be false, got %t", b.config.DisableKVM)
@@ -169,18 +169,18 @@ func TestDeprecatedBootISOOptionsAreConverted(t *testing.T) {
 	}
 }
 
-func TestAgentSetToFalse(t *testing.T) {
+func TestAgentSetToDisabled(t *testing.T) {
 	cfg := mandatoryConfig(t)
 	cfg["qemu_agent"] = "disabled"
 
 	var c Config
-	_, warn, err := c.Prepare(cfg)
+	_, _, err := c.Prepare(&c, cfg)
 	if err != nil {
-		t.Fatal(err, warn)
+		t.Fatal(err)
 	}
 
-	if c.Agent.False() != true {
-		t.Errorf("Expected Agent to be false, got %t", c.Agent.True())
+	if c.Agent != "disabled" {
+		t.Errorf("Expected Agent to be 'disabled', got %s", c.Agent)
 	}
 }
 
