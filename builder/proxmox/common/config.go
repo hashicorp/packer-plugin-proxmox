@@ -158,10 +158,11 @@ type Config struct {
 	//   ]
 	//   ```
 	Serials []string `mapstructure:"serials"`
-	// Enables QEMU Agent option for this VM. When enabled,
-	// then `qemu-guest-agent` must be installed on the guest. When disabled, then
-	// `ssh_host` should be used. Defaults to `true`.
-	Agent config.Trilean `mapstructure:"qemu_agent"`
+	// Configures QEMU Agent option for this VM.
+	// Supported values are 'virtio', 'isa' or 'disabled'.
+	// When disabled, then `ssh_host` should be used.
+	// Defaults to 'virtio'.
+	Agent string `mapstructure:"qemu_agent"`
 	// The SCSI controller model to emulate. Can be `lsi`,
 	// `lsi53c810`, `virtio-scsi-pci`, `virtio-scsi-single`, `megasas`, or `pvscsi`.
 	// Defaults to `lsi`.
@@ -611,9 +612,13 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		warnings = append(warnings, "proxmox is deprecated, please use proxmox-iso instead")
 	}
 
-	// Default qemu_agent to true
-	if c.Agent != config.TriFalse {
-		c.Agent = config.TriTrue
+	switch c.Agent {
+		case "virtio", "isa":
+		case "":
+			log.Printf("qemu_agent not specified, defaulting to `virtio`")
+			c.Agent = "virtio"
+		default:
+			errs = packersdk.MultiErrorAppend(errs, errors.New("qemu_agent type field must be `virtio` , `isa` or `disabled`"))
 	}
 
 	packersdk.LogSecretFilter.Set(c.Password)
