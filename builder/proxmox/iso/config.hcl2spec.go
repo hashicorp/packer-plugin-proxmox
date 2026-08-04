@@ -109,7 +109,7 @@ type FlatConfig struct {
 	Disks                           []proxmox.FlatdiskConfig      `mapstructure:"disks" cty:"disks" hcl:"disks"`
 	PCIDevices                      []proxmox.FlatpciDeviceConfig `mapstructure:"pci_devices" cty:"pci_devices" hcl:"pci_devices"`
 	Serials                         []string                      `mapstructure:"serials" cty:"serials" hcl:"serials"`
-	Agent                           *bool                         `mapstructure:"qemu_agent" cty:"qemu_agent" hcl:"qemu_agent"`
+	Agent                           *string                       `mapstructure:"qemu_agent" cty:"qemu_agent" hcl:"qemu_agent"`
 	SCSIController                  *string                       `mapstructure:"scsi_controller" cty:"scsi_controller" hcl:"scsi_controller"`
 	Onboot                          *bool                         `mapstructure:"onboot" cty:"onboot" hcl:"onboot"`
 	DisableKVM                      *bool                         `mapstructure:"disable_kvm" cty:"disable_kvm" hcl:"disable_kvm"`
