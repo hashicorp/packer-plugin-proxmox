@@ -171,7 +171,7 @@ func TestDeprecatedBootISOOptionsAreConverted(t *testing.T) {
 
 func TestAgentSetToFalse(t *testing.T) {
 	cfg := mandatoryConfig(t)
-	cfg["qemu_agent"] = false
+	cfg["qemu_agent"] = "disabled"
 
 	var c Config
 	_, warn, err := c.Prepare(cfg)
