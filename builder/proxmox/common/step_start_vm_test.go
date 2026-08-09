@@ -1128,6 +1128,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 							Format:          proxmox.QemuDiskFormat("qcow2"),
 							Discard:         false,
 							Backup:          true,
+							Replicate:       true,
 						},
 					},
 					Disk_1: &proxmox.QemuIdeStorage{
@@ -1138,6 +1139,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 							Format:          proxmox.QemuDiskFormat("qcow2"),
 							Discard:         false,
 							Backup:          true,
+							Replicate:       true,
 						},
 					},
 				},
@@ -1150,6 +1152,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 							Format:          proxmox.QemuDiskFormat("qcow2"),
 							Discard:         false,
 							Backup:          true,
+							Replicate:       true,
 						},
 					},
 					Disk_1: &proxmox.QemuSataStorage{
@@ -1160,6 +1163,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 							Format:          proxmox.QemuDiskFormat("qcow2"),
 							Discard:         false,
 							Backup:          true,
+							Replicate:       true,
 						},
 					},
 				},
@@ -1173,6 +1177,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 							Discard:         false,
 							IOThread:        true,
 							Backup:          true,
+							Replicate:       true,
 						},
 					},
 					Disk_1: &proxmox.QemuScsiStorage{
@@ -1184,6 +1189,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 							Discard:         false,
 							IOThread:        true,
 							Backup:          true,
+							Replicate:       true,
 						},
 					},
 				},
@@ -1197,6 +1203,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 							Discard:         false,
 							IOThread:        true,
 							Backup:          true,
+							Replicate:       true,
 						},
 					},
 					Disk_1: &proxmox.QemuVirtIOStorage{
@@ -1208,6 +1215,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 							Discard:         false,
 							IOThread:        true,
 							Backup:          true,
+							Replicate:       true,
 						},
 					},
 				},
@@ -1283,6 +1291,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 							Format:          proxmox.QemuDiskFormat("qcow2"),
 							Discard:         false,
 							Backup:          true,
+							Replicate:       true,
 						},
 					},
 					Disk_1: &proxmox.QemuIdeStorage{
@@ -1293,6 +1302,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 							Format:          proxmox.QemuDiskFormat("qcow2"),
 							Discard:         false,
 							Backup:          true,
+							Replicate:       true,
 						},
 					},
 					Disk_2: &proxmox.QemuIdeStorage{
@@ -1303,6 +1313,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 							Format:          proxmox.QemuDiskFormat("qcow2"),
 							Discard:         false,
 							Backup:          true,
+							Replicate:       true,
 						},
 					},
 				},
@@ -1315,6 +1326,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 							Format:          proxmox.QemuDiskFormat("qcow2"),
 							Discard:         false,
 							Backup:          true,
+							Replicate:       true,
 						},
 					},
 					Disk_1: &proxmox.QemuSataStorage{
@@ -1325,6 +1337,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 							Format:          proxmox.QemuDiskFormat("qcow2"),
 							Discard:         false,
 							Backup:          true,
+							Replicate:       true,
 						},
 					},
 					Disk_2: &proxmox.QemuSataStorage{
@@ -1346,6 +1359,7 @@ func TestGenerateProxmoxDisks(t *testing.T) {
 							Discard:         false,
 							IOThread:        true,
 							Backup:          true,
+							Replicate:       true,
 						},
 					},
 				},
