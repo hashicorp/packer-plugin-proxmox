@@ -634,6 +634,9 @@ Example:
   
   This cannot work with virtio disks.
 
+- `skip_replication` (bool) - Exclude disk from replication jobs.
+  Defaults to false.
+
 <!-- End of code generated from the comments of the diskConfig struct in builder/proxmox/common/config.go; -->
 
 
