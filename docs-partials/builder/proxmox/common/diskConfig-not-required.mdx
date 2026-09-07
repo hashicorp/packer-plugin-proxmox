@@ -3,6 +3,9 @@
 - `type` (string) - The type of disk. Can be `scsi`, `sata`, `virtio` or
   `ide`. Defaults to `scsi`.
 
+- `index` (string) - Optional: Used to specify the index of a disk. Can be used in combination
+  with `type` and `size` to resize disks inherited from a cloned VM
+
 - `storage_pool` (string) - Required. Name of the Proxmox storage pool
   to store the virtual machine disk on. A `local-lvm` pool is allocated
   by the installer, for example.
