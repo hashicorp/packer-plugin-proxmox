@@ -191,6 +191,16 @@ func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, vmConfig proxmoxapi.Confi
 		}
 	}
 
+	if fullClone == 1 && len(c.Disks) > 0 && c.Disks[0].StoragePool != "" {
+		if vmConfig.QemuDisks == nil {
+			vmConfig.QemuDisks = proxmoxapi.QemuDevices{}
+		}
+		if vmConfig.QemuDisks[0] == nil {
+			vmConfig.QemuDisks[0] = make(map[string]interface{})
+		}
+		vmConfig.QemuDisks[0]["storage"] = c.Disks[0].StoragePool
+	}
+
 	err := vmConfig.CloneVm(sourceVmr, vmRef, client)
 	if err != nil {
 		return err
