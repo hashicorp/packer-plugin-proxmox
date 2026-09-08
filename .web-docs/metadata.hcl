@@ -17,4 +17,9 @@ integration {
     name = "Proxmox ISO"
     slug = "iso"
   }
+  component {
+    type = "data-source"
+    name = "Proxmox Virtual Machine"
+    slug = "virtualmachine"
+  }
 }
