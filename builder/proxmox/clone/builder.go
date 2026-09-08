@@ -65,7 +65,16 @@ func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, vmConfig proxmoxapi.Confi
 		fullClone = 0
 	}
 	vmConfig.FullClone = &fullClone
-
+	if c.TargetStoragePool != "" {
+		if config.QemuDisks == nil {
+			config.QemuDisks = make(proxmoxapi.QemuDevices)
+		}
+		if config.QemuDisks[0] == nil {
+			config.QemuDisks[0] = make(proxmoxapi.QemuDevice)
+		}
+		config.QemuDisks[0]["storage"] = c.TargetStoragePool
+	}
+ 
 	// cloud-init options
 
 	var nameServers []netip.Addr
