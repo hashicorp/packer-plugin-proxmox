@@ -30,6 +30,9 @@ type Config struct {
 	CloneVMID int `mapstructure:"clone_vm_id" required:"true"`
 	// Whether to run a full or shallow clone from the base clone_vm. Defaults to `true`.
 	FullClone config.Trilean `mapstructure:"full_clone" required:"false"`
+	// Storage pool to place the cloned source disk on. Only used for full clones.
+	// Defaults to the storage_pool of the first defined disk if not set.
+	CloneStoragePool string `mapstructure:"clone_storage_pool" required:"false"`
 
 	// Set nameserver IP address(es) via Cloud-Init.
 	// If not given, the same setting as on the host is used.
