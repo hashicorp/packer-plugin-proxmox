@@ -30,9 +30,10 @@ type Config struct {
 	CloneVMID int `mapstructure:"clone_vm_id" required:"true"`
 	// Whether to run a full or shallow clone from the base clone_vm. Defaults to `true`.
 	FullClone config.Trilean `mapstructure:"full_clone" required:"false"`
-	// Storage pool to place the cloned source disk on. Only used for full clones.
-	// Defaults to the storage_pool of the first defined disk if not set.
-	CloneStoragePool string `mapstructure:"clone_storage_pool" required:"false"`
+	// Name of the Proxmox storage pool to store the cloned VM disks on.
+	// If not given, the source template's storage is used, or the storage_pool of the first defined disk.
+	// This setting only applies to full clones.
+	TargetStoragePool string `mapstructure:"target_storage_pool" required:"false"`
 
 	// Set nameserver IP address(es) via Cloud-Init.
 	// If not given, the same setting as on the host is used.
@@ -91,6 +92,9 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, []string, error) {
 	// https://pve-devel.pve.proxmox.narkive.com/Pa6mH1OP/avoiding-vmid-reuse#post8
 	if c.CloneVMID != 0 && (c.CloneVMID < 100 || c.CloneVMID > 999999999) {
 		errs = packersdk.MultiErrorAppend(errs, errors.New("clone_vm_id must be in range 100-999999999"))
+	}
+	if c.FullClone.False() && c.TargetStoragePool != "" {
+		warnings = append(warnings, "target_storage_pool is only used for full clones and will be ignored when full_clone is false")
 	}
 
 	// Check validity of given IP addresses

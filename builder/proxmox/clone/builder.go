@@ -191,7 +191,7 @@ func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, vmConfig proxmoxapi.Confi
 		}
 	}
 
-	storagePool := c.CloneStoragePool
+	storagePool := c.TargetStoragePool
 	if storagePool == "" && len(c.Disks) > 0 {
 		storagePool = c.Disks[0].StoragePool
 	}
@@ -203,7 +203,7 @@ func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, vmConfig proxmoxapi.Confi
 			vmConfig.QemuDisks[0] = make(map[string]interface{})
 		}
 		vmConfig.QemuDisks[0]["storage"] = storagePool
-		ui.Say(fmt.Sprintf("Using clone storage pool: %s", storagePool))
+		ui.Say(fmt.Sprintf("Using target storage pool: %s", storagePool))
 	}
 
 	err := vmConfig.CloneVm(sourceVmr, vmRef, client)
