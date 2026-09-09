@@ -272,3 +272,37 @@ func TestIpconfig(t *testing.T) {
 		})
 	}
 }
+
+func TestTargetStoragePool(t *testing.T) {
+	t.Run("target_storage_pool with full clone", func(t *testing.T) {
+		cfg := mandatoryConfig(t)
+		cfg["target_storage_pool"] = "local-lvm"
+
+		var c Config
+		_, warnings, err := c.Prepare(&c, cfg)
+		if err != nil {
+			t.Fatalf("unexpected failure: %s", err)
+		}
+		if len(warnings) != 0 {
+			t.Fatalf("unexpected warnings: %v", warnings)
+		}
+	})
+
+	t.Run("target_storage_pool with linked clone warning", func(t *testing.T) {
+		cfg := mandatoryConfig(t)
+		cfg["target_storage_pool"] = "local-lvm"
+		cfg["full_clone"] = false
+
+		var c Config
+		_, warnings, err := c.Prepare(&c, cfg)
+		if err != nil {
+			t.Fatalf("unexpected failure: %s", err)
+		}
+		if len(warnings) != 1 {
+			t.Fatalf("expected one warning, got %d (%v)", len(warnings), warnings)
+		}
+		if !strings.Contains(warnings[0], "target_storage_pool") {
+			t.Fatalf("expected target_storage_pool warning, got %q", warnings[0])
+		}
+	})
+}
