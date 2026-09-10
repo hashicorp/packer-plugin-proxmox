@@ -48,9 +48,9 @@ func TestRequiredParameters(t *testing.T) {
 	}
 }
 
-func TestAgentSetToFalse(t *testing.T) {
+func TestAgentSetToDisabled(t *testing.T) {
 	cfg := mandatoryConfig(t)
-	cfg["qemu_agent"] = false
+	cfg["qemu_agent"] = "disabled"
 
 	var c Config
 	_, _, err := c.Prepare(&c, cfg)
@@ -58,8 +58,8 @@ func TestAgentSetToFalse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if c.Agent.False() != true {
-		t.Errorf("Expected Agent to be false, got %t", c.Agent.True())
+	if c.Agent != "disabled" {
+		t.Errorf("Expected Agent to be 'disabled', got %s", c.Agent)
 	}
 }
 

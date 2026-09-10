@@ -15,7 +15,7 @@ import (
 	"github.com/Telmate/proxmox-api-go/proxmox"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/hashicorp/packer-plugin-sdk/template/config"
+	// "github.com/hashicorp/packer-plugin-sdk/template/config"
 )
 
 // stepStartVM takes the given configuration and starts a VM on the given Proxmox node.
@@ -285,15 +285,29 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 	return multistep.ActionContinue
 }
 
-func generateAgentConfig(agent config.Trilean) *proxmox.QemuGuestAgent {
-	var enableAgent bool
+func generateAgentConfig(agent string) *proxmox.QemuGuestAgent {
+	var enableAgent, enableFreeze, enableFsTrim bool
+	var agentType proxmox.QemuGuestAgentType
 
-	if agent.True() {
-		enableAgent = true
-	}
+	switch agent {
+	case "virtio", "isa":
+		enableAgent  = true
+		enableFreeze = true
+		enableFsTrim = true
+		agentType = proxmox.QemuGuestAgentType(agent)
 
-	return &proxmox.QemuGuestAgent{
-		Enable: &enableAgent,
+		return &proxmox.QemuGuestAgent{
+			Enable: &enableAgent,
+			Freeze: &enableFreeze,
+			FsTrim: &enableFsTrim,
+			Type:   &agentType,
+		}
+
+	default: // "disabled" or unrecognized string
+		enableAgent = false
+		return &proxmox.QemuGuestAgent{
+			Enable: &enableAgent,
+		}
 	}
 }
 
