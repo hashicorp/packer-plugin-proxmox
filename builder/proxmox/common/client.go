@@ -5,6 +5,9 @@ package proxmox
 
 import (
 	"crypto/tls"
+	"crypto/x509"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -32,7 +35,7 @@ func newProxmoxClient(config Config) (*proxmox.Client, error) {
 
 	client, err := proxmox.NewClient(strings.TrimSuffix(config.proxmoxURL.String(), "/"), httpClient, "", tlsConfig, "", int(config.TaskTimeout.Seconds()))
 	if err != nil {
-		return nil, err
+		return nil, wrapTLSError(err)
 	}
 
 	*proxmox.Debug = config.PackerDebug
@@ -46,9 +49,34 @@ func newProxmoxClient(config Config) (*proxmox.Client, error) {
 		log.Print("using password auth")
 		err = client.Login(config.Username, config.Password, "")
 		if err != nil {
-			return nil, err
+			return nil, wrapTLSError(err)
 		}
 	}
 
 	return client, nil
+}
+
+// wrapTLSError inspects err for known x509 certificate errors and, if found,
+// wraps it with an actionable hint pointing to insecure_skip_tls_verify.
+// All other errors are returned unchanged.
+func wrapTLSError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	var unknownAuthority x509.UnknownAuthorityError
+	var hostnameErr x509.HostnameError
+	var certInvalid x509.CertificateInvalidError
+
+	if errors.As(err, &unknownAuthority) || errors.As(err, &hostnameErr) || errors.As(err, &certInvalid) {
+		return fmt.Errorf(
+			"TLS certificate verification failed connecting to Proxmox: %w\n\n"+
+				"Hint: If your Proxmox server uses a self-signed certificate, add\n"+
+				"  insecure_skip_tls_verify = true\n"+
+				"to your builder configuration. Do NOT use this option in production.",
+				err,
+		)
+	}
+
+	return err
 }
