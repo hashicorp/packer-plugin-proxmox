@@ -17,7 +17,7 @@ type CloudInitDriveRemoverMock struct {
 	setConfig func(map[string]interface{}) (string, error)
 }
 
-func (m CloudInitDriveRemoverMock) GetVmConfig(*proxmox.VmRef) (map[string]interface{}, error) {
+func (m CloudInitDriveRemoverMock) GetVmConfig(context.Context, *proxmox.VmRef) (map[string]interface{}, error) {
 	return m.getConfig()
 }
 func (m CloudInitDriveRemoverMock) SetVmConfig(vmref *proxmox.VmRef, c map[string]interface{}) (interface{}, error) {

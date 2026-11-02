@@ -18,11 +18,12 @@ import (
 // stepUploadISO uploads an ISO file
 type stepUploadISO struct {
 	ISO *ISOsConfig
+	ctx context.Context
 }
 
 type uploader interface {
-	Upload(node string, storage string, contentType string, filename string, file io.Reader) error
-	DeleteVolume(vmr *proxmoxapi.VmRef, storageName string, volumeName string) (exitStatus interface{}, err error)
+	Upload(ctx context.Context, node string, storage string, contentType string, filename string, file io.Reader) error
+	DeleteVolume(ctx context.Context, vmr *proxmoxapi.VmRef, storageName string, volumeName string) (exitStatus interface{}, err error)
 }
 
 var _ uploader = &proxmoxapi.Client{}
@@ -72,7 +73,7 @@ func (s *stepUploadISO) Run(ctx context.Context, state multistep.StateBag) multi
 	}
 
 	filename := filepath.Base(isoPath)
-	err = client.Upload(c.Node, s.ISO.ISOStoragePool, "iso", filename, r)
+	err = client.Upload(ctx, c.Node, s.ISO.ISOStoragePool, "iso", filename, r)
 	if err != nil {
 		state.Put("error", err)
 		ui.Error(err.Error())
@@ -81,7 +82,7 @@ func (s *stepUploadISO) Run(ctx context.Context, state multistep.StateBag) multi
 
 	isoStoragePath := fmt.Sprintf("%s:iso/%s", s.ISO.ISOStoragePool, filename)
 	s.ISO.ISOFile = isoStoragePath
-	ui.Message(fmt.Sprintf("Uploaded ISO to %s", isoStoragePath))
+	ui.Sayf("Uploaded ISO to %s", isoStoragePath)
 
 	return multistep.ActionContinue
 }
@@ -100,14 +101,14 @@ func (s *stepUploadISO) Cleanup(state multistep.StateBag) {
 		// Fake a VM reference, DeleteVolume just needs the node to be valid
 		vmRef := &proxmoxapi.VmRef{}
 		vmRef.SetNode(c.Node)
-		vmRef.SetVmType("qemu")
+		vmRef.SetVmType(proxmoxapi.GuestQemu)
 
-		_, err := client.DeleteVolume(vmRef, s.ISO.ISOStoragePool, s.ISO.ISOFile)
+		_, err := client.DeleteVolume(s.ctx, vmRef, s.ISO.ISOStoragePool, s.ISO.ISOFile)
 		if err != nil {
 			state.Put("error", err)
 			ui.Error(fmt.Sprintf("delete volume failed: %s", err.Error()))
 			return
 		}
-		ui.Message(fmt.Sprintf("Deleted generated ISO from %s", s.ISO.ISOFile))
+		ui.Sayf("Deleted generated ISO from %s", s.ISO.ISOFile)
 	}
 }

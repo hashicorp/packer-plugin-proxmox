@@ -21,11 +21,11 @@ import (
 type stepFinalizeConfig struct{}
 
 type finalizer interface {
-	GetVmConfig(*proxmox.VmRef) (map[string]interface{}, error)
+	GetVmConfig(context.Context, *proxmox.VmRef) (map[string]interface{}, error)
 	SetVmConfig(*proxmox.VmRef, map[string]interface{}) (interface{}, error)
-	Version() (proxmox.Version, error)
-	StartVm(*proxmox.VmRef) (string, error)
-	ShutdownVm(*proxmox.VmRef) (string, error)
+	Version(context.Context) (proxmox.Version, error)
+	StartVm(context.Context, *proxmox.VmRef) (string, error)
+	ShutdownVm(context.Context, *proxmox.VmRef) (string, error)
 }
 
 var _ finalizer = &proxmox.Client{}
@@ -47,7 +47,7 @@ func (s *stepFinalizeConfig) Run(ctx context.Context, state multistep.StateBag) 
 	// set, we need to clear it
 	changes["description"] = c.TemplateDescription
 
-	vmParams, err := client.GetVmConfig(vmRef)
+	vmParams, err := client.GetVmConfig(ctx, vmRef)
 	if err != nil {
 		err := fmt.Errorf("error fetching config: %s", err)
 		state.Put("error", err)
@@ -94,7 +94,7 @@ func (s *stepFinalizeConfig) Run(ctx context.Context, state multistep.StateBag) 
 					// Cloud-Init `Upgrade Packages`
 					if c.CloudInitDisableUpgradePackages != config.TriUnset {
 						// Cloud-Init `Upgrade Packages` not available in versions lower than 8
-						proxmoxVersion, err := client.Version()
+						proxmoxVersion, err := client.Version(ctx)
 						if err != nil {
 							err := fmt.Errorf("error fetching backend version: %s", err)
 							state.Put("error", err)
@@ -170,7 +170,7 @@ func (s *stepFinalizeConfig) Run(ctx context.Context, state multistep.StateBag) 
 		// Adding a Cloud-Init drive or removing CD-ROM devices won't take effect without a power off and on of the QEMU VM
 		if c.SkipConvertToTemplate {
 			ui.Say("Hardware changes pending for VM, stopping VM")
-			_, err := client.ShutdownVm(vmRef)
+			_, err := client.ShutdownVm(ctx, vmRef)
 			if err != nil {
 				err := fmt.Errorf("Error stopping VM: %s", err)
 				state.Put("error", err)
@@ -190,7 +190,7 @@ func (s *stepFinalizeConfig) Run(ctx context.Context, state multistep.StateBag) 
 	// When build artifact is to be a VM, return a running VM
 	if c.SkipConvertToTemplate {
 		ui.Say("Resuming VM")
-		_, err := client.StartVm(vmRef)
+		_, err := client.StartVm(ctx, vmRef)
 		if err != nil {
 			err := fmt.Errorf("Error starting VM: %s", err)
 			state.Put("error", err)

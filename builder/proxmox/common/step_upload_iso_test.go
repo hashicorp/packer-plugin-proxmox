@@ -22,7 +22,7 @@ type uploaderMock struct {
 	deleteWasCalled bool
 }
 
-func (m *uploaderMock) Upload(node string, storage string, contentType string, filename string, file io.Reader) error {
+func (m *uploaderMock) Upload(_ context.Context, node string, storage string, contentType string, filename string, file io.Reader) error {
 	m.uploadWasCalled = true
 	if m.uploadFail {
 		return fmt.Errorf("Testing induced Upload failure")
@@ -30,7 +30,7 @@ func (m *uploaderMock) Upload(node string, storage string, contentType string, f
 	return nil
 }
 
-func (m *uploaderMock) DeleteVolume(vmr *proxmox.VmRef, storageName string, volumeName string) (exitStatus interface{}, err error) {
+func (m *uploaderMock) DeleteVolume(_ context.Context, vmr *proxmox.VmRef, storageName string, volumeName string) (exitStatus interface{}, err error) {
 	m.deleteWasCalled = true
 	if m.deleteFail {
 		return nil, fmt.Errorf("Testing induced DeleteVolume failure")
@@ -63,6 +63,7 @@ func TestUploadISO(t *testing.T) {
 				ISO: &ISOsConfig{
 					ShouldUploadISO: false,
 				},
+				ctx: context.Background(),
 			},
 			expectError:    false,
 			expectedAction: multistep.ActionContinue,
@@ -77,6 +78,7 @@ func TestUploadISO(t *testing.T) {
 						CDFiles: []string{"testfile"},
 					},
 				},
+				ctx: context.Background(),
 			},
 			expectError:    true,
 			expectedAction: multistep.ActionHalt,
@@ -89,6 +91,7 @@ func TestUploadISO(t *testing.T) {
 					ShouldUploadISO: true,
 					DownloadPathKey: "",
 				},
+				ctx: context.Background(),
 			},
 			expectError:    true,
 			expectedAction: multistep.ActionHalt,
@@ -101,6 +104,7 @@ func TestUploadISO(t *testing.T) {
 					ShouldUploadISO: true,
 					DownloadPathKey: "filethatdoesnotexist.iso",
 				},
+				ctx: context.Background(),
 			},
 			downloadPath:   "filethatdoesnotexist.iso",
 			expectError:    true,
@@ -118,6 +122,7 @@ func TestUploadISO(t *testing.T) {
 					},
 					DownloadPathKey: "../iso/testdata/test.iso",
 				},
+				ctx: context.Background(),
 			},
 			generatedISOPath: "../iso/testdata/test.iso",
 
@@ -139,6 +144,7 @@ func TestUploadISO(t *testing.T) {
 					},
 					DownloadPathKey: "../iso/testdata/test.iso",
 				},
+				ctx: context.Background(),
 			},
 			generatedISOPath:   "../iso/testdata/test.iso",
 			failDelete:         true,
@@ -157,6 +163,7 @@ func TestUploadISO(t *testing.T) {
 					ISOStoragePool:  "local",
 					DownloadPathKey: "../iso/testdata/test.iso",
 				},
+				ctx: context.Background(),
 			},
 			downloadPath: "../iso/testdata/test.iso",
 
@@ -175,6 +182,7 @@ func TestUploadISO(t *testing.T) {
 					ISOStoragePool:  "local",
 					DownloadPathKey: "../iso/testdata/test.iso",
 				},
+				ctx: context.Background(),
 			},
 			downloadPath:       "../iso/testdata/test.iso",
 			failUpload:         true,

@@ -81,7 +81,7 @@ func (s *StepSshKeyPair) Run(ctx context.Context, state multistep.StateBag) mult
 	// If we're in debug mode, output the private key to the working
 	// directory.
 	if s.Debug {
-		ui.Message(fmt.Sprintf("Saving communicator private key for debug purposes: %s", s.DebugKeyPath))
+		ui.Sayf("Saving communicator private key for debug purposes: %s", s.DebugKeyPath)
 		f, err := os.OpenFile(s.DebugKeyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		if err != nil {
 			state.Put("error", fmt.Errorf("Error saving debug key: %s", err))

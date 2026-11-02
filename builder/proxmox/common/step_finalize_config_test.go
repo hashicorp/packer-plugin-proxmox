@@ -24,21 +24,21 @@ type finalizerMock struct {
 	version    func() (proxmox.Version, error)
 }
 
-func (m finalizerMock) GetVmConfig(*proxmox.VmRef) (map[string]interface{}, error) {
+func (m finalizerMock) GetVmConfig(context.Context, *proxmox.VmRef) (map[string]interface{}, error) {
 	return m.getConfig()
 }
 func (m finalizerMock) SetVmConfig(vmref *proxmox.VmRef, c map[string]interface{}) (interface{}, error) {
 	return m.setConfig(c)
 }
-func (m finalizerMock) Version() (proxmox.Version, error) {
+func (m finalizerMock) Version(context.Context) (proxmox.Version, error) {
 	return m.version()
 }
 
-func (m finalizerMock) StartVm(*proxmox.VmRef) (string, error) {
+func (m finalizerMock) StartVm(context.Context, *proxmox.VmRef) (string, error) {
 	return m.startVm()
 }
 
-func (m finalizerMock) ShutdownVm(*proxmox.VmRef) (string, error) {
+func (m finalizerMock) ShutdownVm(context.Context, *proxmox.VmRef) (string, error) {
 	return m.shutdownVm()
 }
 

@@ -1,15 +1,16 @@
 module github.com/hashicorp/packer-plugin-proxmox
 
-go 1.25.11
+go 1.26.2
 
 require (
-	github.com/Telmate/proxmox-api-go v0.0.0-20241022204517-b149708f750b
+	github.com/Telmate/proxmox-api-go v0.0.0-20261031171407-06d3c5a3ac83
 	github.com/hashicorp/go-getter/v2 v2.2.3
 	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/hashicorp/packer-plugin-sdk v0.6.10
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/stretchr/testify v1.11.1
 	github.com/zclconf/go-cty v1.18.1
+	golang.org/x/crypto v0.54.0
 )
 
 require (
@@ -118,7 +119,6 @@ require (
 	go.opentelemetry.io/otel v1.43.0 // indirect
 	go.opentelemetry.io/otel/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
-	golang.org/x/crypto v0.54.0 // indirect
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29 // indirect
 	golang.org/x/mobile v0.0.0-20210901025245-1fde1d6c3ca1 // indirect
 	golang.org/x/mod v0.37.0 // indirect

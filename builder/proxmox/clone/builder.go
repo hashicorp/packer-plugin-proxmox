@@ -4,7 +4,6 @@
 package proxmoxclone
 
 import (
-	"crypto"
 	"net/netip"
 	"strings"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
+	"golang.org/x/crypto/ssh"
 
 	"context"
 	"fmt"
@@ -54,17 +54,11 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 
 type cloneVMCreator struct{}
 
-func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, vmConfig proxmoxapi.ConfigQemu, state multistep.StateBag) error {
+func (*cloneVMCreator) Create(ctx context.Context, vmConfig proxmoxapi.ConfigQemu, state multistep.StateBag) (*proxmoxapi.VmRef, error) {
 	client := state.Get("proxmoxClient").(*proxmoxapi.Client)
 	c := state.Get("clone-config").(*Config)
 	comm := state.Get("config").(*proxmox.Config).Comm
 	ui := state.Get("ui").(packersdk.Ui)
-
-	fullClone := 1
-	if c.FullClone.False() {
-		fullClone = 0
-	}
-	vmConfig.FullClone = &fullClone
 
 	// cloud-init options
 
@@ -127,15 +121,22 @@ func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, vmConfig proxmoxapi.Confi
 		}
 	}
 
-	var publicKey []crypto.PublicKey
+	var publicKeys []proxmoxapi.AuthorizedKey
 
 	if comm.SSHPublicKey != nil {
-		publicKey = append(publicKey, crypto.PublicKey(string(comm.SSHPublicKey)))
+		publicKey, err := ssh.ParsePublicKey([]byte(string(comm.SSHPublicKey)))
+		if err != nil {
+			err := fmt.Errorf("error parsing public key: %s", err)
+			state.Put("error", err)
+			ui.Error(err.Error())
+			return nil, err
+		}
+		publicKeys = []proxmoxapi.AuthorizedKey{{PublicKey: publicKey}}
 	}
 
 	vmConfig.CloudInit = &proxmoxapi.CloudInit{
 		Username:      &comm.SSHUsername,
-		PublicSSHkeys: &publicKey,
+		PublicSSHkeys: &publicKeys,
 		DNS: &proxmoxapi.GuestDNS{
 			NameServers:  &nameServers,
 			SearchDomain: &c.Searchdomain,
@@ -145,12 +146,12 @@ func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, vmConfig proxmoxapi.Confi
 
 	if c.CloudInitDisableUpgradePackages != config.TriUnset {
 		// Cloud-Init `Upgrade Packages` not available in versions lower than 8
-		proxmoxVersion, err := client.Version()
+		proxmoxVersion, err := client.Version(ctx)
 		if err != nil {
 			err := fmt.Errorf("error fetching backend version: %s", err)
 			state.Put("error", err)
 			ui.Error(err.Error())
-			return err
+			return nil, err
 		}
 		if proxmoxVersion.Major >= 8 {
 			switch c.CloudInitDisableUpgradePackages {
@@ -171,33 +172,48 @@ func (*cloneVMCreator) Create(vmRef *proxmoxapi.VmRef, vmConfig proxmoxapi.Confi
 
 	var sourceVmr *proxmoxapi.VmRef
 	if c.CloneVM != "" {
-		sourceVmrs, err := client.GetVmRefsByName(c.CloneVM)
+		sourceVmrs, err := client.GetVmRefsByName(ctx, proxmoxapi.GuestName(c.CloneVM))
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		// prefer source Vm located on same node
 		sourceVmr = sourceVmrs[0]
 		for _, candVmr := range sourceVmrs {
-			if candVmr.Node() == vmRef.Node() {
+			if candVmr.Node() == *vmConfig.Node {
 				sourceVmr = candVmr
 			}
 		}
 	} else if c.CloneVMID != 0 {
-		sourceVmr = proxmoxapi.NewVmRef(c.CloneVMID)
-		err := client.CheckVmRef(sourceVmr)
+		sourceVmr = proxmoxapi.NewVmRef(proxmoxapi.GuestID(c.CloneVMID))
+		err := client.CheckVmRef(ctx, sourceVmr)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	err := vmConfig.CloneVm(sourceVmr, vmRef, client)
-	if err != nil {
-		return err
+	var clone proxmoxapi.CloneQemuTarget
+	if c.FullClone.False() {
+		clone.Linked = &proxmoxapi.CloneLinked{
+			ID:   vmConfig.ID,
+			Name: vmConfig.Name,
+			Node: *vmConfig.Node,
+			Pool: vmConfig.Pool}
+	} else {
+		clone.Full = &proxmoxapi.CloneQemuFull{
+			ID:   vmConfig.ID,
+			Name: vmConfig.Name,
+			Node: *vmConfig.Node,
+			Pool: vmConfig.Pool}
 	}
-	_, err = vmConfig.Update(false, vmRef, client)
+
+	cl := client.New()
+	vmr, err := cl.QemuGuest.Clone(ctx, *sourceVmr, clone)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	if err := cl.QemuGuest.Update(ctx, *vmr, false, false, vmConfig); err != nil {
+		return vmr, err
+	}
+	return vmr, nil
 }
