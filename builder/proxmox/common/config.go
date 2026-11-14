@@ -616,7 +616,7 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 	}
 
 	switch c.Agent {
-		case "virtio", "isa":
+		case "virtio", "isa", "disabled":
 		case "":
 			log.Printf("qemu_agent not specified, defaulting to `virtio`")
 			c.Agent = "virtio"
