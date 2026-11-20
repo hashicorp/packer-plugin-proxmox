@@ -124,7 +124,8 @@ type Config struct {
 	Numa bool `mapstructure:"numa"`
 	// The operating system. Can be `wxp`, `w2k`, `w2k3`, `w2k8`,
 	// `wvista`, `win7`, `win8`, `win10`, `l24` (Linux 2.4), `l26` (Linux 2.6+),
-	// `solaris` or `other`. Defaults to `other`.
+	// `solaris` or `other`. Defaults to `other`. With `proxmox-clone`, the
+	// OS type of the source template is kept when this is not set.
 	OS string `mapstructure:"os"`
 	// Set the machine bios. This can be set to ovmf or seabios. The default value is seabios.
 	BIOS string `mapstructure:"bios"`
@@ -677,7 +678,10 @@ func (c *Config) Prepare(upper interface{}, raws ...interface{}) ([]string, []st
 		log.Printf("CPU type not set, using default 'kvm64'")
 		c.CPUType = "kvm64"
 	}
-	if c.OS == "" {
+	// A clone inherits the OS type of its source template. Leaving OS empty
+	// keeps "ostype" out of the config update sent after the clone, so only
+	// default it when the VM is created from scratch.
+	if c.OS == "" && c.Ctx.BuildType != "proxmox-clone" {
 		log.Printf("OS not set, using default 'other'")
 		c.OS = "other"
 	}
