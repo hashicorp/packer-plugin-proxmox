@@ -272,3 +272,41 @@ func TestIpconfig(t *testing.T) {
 		})
 	}
 }
+
+func TestOSInheritedFromSourceTemplate(t *testing.T) {
+	tests := []struct {
+		name       string
+		os         string
+		expectedOS string
+	}{
+		{
+			name:       "os not set, left empty so the clone keeps the template's ostype",
+			os:         "",
+			expectedOS: "",
+		},
+		{
+			name:       "os set, used as given",
+			os:         "win10",
+			expectedOS: "win10",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := mandatoryConfig(t)
+			cfg["packer_builder_type"] = "proxmox-clone"
+			if tt.os != "" {
+				cfg["os"] = tt.os
+			}
+
+			var c Config
+			_, _, err := c.Prepare(&c, cfg)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if c.OS != tt.expectedOS {
+				t.Errorf("Expected OS to be %q, got %q", tt.expectedOS, c.OS)
+			}
+		})
+	}
+}
